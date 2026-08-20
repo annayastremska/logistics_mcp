@@ -128,7 +128,11 @@ button:disabled { opacity: .45; cursor: default; }
 .fld .v { font-family: var(--din); font-size: 22px; font-weight: 600; letter-spacing: .01em; line-height: 1.1; margin-top: 3px; }
 .fld .v s { text-decoration: none; font-family: var(--body); font-size: 12px; font-weight: 400;
             letter-spacing: 0; color: var(--ink-2); margin-left: 6px; }
-.fld.hot .v { color: var(--stamp); }
+/* At portfolio level this is the number the reader came for, so it is not
+   the same size as the count of lines beside it. */
+.fld.hot { padding-right: 30px; margin-right: 30px; }
+.fld.hot .v { color: var(--stamp); font-size: 34px; font-weight: 700; letter-spacing: -0.02em; }
+.fld.hot .v s { font-size: 13px; }
 
 .tools { display: flex; align-items: center; gap: 12px; padding: 16px 0 14px; }
 .seg { display: inline-flex; border: 1px solid var(--control); border-radius: 2px; overflow: hidden; }
@@ -168,50 +172,65 @@ button:disabled { opacity: .45; cursor: default; }
 
 .body { display: flex; gap: 18px; padding: 14px 16px 15px; align-items: flex-start; }
 
-/* THE SIGNATURE — an origin stencil, as marked on a crate */
+/* THE SIGNATURE — the origin as an inked stamp, the way it is actually
+   marked on a crate. This is the one bold thing on the page; everything
+   around it stays quiet. Ground is the line's own tone, type knocked out. */
 .stencil {
-  flex: none; width: 186px; padding: 11px 13px 12px;
-  border: 1.5px solid var(--ink); border-radius: 1px;
-  background: var(--sheet);
+  flex: none; width: 200px; padding: 13px 15px 14px;
+  background: currentColor; border-radius: 1px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 45%, transparent);
 }
-.entry.wide .stencil { width: 232px; }
+.entry.wide .stencil { width: 258px; padding: 16px 18px 17px; }
 .stencil .org {
   font-family: var(--din); font-weight: 700; text-transform: uppercase;
-  letter-spacing: .2em; font-size: 15px; color: var(--ink); line-height: 1.15;
+  letter-spacing: .19em; font-size: 15px; color: var(--sheet); line-height: 1.15;
   word-break: break-word;
 }
 .entry.wide .stencil .org { font-size: 18px; }
 .stencil .pc {
-  font-family: var(--din); font-weight: 700; font-size: 38px; line-height: 1;
-  letter-spacing: -0.01em; margin-top: 9px; color: var(--ink);
+  font-family: var(--din); font-weight: 700; font-size: 46px; line-height: .95;
+  letter-spacing: -0.02em; margin-top: 8px; color: var(--sheet);
 }
-.entry.wide .stencil .pc { font-size: 52px; }
+.entry.wide .stencil .pc { font-size: 64px; }
 .stencil .mf {
-  font-family: var(--code); font-size: 10px; color: var(--ink-2) !important;
-  margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--control);
-  letter-spacing: .02em;
+  font-family: var(--code); font-size: 10px; margin-top: 9px; padding-top: 8px;
+  letter-spacing: .02em; letter-spacing: .04em;
+  color: color-mix(in srgb, var(--sheet) 78%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--sheet) 42%, transparent);
 }
-/* The share, filled in the line's own tone against a neutral remainder --
-   not the other way round. */
-.stencil .rule { height: 3px; background: var(--rule); margin-top: 10px; }
-.stencil .rule i { display: block; height: 100%; background: currentColor; }
+/* The share, knocked out of the stamp against its own darker ground. */
+.stencil .rule { height: 4px; margin-top: 12px;
+  background: color-mix(in srgb, var(--ink) 38%, transparent); }
+.stencil .rule i { display: block; height: 100%; background: var(--sheet); }
 
 /* tally: the figures, as a form's field list */
-.tally { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; align-items: baseline; }
-.tally dt { white-space: nowrap; }
-.tally dd { margin: 0; font-family: var(--din); font-size: 15px; font-weight: 600;
-             letter-spacing: .01em; color: var(--ink); }
-.tally dd em { font-style: normal; font-family: var(--body); font-size: 11.5px; font-weight: 400; color: var(--ink-2); margin-left: 5px; letter-spacing: 0; }
+.tally { flex: 1; min-width: 0; }
+.tally dt { margin-bottom: 1px; }
+.tally dd { margin: 0 0 13px; font-family: var(--din); font-weight: 700;
+            letter-spacing: -0.01em; color: var(--ink); font-size: 30px; line-height: 1; }
+.entry.wide .tally dd { font-size: 38px; }
+.tally dd:last-child { margin-bottom: 0; }
+.tally dd.small { font-size: 20px; font-weight: 600; letter-spacing: .01em; }
+.entry.wide .tally dd.small { font-size: 24px; }
+.tally dd em { font-style: normal; font-family: var(--body); font-size: 12px;
+               font-weight: 400; color: var(--ink-2); margin-left: 6px; letter-spacing: 0; }
 
 .cond { padding: 0 16px 14px; display: flex; align-items: center; gap: 9px; }
-.cond .w { font-family: var(--din); font-size: 11.5px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
+.cond .w { font-family: var(--din); font-size: 13px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
 .cond .more { font-size: 11.5px; color: var(--ink-3); }
-.cond::before { content: ""; width: 14px; height: 3px; background: currentColor; flex: none; }
+.cond::before { content: ""; width: 22px; height: 5px; background: currentColor; flex: none; }
 
 /* alternatives, only on the lead entry */
 .alt { margin: 0 16px 15px; border-top: 1px solid var(--rule); padding-top: 11px; }
+/* Inside a wide entry the alternatives are a column, not a footer: the reader
+   compares exposure against the origins that could absorb it. */
+.entry.wide .body { align-items: stretch; }
+.entry.wide .body > .alt {
+  margin: 0; flex: 1.2; min-width: 0;
+  border-top: 0; border-left: 1px solid var(--rule); padding: 0 0 0 20px;
+}
 .alt table { width: 100%; border-collapse: collapse; }
-.alt td { padding: 3px 0; font-size: 13px; color: var(--ink-2); }
+.alt td { padding: 4px 0; font-size: 13px; color: var(--ink-2); }
 .alt td.r { text-align: right; font-family: var(--din); font-weight: 600; color: var(--ink); }
 .alt .after { font-size: 11.5px; color: var(--ink-3); margin-top: 7px; }
 
@@ -385,13 +404,13 @@ function entry(r, wide) {
   const share = r.top_partner_share_pct;
   const org = (r.top_partner_name || r.top_partner_iso3 || "—").toUpperCase();
 
-  const tally = [
-    ["At risk", usd(atRisk(r)), ""],
-    ["Real alternatives", n(r.effective_partner_count, 1), "of " + n(r.partner_count) + " reporting"],
-    ["Declared imports", usd(r.total_value_usd), ""],
-    ["Volume swing", pct(r.yoy_volatility_pct, 0), "year on year"],
-  ].map(x => '<dt class="eb">' + x[0] + '</dt><dd>' + x[1] +
-             (x[2] ? '<em>' + x[2] + '</em>' : "") + '</dd>').join("");
+  /* Two fields only. The reader is accountable for continuity, so the face
+     carries how much is exposed and how many origins could actually take it.
+     Declared imports and volume swing are context and live on the line sheet. */
+  const tally =
+    '<dt class="eb">Value exposed</dt><dd>' + usd(atRisk(r)) + '</dd>' +
+    '<dt class="eb">Origins that could take it</dt><dd class="small">' +
+      n(r.effective_partner_count, 1) + '<em>of ' + n(r.partner_count) + ' reporting</em></dd>';
 
   return '<div class="entry ' + cls + (wide ? " wide" : "") + '" role="button" tabindex="0"' +
     ' aria-label="' + esc(shortName(r)) + ', ' + pct(share) + ' from ' + esc(org) + '"' +
@@ -408,12 +427,12 @@ function entry(r, wide) {
           ' · ' + usd(atRisk(r)) + '</div>' +
       '</div>' +
       '<dl class="tally">' + tally + '</dl>' +
+      (wide ? '<div class="alt" id="alt-' + esc(r.hs_code) + '">' +
+              '<span class="eb">Origins already shipping</span>' +
+              '<div class="note" style="margin-top:6px">loading&#8230;</div></div>' : "") +
     '</div>' +
     '<div class="cond"><span class="w">' + (h ? h.w : "Spread") + '</span>' +
       (rest > 0 ? '<span class="more">+' + rest + '</span>' : "") + '</div>' +
-    (wide ? '<div class="alt" id="alt-' + esc(r.hs_code) + '">' +
-            '<span class="eb">Already arriving from</span>' +
-            '<div class="note" style="margin-top:6px">loading&#8230;</div></div>' : "") +
     '</div>';
 }
 
@@ -439,7 +458,7 @@ function renderList() {
 async function fillAlt(hs) {
   const host = $("alt-" + hs);
   if (!host) return;
-  const cap = '<span class="eb">Already arriving from</span>';
+  const cap = '<span class="eb">Origins already shipping</span>';
   try {
     const d = await (await fetch("/api/commodity/" + hs + "?year=2024")).json();
     const alts = ((d.flows && d.flows.rows) || []).slice(1, 5);
