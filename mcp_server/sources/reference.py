@@ -105,12 +105,24 @@ def partner_index() -> dict[int, CountryEntry]:
     return index
 
 
+# Dissolved states keep their ISO3 in the partner list: PAK belongs to both
+# "Pakistan" (586) and "East and West Pakistan (...1971)" (588), and there are
+# thirty such entries -- Czechoslovakia, the GDR, Belgium-Luxembourg. Whichever
+# came first won the lookup, so Pakistan surfaced on screen under its 1971 name.
+_HISTORICAL = re.compile(r"\(\.\.\.\s*\d{4}\)|former", re.IGNORECASE)
+
+
 @lru_cache(maxsize=1)
 def _iso3_to_partner() -> dict[str, CountryEntry]:
+    """Map ISO3 to a partner, preferring the entity that still exists."""
     out: dict[str, CountryEntry] = {}
     for entry in partner_index().values():
-        if entry.iso3 and not entry.iso3.startswith("_") and not entry.is_group:
-            out.setdefault(entry.iso3.upper(), entry)
+        if not entry.iso3 or entry.iso3.startswith("_") or entry.is_group:
+            continue
+        iso = entry.iso3.upper()
+        held = out.get(iso)
+        if held is None or (_HISTORICAL.search(held.name) and not _HISTORICAL.search(entry.name)):
+            out[iso] = entry
     return out
 
 
