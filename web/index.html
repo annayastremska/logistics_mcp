@@ -3,682 +3,620 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Import Sourcing Advisor</title>
+<title>Sourcing Risk</title>
 <style>
+  /* ===================================================================
+     Built as an analyst's worklist, not a landing page. The rules that
+     keep it out of the generic-template centre of gravity:
+
+       no hero headline, no card grid of equal-weight tiles, no shadows,
+       no blur, no gradient, no hover lift, no filled status pills, and
+       no Inter -- the platform UI face instead.
+
+     Density is the point: a 40px row, hairline rules, right-aligned
+     tabular figures, and detail that opens in place instead of on
+     another screen.
+     =================================================================== */
   :root {
-    --bg: #fbfaf8;
-    --panel: #ffffff;
-    --ink: #1c1b19;
-    --ink-soft: #5f5b55;
-    --ink-faint: #8b8681;
-    --line: #e4e0d9;
-    --line-strong: #cfc9bf;
-    --accent: #1f5f4f;
-    --accent-soft: #eaf1ee;
-    --warn: #8a5a12;
-    --warn-soft: #fbf2e2;
-    --bad: #8c2f22;
-    --bad-soft: #fbeceb;
-    --ok: #2f6b3a;
-    --ok-soft: #eaf3ec;
-    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    color-scheme: light;
+
+    --bg:        #ffffff;
+    --bg-sunk:   #f7f7f5;
+    --bg-hover:  #f2f2ef;
+
+    --ink:       #16150f;
+    --ink-2:     #5c5a52;
+    --ink-3:     #8f8d84;
+
+    --line:      #e6e4dd;   /* row rules: decorative, deliberately light */
+    --line-2:    #cfccc2;   /* header rule */
+    --control:   #8f8d84;   /* interactive boundaries -- 3.33:1, clears the 3:1 gate */
+
+    --sel:       #1a4f8a;
+    --sel-bg:    #eef3f9;
+
+    --crit:      #b3261e;
+    --high:      #a2560f;
+    --mod:       #7a6a12;
+    --ok:        #1d6b2b;
+
+    --bar:       #dedcd4;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #16181a; --panel: #1e2124; --ink: #ecebe8; --ink-soft: #b3aea7;
-      --ink-faint: #857f78; --line: #30343a; --line-strong: #454b52;
-      --accent: #6fd0b4; --accent-soft: #1d2c28;
-      --warn: #e0b063; --warn-soft: #2c2418; --bad: #ec8377; --bad-soft: #2e1d1b;
-      --ok: #7fc98d; --ok-soft: #1b2a1e;
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #17171a; --bg-sunk: #1e1e21; --bg-hover: #26262a;
+      --ink: #f2f1ec; --ink-2: #a8a69e; --ink-3: #7c7a73;
+      --line: #2b2b2f; --line-2: #3d3d42; --control: #7c7a73;  /* 4.16:1 */
+      --sel: #7fb0ea; --sel-bg: #1b2735;
+      --crit: #f08a82; --high: #e0a457; --mod: #cfc05a; --ok: #79c489;
+      --bar: #323236;
     }
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #17171a; --bg-sunk: #1e1e21; --bg-hover: #26262a;
+    --ink: #f2f1ec; --ink-2: #a8a69e; --ink-3: #7c7a73;
+    --line: #2b2b2f; --line-2: #3d3d42; --control: #7c7a73;
+    --sel: #7fb0ea; --sel-bg: #1b2735;
+    --crit: #f08a82; --high: #e0a457; --mod: #cfc05a; --ok: #79c489;
+    --bar: #323236;
+  }
+
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column;
+    /* Platform UI face. Deliberately not Inter or Roboto. */
+    font: 13px/1.45 -apple-system, "Segoe UI Variable Text", "Segoe UI",
+          ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
+    font-variant-numeric: tabular-nums;
   }
+  h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.005em; }
+  a { color: var(--sel); }
+  :focus-visible { outline: 2px solid var(--sel); outline-offset: -1px; }
 
-  /* ---- chrome ---- */
+  /* ---------------- header ---------------- */
   header {
-    border-bottom: 1px solid var(--line); padding: 14px 22px; background: var(--panel);
-    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    position: sticky; top: 0; z-index: 20;
+    height: 44px; display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; border-bottom: 1px solid var(--line);
   }
-  h1 { font-size: 17px; margin: 0; letter-spacing: -0.01em; white-space: nowrap; }
-  .sub { color: var(--ink-faint); font-size: 12.5px; }
-  main { max-width: 1400px; margin: 0 auto; padding: 20px 22px 70px; }
-  .layout { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 20px; align-items: start; }
-  @media (max-width: 1150px) { .layout { grid-template-columns: minmax(0,1fr); } }
-
-  .card {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-    padding: 16px 18px; margin-bottom: 16px;
-  }
-  .card > h2 {
-    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--ink-faint); margin: 0 0 12px; font-weight: 600;
-    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-  }
-  .card > h2 .h2note { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
-
-  /* ---- controls ---- */
-  select, input[type=text], input[type=search], textarea {
-    padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 7px;
-    background: var(--bg); color: var(--ink); font: inherit; font-size: 13.5px;
-  }
-  textarea { width: 100%; resize: vertical; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  button {
-    padding: 8px 15px; border-radius: 7px; border: 1px solid var(--accent);
-    background: var(--accent); color: #fff; font: inherit; font-size: 13.5px;
-    font-weight: 600; cursor: pointer;
-  }
-  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line-strong); font-weight: 500; }
-  button.link { background: none; border: none; color: var(--accent); padding: 0; font-weight: 600; text-decoration: underline; }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
-  .filters { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field > span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); font-weight: 600; }
-
-  /* ---- badges. Every severity carries a glyph as well as a colour, so the
-         ranking survives greyscale printing and colour-blind readers. ---- */
-  .pill {
-    display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px;
-    font-size: 10.5px; font-weight: 700; font-family: var(--mono);
-    background: var(--accent-soft); color: var(--accent); white-space: nowrap;
-  }
-  .pill.warn { background: var(--warn-soft); color: var(--warn); }
-  .pill.bad  { background: var(--bad-soft);  color: var(--bad); }
-  .pill.ok   { background: var(--ok-soft);   color: var(--ok); }
-  .pill.mute { background: transparent; color: var(--ink-faint); border: 1px solid var(--line); }
-  .flags { display: flex; gap: 4px; flex-wrap: wrap; }
-
-  /* ---- portfolio table ---- */
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  thead th {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--ink-faint); font-weight: 700; border-bottom: 1px solid var(--line-strong);
-    white-space: nowrap;
-  }
-  thead th.sortable { cursor: pointer; user-select: none; }
-  thead th.sortable:hover { color: var(--ink); }
-  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
-  tbody tr.line { cursor: pointer; }
-  tbody tr.line:hover { background: var(--accent-soft); }
-  tbody tr.line.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
-  .prod { font-weight: 600; }
-  .hs { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
-  td.num .hs { white-space: nowrap; }  /* "17 origins" must not break across lines */
-
-  /* Share bar: the number is the fact, the bar only makes the column scannable. */
-  .share { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
-  .bar { width: 54px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; flex: none; }
-  .bar > i { display: block; height: 100%; background: var(--accent); }
-  .bar.warn > i { background: var(--warn); }
-  .bar.bad > i { background: var(--bad); }
-
-  /* ---- detail ---- */
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 14px; }
-  .kpi { border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--bg); }
-  .kpi .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); font-weight: 700; }
-  .kpi .v { font-size: 19px; font-family: var(--mono); font-variant-numeric: tabular-nums; margin-top: 2px; }
-  .kpi .u { font-size: 11px; color: var(--ink-faint); }
-
-  /* ---- trace ---- */
-  #trace { max-height: 380px; overflow-y: auto; }
-  .step { border-left: 2px solid var(--line); padding: 0 0 12px 13px; margin-left: 3px; position: relative; }
-  .step::before {
-    content: ""; position: absolute; left: -5px; top: 6px; width: 8px; height: 8px;
-    border-radius: 50%; background: var(--line);
-  }
-  .step.call::before { background: var(--accent); }
-  .step.res::before  { background: var(--ok); }
-  .step.err::before  { background: var(--bad); }
-  .step-head { display: flex; gap: 7px; align-items: baseline; flex-wrap: wrap; font-size: 12.5px; }
-  .tool { font-family: var(--mono); font-weight: 600; font-size: 12px; }
-  .srv { font-family: var(--mono); font-size: 9.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; }
-  .step pre, pre.out {
-    margin: 5px 0 0; font-family: var(--mono); font-size: 11px; line-height: 1.45;
-    color: var(--ink-soft); background: var(--bg); border: 1px solid var(--line);
-    border-radius: 6px; padding: 7px 8px; overflow-x: auto; max-height: 190px; white-space: pre-wrap;
-  }
-
-  /* ---- chat ---- */
-  .chat-log { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow-y: auto; margin-bottom: 10px; }
-  .msg { padding: 8px 11px; border-radius: 9px; font-size: 13.5px; }
-  .msg.me { background: var(--accent-soft); color: var(--ink); align-self: flex-end; max-width: 92%; }
-  .msg.bot { background: var(--bg); border: 1px solid var(--line); white-space: pre-wrap; }
-  .msg.bot.thinking { color: var(--ink-faint); font-style: italic; }
-
-  .answer { white-space: pre-wrap; font-size: 14px; }
-  .note { font-size: 12px; color: var(--ink-faint); margin: 8px 0 0; }
-  .caveat { background: var(--warn-soft); color: var(--warn); border-radius: 7px; padding: 9px 11px; font-size: 12.5px; }
-  .empty { color: var(--ink-faint); font-size: 13px; padding: 10px 0; }
-  .check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
-  .spinner {
-    display: inline-block; width: 11px; height: 11px; border-radius: 50%;
-    border: 2px solid var(--line); border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite; vertical-align: -1px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
-  .hidden { display: none !important; }
+  .name { font-weight: 600; font-size: 13px; letter-spacing: -0.01em; }
+  .name span { color: var(--ink-3); font-weight: 400; margin-left: 7px; }
   .grow { flex: 1; }
+
+  button {
+    appearance: none; font: inherit; cursor: pointer;
+    border: 1px solid var(--control); background: var(--bg); color: var(--ink);
+    height: 26px; padding: 0 10px; border-radius: 4px;
+  }
+  button:hover { background: var(--bg-hover); }
+  button.plain { border-color: transparent; background: none; color: var(--ink-2); }
+  button.plain:hover { background: var(--bg-hover); color: var(--ink); }
+  button.go { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 500; }
+  :root[data-theme="dark"] button.go, :root:not([data-theme="light"]) button.go { color: #14141a; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) button.go { color: #fff; } }
+  button:disabled { opacity: .45; cursor: default; }
+
+  /* segmented control, not chips */
+  .seg { display: inline-flex; border: 1px solid var(--control); border-radius: 4px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; height: 24px; color: var(--ink-2); }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--bg-sunk); color: var(--ink); font-weight: 550; }
+
+  /* ---------------- summary strip ---------------- */
+  .strip {
+    display: flex; align-items: stretch; flex-wrap: wrap;
+    border-bottom: 1px solid var(--line); background: var(--bg-sunk);
+  }
+  .strip .cell { padding: 9px 16px; border-right: 1px solid var(--line); min-width: 132px; }
+  .strip .cell:last-child { border-right: 0; }
+  .strip .k {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-3); font-weight: 600;
+  }
+  .strip .v { font-size: 16px; font-weight: 600; letter-spacing: -0.015em; margin-top: 1px; }
+  .strip .v small { font-size: 11.5px; font-weight: 400; color: var(--ink-2); margin-left: 4px; letter-spacing: 0; }
+
+  /* ---------------- toolbar ---------------- */
+  .bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px; border-bottom: 1px solid var(--line);
+  }
+  .count { font-size: 12px; color: var(--ink-3); }
+
+  /* ---------------- table ---------------- */
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky; top: 0; z-index: 2; background: var(--bg);
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--ink-3); font-weight: 600; padding: 7px 12px; height: 28px;
+    border-bottom: 1px solid var(--line-2); white-space: nowrap;
+  }
+  tbody td { padding: 0 12px; height: 40px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr.line { cursor: pointer; }
+  tbody tr.line:hover td { background: var(--bg-hover); }
+  tbody tr.line.open td { background: var(--sel-bg); }
+  .r { text-align: right; }
+  .prod { font-weight: 550; }
+  .hs { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); margin-left: 6px; }
+  .sub { font-size: 11.5px; color: var(--ink-3); }
+
+  /* share cell: bar is scanning aid, number is the fact */
+  .share { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .track { width: 46px; height: 3px; background: var(--bar); flex: none; }
+  .track > i { display: block; height: 100%; background: currentColor; }
+
+  /* status: a rule and a word, never a filled pill */
+  .st { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 12px; }
+  .st::before { content: ""; width: 3px; height: 12px; background: currentColor; flex: none; }
+  .c-crit { color: var(--crit); } .c-high { color: var(--high); }
+  .c-mod  { color: var(--mod);  } .c-ok   { color: var(--ok); }
+  .st b { font-weight: 550; color: var(--ink); }
+
+  /* ---------------- inline expansion ---------------- */
+  tr.detail td { padding: 0; background: var(--bg-sunk); border-bottom: 1px solid var(--line-2); }
+  .exp { padding: 14px 16px 16px 16px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 26px; }
+  @media (max-width: 900px) { .exp { grid-template-columns: minmax(0,1fr); gap: 16px; } }
+  .exp h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); margin-bottom: 7px; }
+  .mini { width: 100%; border-collapse: collapse; }
+  .mini td { height: 24px; padding: 0 8px 0 0; border: 0; font-size: 12.5px; }
+  .mini td.r { padding-right: 0; }
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font-size: 12.5px; }
+  .facts dt { color: var(--ink-3); white-space: nowrap; }
+  .facts dd { margin: 0; }
+  .acts { display: flex; gap: 8px; margin-top: 14px; align-items: center; grid-column: 1 / -1; }
+
+  /* ---------------- drill-down page ---------------- */
+  .crumbs { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
+  .pad { padding: 16px; }
+  .block { border: 1px solid var(--line); border-radius: 5px; margin-bottom: 12px; }
+  .block > .hd {
+    padding: 9px 13px; border-bottom: 1px solid var(--line); background: var(--bg-sunk);
+    font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  }
+  .block > .bd { padding: 13px; }
+  .block table td { padding: 0 13px; }
+  .block table th { padding: 7px 13px; }
+
+  details { border-top: 1px solid var(--line); }
+  details > summary {
+    list-style: none; cursor: pointer; padding: 8px 13px; font-size: 12px; color: var(--ink-2);
+    display: flex; align-items: center; gap: 7px;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "+"; color: var(--ink-3); font-family: var(--mono); }
+  details[open] > summary::before { content: "−"; }
+  details > summary:hover { color: var(--ink); background: var(--bg-hover); }
+  details .bd { padding: 4px 13px 14px; }
+
+  /* Which columns the order actually follows -- two keys, so a single caret
+     would misreport it. */
+  .ord { font-weight: 400; color: var(--ink-3); font-size: 9.5px; letter-spacing: .04em; margin-left: 3px; }
+  .note { font-size: 11.5px; color: var(--ink-3); }
+  .warn { border-left: 2px solid var(--mod); padding: 7px 11px; font-size: 11.5px; color: var(--ink-2); background: var(--bg-sunk); }
+
+  /* ---------------- run log ---------------- */
+  .log { font-family: var(--mono); font-size: 11.5px; }
+  .log div { display: flex; gap: 10px; padding: 2px 0; color: var(--ink-2); }
+  .log .t { color: var(--ink); }
+  .log .bad { color: var(--crit); }
+  .log .st2 { width: 12px; flex: none; }
+  .out { white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
+
+  /* ---------------- ask ---------------- */
+  .ask { border-top: 1px solid var(--line); padding: 8px 16px; display: flex; gap: 8px; align-items: center; }
+  .ask input {
+    flex: 1; font: inherit; height: 28px; padding: 0 9px;
+    border: 1px solid var(--control); border-radius: 4px; background: var(--bg); color: var(--ink);
+  }
+  .qa { padding: 0 16px 10px; }
+  .qa .q { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+  .qa .a { font-size: 13px; white-space: pre-wrap; margin-top: 3px; }
+
+  /* The worklist takes the slack, so the ask row rests on the bottom edge
+     instead of floating halfway up an empty page. */
+  #vList, #vLine { flex: 1 1 auto; }
+  .hide { display: none !important; }
+  .sk { height: 40px; border-bottom: 1px solid var(--line); background:
+        linear-gradient(90deg, var(--bg) 0%, var(--bg-hover) 50%, var(--bg) 100%); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Import Sourcing Advisor</h1>
-  <span class="sub">Ukraine · concentration risk across tracked import lines</span>
+  <span class="name">Sourcing Risk <span id="period"></span></span>
   <span class="grow"></span>
-  <label class="field" style="flex-direction:row;align-items:center;gap:6px">
-    <span>Year</span>
-    <select id="year">
-      <option>2024</option><option>2023</option><option>2022</option>
-    </select>
-  </label>
-  <span id="modeBadge" class="pill mute">loading…</span>
+  <button class="plain" id="sysBtn">Sources</button>
 </header>
 
-<main>
-  <div class="layout">
-    <!-- ===================== left: portfolio + detail ===================== -->
-    <div>
-      <div class="card">
-        <h2>
-          Portfolio
-          <span class="h2note" id="portfolioMeta"></span>
-        </h2>
+<div class="strip" id="strip"></div>
 
-        <div class="filters">
-          <label class="field">
-            <span>Search</span>
-            <input type="search" id="fSearch" placeholder="product or HS code" style="width:190px">
-          </label>
-          <label class="field">
-            <span>Group</span>
-            <select id="fGroup"><option value="">All</option></select>
-          </label>
-          <label class="field">
-            <span>Risk</span>
-            <select id="fRisk">
-              <option value="">All lines</option>
-              <option value="4">Single source only</option>
-              <option value="3">High concentration and worse</option>
-              <option value="1">Any flag</option>
-            </select>
-          </label>
-          <span class="grow"></span>
-          <button class="ghost" id="refreshBtn">Refresh from server</button>
-        </div>
-
-        <div id="portfolioWrap">
-          <p class="empty"><span class="spinner"></span> Querying the MCP server for every tracked line…</p>
-        </div>
-        <p class="note" id="portfolioNote"></p>
-      </div>
-
-      <!-- detail, hidden until a line is picked -->
-      <div class="card hidden" id="detailCard">
-        <h2>
-          <span id="detailTitle">Line detail</span>
-          <span class="h2note" id="detailSub"></span>
-          <span class="grow"></span>
-          <button class="link" id="closeDetail">close</button>
-        </h2>
-        <div id="detailBody"></div>
-      </div>
-
-      <!-- agent run, hidden until asked for -->
-      <div class="card hidden" id="runCard">
-        <h2>Full sourcing analysis <span class="h2note" id="runMeta"></span></h2>
-        <div id="runStatus" class="note"></div>
-        <div class="answer" id="runAnswer"></div>
-        <details style="margin-top:12px">
-          <summary>MCP call trace</summary>
-          <div id="trace"></div>
-        </details>
-      </div>
+<!-- ============== worklist ============== -->
+<section id="vList">
+  <div class="bar">
+    <div class="seg">
+      <button id="segAll" aria-pressed="true">All</button>
+      <button id="segRisk" aria-pressed="false">Needs attention</button>
     </div>
-
-    <!-- ===================== right: connections + chat ===================== -->
-    <div>
-      <div class="card">
-        <h2>MCP connections</h2>
-        <div id="health" class="empty">checking…</div>
-      </div>
-
-      <div class="card">
-        <h2>Ask about what is on screen <span class="h2note" id="chatModel"></span></h2>
-        <div class="chat-log" id="chatLog">
-          <p class="empty">The portfolio above is computed, not chatted about. Ask here to interpret it.</p>
-        </div>
-        <textarea id="chatInput" rows="2" placeholder="e.g. which line would you fix first, and why?"></textarea>
-        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-          <button id="chatSend">Ask</button>
-          <span class="note" style="margin:0">Answered on the small model, from the numbers on screen.</span>
-        </div>
-      </div>
-    </div>
+    <span class="count" id="count"></span>
+    <span class="grow"></span>
+    <button class="plain" id="refresh">Refresh</button>
   </div>
-</main>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:24%">Line</th>
+        <th style="width:19%">Lead supplier</th>
+        <th class="r" style="width:15%">Share</th>
+        <th class="r" style="width:12%">At risk <span class="ord">2</span></th>
+        <th class="r" style="width:12%">Alternatives</th>
+        <th style="width:18%">Status <span class="ord">1 ↓</span></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <details id="sysWrap">
+    <summary>Data sources and connections</summary>
+    <div class="bd" id="sysBody">checking…</div>
+  </details>
+</section>
+
+<!-- ============== one line ============== -->
+<section id="vLine" class="hide">
+  <div class="crumbs">
+    <button class="plain" id="back">← Lines</button>
+    <span id="crumb"></span>
+  </div>
+  <div class="pad" id="lineBody"></div>
+</section>
+
+<div class="qa" id="qa"></div>
+<div class="ask">
+  <input id="ask" placeholder="Ask about these lines" autocomplete="off">
+  <button class="go" id="askBtn">Ask</button>
+</div>
 
 <script>
 "use strict";
 
-// ---------------------------------------------------------------------------
-// state
-// ---------------------------------------------------------------------------
-let portfolio = null;      // last /api/portfolio payload
-let selected = null;       // hs_code of the open detail row
-let sortKey = "severity";  // portfolio sort column
-let sortDir = -1;          // -1 descending
-let liveStream = null;     // the open EventSource, so a new run cancels the old
-
-const $ = (id) => document.getElementById(id);
-const fmtUsd = (v) =>
-  v == null ? "—" :
-  v >= 1e9 ? "$" + (v / 1e9).toFixed(2) + "B" :
-  v >= 1e6 ? "$" + (v / 1e6).toFixed(1) + "M" :
-  v >= 1e3 ? "$" + (v / 1e3).toFixed(0) + "k" : "$" + v.toFixed(0);
-const fmtPct = (v) => (v == null ? "—" : v.toFixed(1) + "%");
-const fmtNum = (v, d = 0) => (v == null ? "—" : v.toLocaleString("en-US", { maximumFractionDigits: d }));
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-// A flag's severity decides its colour; the glyph repeats the severity so the
-// table is still readable without colour at all.
-const FLAG_META = {
-  SINGLE_SOURCE:          { cls: "bad",  glyph: "▲", text: "single source" },
-  HIGH_CONCENTRATION:     { cls: "bad",  glyph: "▲", text: "high concentration" },
-  MODERATE_CONCENTRATION: { cls: "warn", glyph: "▲", text: "moderate concentration" },
-  VOLATILE_SUPPLY:        { cls: "warn", glyph: "~", text: "volatile supply" },
-  MIRROR_DISCREPANCY:     { cls: "mute", glyph: "≠", text: "mirror gap" },
-  THIN_DATA:              { cls: "mute", glyph: "·", text: "thin data" },
+/* Server enums are not user language. Each maps to a word an analyst can act
+   on, a severity class, and whether it is worth a place in the worklist's
+   single status cell -- the rest surface when a row is opened. */
+const COND = {
+  SINGLE_SOURCE:          { w: "Single source",   c: "c-crit", rank: 4, list: true,
+                            why: "One country supplies over 40% of this line." },
+  HIGH_CONCENTRATION:     { w: "Concentrated",    c: "c-high", rank: 3, list: true,
+                            why: "Supply sits with very few countries." },
+  MODERATE_CONCENTRATION: { w: "Moderate",        c: "c-mod",  rank: 2, list: true,
+                            why: "Supply is moderately concentrated." },
+  VOLATILE_SUPPLY:        { w: "Volumes swing",   c: "c-mod",  rank: 2, list: false,
+                            why: "Volumes move sharply year to year." },
+  MIRROR_DISCREPANCY:     { w: "Reporting gap",   c: "c-mod",  rank: 1, list: false,
+                            why: "Partner export reports disagree with Ukraine's import figures." },
+  THIN_DATA:              { w: "Thin data",       c: "c-mod",  rank: 1, list: false,
+                            why: "Too few reporting origins to be confident." },
 };
 
-function flagPill(flag) {
-  const m = FLAG_META[flag] || { cls: "mute", glyph: "·", text: flag.toLowerCase().replace(/_/g, " ") };
-  return `<span class="pill ${m.cls}" title="${esc(flag)}">${m.glyph} ${esc(m.text)}</span>`;
+/* The threshold the filter uses. Everything in this portfolio is concentrated
+   to some degree, so filtering on "has any flag" returned all six rows and the
+   control did nothing. Single-source is the band that warrants action. */
+const ATTENTION = 4;
+
+let data = null, riskOnly = false, openHs = null, live = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const usd = (v) => v == null ? "—"
+  : v >= 1e9 ? "$" + (v/1e9).toFixed(1) + "bn"
+  : v >= 1e6 ? "$" + (v/1e6).toFixed(0) + "m"
+  : v >= 1e3 ? "$" + (v/1e3).toFixed(0) + "k" : "$" + v.toFixed(0);
+const pct = (v, d = 0) => v == null ? "—" : v.toFixed(d) + "%";
+const n = (v, d = 0) => v == null ? "—" : v.toLocaleString("en-US", { maximumFractionDigits: d });
+
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function period(label) {
+  if (!label) return "";
+  const one = p => `${MON[+p.slice(4)-1]} ${p.slice(2,4)}`;
+  const m = String(label).match(/^(\d{6})-(\d{6})$/);
+  return m ? `${one(m[1])}–${one(m[2])}` : String(label);
 }
 
-// ---------------------------------------------------------------------------
-// health
-// ---------------------------------------------------------------------------
-async function loadHealth() {
-  try {
-    const h = await (await fetch("/api/health")).json();
-    $("modeBadge").textContent = h.data_mode === "live" ? "live data" : h.data_mode;
-    $("modeBadge").className = "pill " + (h.data_mode === "live" ? "ok" : "warn");
-    $("chatModel").textContent = "· small model";
-    const rows = Object.entries(h.servers).map(([name, s]) => `
-      <div style="margin-bottom:9px">
-        <div style="display:flex;gap:7px;align-items:baseline">
-          <span class="tool">${esc(name)}</span>
-          <span class="srv">${esc(s.transport)}</span>
-          <span class="pill mute">${s.declared_tools.length} tools</span>
-        </div>
-        <div class="note" style="margin-top:3px">${s.declared_tools.map(esc).join(", ")}</div>
-      </div>`).join("");
-    $("health").className = "";
-    $("health").innerHTML = rows +
-      `<div class="note">Analysis model <b>${esc(h.model)}</b> · credential via ${esc(h.credential)}</div>`;
-  } catch (e) {
-    $("health").textContent = "health check failed: " + e;
-  }
+/* Money the lead supplier controls. Share alone ranks a $19m line above a
+   $231m one; a buyer allocating attention needs the money. */
+const atRisk = (r) => (r.total_value_usd == null || r.top_partner_share_pct == null)
+  ? null : r.total_value_usd * r.top_partner_share_pct / 100;
+
+const conds = (r) => (r.flags || []).map(f => COND[f]).filter(Boolean).sort((a,b) => b.rank - a.rank);
+const headline = (r) => conds(r).find(c => c.list) || null;
+
+/* ---------------- strip: aggregate facts, no prose ---------------- */
+function renderStrip() {
+  const rows = data.rows.filter(r => r.top_partner_share_pct != null);
+  const total = rows.reduce((s,r) => s + (r.total_value_usd||0), 0);
+  const risk = rows.reduce((s,r) => s + (atRisk(r)||0), 0);
+
+  const byLead = {};
+  rows.forEach(r => (byLead[r.top_partner_name || r.top_partner_iso3] ??= []).push(r));
+  const shared = Object.entries(byLead).sort((a,b) => b[1].length - a[1].length)[0];
+  const sharedRisk = shared ? shared[1].reduce((s,r) => s + (atRisk(r)||0), 0) : 0;
+  const flagged = rows.filter(r => (r.severity||0) >= ATTENTION).length;
+
+  const cell = (k, v, s) => `<div class="cell"><div class="k">${k}</div>
+    <div class="v">${v}${s ? `<small>${s}</small>` : ""}</div></div>`;
+
+  $("strip").innerHTML =
+    cell("Lines", rows.length, `of ${data.rows.length}`) +
+    cell("Imports", usd(total), "") +
+    cell("Concentrated in one origin", usd(risk), total ? `${Math.round(risk/total*100)}%` : "") +
+    (shared && shared[1].length > 1
+      ? cell("Largest single origin", esc(shared[0]), `${shared[1].length} lines · ${usd(sharedRisk)}`)
+      : "") +
+    cell("Needs attention", flagged, `of ${rows.length}`);
+
+  $("period").textContent = period(data.period_label);
 }
 
-// ---------------------------------------------------------------------------
-// portfolio
-// ---------------------------------------------------------------------------
-async function loadPortfolio(refresh = false) {
-  const year = $("year").value;
-  $("portfolioWrap").innerHTML =
-    `<p class="empty"><span class="spinner"></span> Querying the MCP server for every tracked line…</p>`;
-  $("portfolioNote").textContent = "";
-  try {
-    const url = `/api/portfolio?year=${year}` + (refresh ? "&refresh=true" : "");
-    portfolio = await (await fetch(url)).json();
-    renderPortfolio();
-  } catch (e) {
-    $("portfolioWrap").innerHTML = `<p class="caveat">Could not load the portfolio: ${esc(e)}</p>`;
-  }
-}
-
-function visibleRows() {
-  const q = $("fSearch").value.trim().toLowerCase();
-  const group = $("fGroup").value;
-  const minSev = parseInt($("fRisk").value || "0", 10);
-  return (portfolio?.rows || []).filter((r) =>
-    (!q || r.label.toLowerCase().includes(q) || r.hs_code.includes(q)) &&
-    (!group || r.group === group) &&
-    (!minSev || r.severity >= minSev)
-  ).sort((a, b) => {
-    const av = a[sortKey], bv = b[sortKey];
-    if (av == null && bv == null) return 0;
-    if (av == null) return 1;          // unknowns sink, whichever way we sort
-    if (bv == null) return -1;
-    return av === bv ? 0 : (av > bv ? sortDir : -sortDir);
-  });
-}
-
-function renderPortfolio() {
-  const groups = [...new Set((portfolio.rows || []).map((r) => r.group))].sort();
-  const sel = $("fGroup");
-  if (sel.options.length <= 1) {
-    groups.forEach((g) => sel.add(new Option(g, g)));
-  }
-
-  const rows = visibleRows();
-  $("portfolioMeta").textContent =
-    `${rows.length} of ${portfolio.rows.length} lines · ${portfolio.year} data · ` +
-    `${portfolio.server_tools.length} tools on trade-sourcing`;
-
-  if (!rows.length) {
-    $("portfolioWrap").innerHTML = `<p class="empty">No line matches these filters.</p>`;
-    return;
-  }
-
-  const th = (key, label, cls = "") =>
-    `<th class="sortable ${cls}" data-key="${key}">${label}${sortKey === key ? (sortDir < 0 ? " ↓" : " ↑") : ""}</th>`;
-
-  $("portfolioWrap").innerHTML = `
-  <div style="overflow-x:auto">
-    <table>
-      <thead><tr>
-        ${th("label", "Product")}
-        ${th("total_value_usd", "Imports", "num")}
-        ${th("top_partner_share_pct", "Lead supplier", "num")}
-        ${th("effective_partner_count", "Eff. sources", "num")}
-        ${th("yoy_volatility_pct", "Volatility", "num")}
-        ${th("severity", "Flags")}
-      </tr></thead>
-      <tbody>${rows.map(rowHtml).join("")}</tbody>
-    </table>
-  </div>`;
-
-  $("portfolioWrap").querySelectorAll("th.sortable").forEach((el) =>
-    el.addEventListener("click", () => {
-      const k = el.dataset.key;
-      if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = -1; }
-      renderPortfolio();
-    }));
-  $("portfolioWrap").querySelectorAll("tr.line").forEach((el) =>
-    el.addEventListener("click", () => openDetail(el.dataset.hs)));
-
-  // A portfolio-level reading the per-row view cannot give: one supplier that
-  // several independent lines all lean on is a shared point of failure.
-  const leads = {};
-  rows.forEach((r) => { if (r.top_partner_iso3) (leads[r.top_partner_iso3] ??= []).push(r.label); });
-  const shared = Object.entries(leads).filter(([, v]) => v.length > 1)
-    .sort((a, b) => b[1].length - a[1].length);
-  $("portfolioNote").innerHTML = shared.length
-    ? `Across these lines, <b>${esc(shared[0][0])}</b> leads ${shared[0][1].length} of them ` +
-      `(${shared[0][1].map(esc).join(", ")}) — a dependency no single line reveals on its own.`
-    : "";
+/* ---------------- worklist ---------------- */
+function visible() {
+  return data.rows
+    .filter(r => !riskOnly || (r.severity||0) >= ATTENTION)
+    .sort((a,b) => (b.severity - a.severity) || ((atRisk(b)||0) - (atRisk(a)||0)));
 }
 
 function rowHtml(r) {
+  const h = headline(r);
+  const cls = h ? h.c : "c-ok";
+  const extra = conds(r).length - (h ? 1 : 0);
   const share = r.top_partner_share_pct;
-  const barCls = share == null ? "" : share >= 70 ? "bad" : share >= 50 ? "warn" : "";
-  const flags = r.flags?.length
-    ? `<div class="flags">${r.flags.map(flagPill).join("")}</div>`
-    : `<span class="pill ok">✓ diversified</span>`;
-  const partial = r.status !== "ok"
-    ? `<span class="pill warn" title="${esc((r.notes || []).join(" "))}">! ${esc(r.status)}</span>` : "";
   return `
-  <tr class="line ${selected === r.hs_code ? "on" : ""}" data-hs="${esc(r.hs_code)}"
-      title="Open the origin breakdown">
-    <td><div class="prod">${esc(r.label)} ${partial}</div>
-        <div class="hs">HS ${esc(r.hs_code)} · ${esc(r.group)}</div></td>
-    <td class="num">${fmtUsd(r.total_value_usd)}<div class="hs">${fmtNum(r.partner_count)} origins</div></td>
-    <td class="num">
-      <div class="share">
-        <span>${fmtPct(share)}</span>
-        <span class="bar ${barCls}"><i style="width:${Math.min(100, share || 0)}%"></i></span>
-      </div>
-      <div class="hs">${esc(r.top_partner_iso3 || "")}</div>
-    </td>
-    <td class="num">${fmtNum(r.effective_partner_count, 1)}</td>
-    <td class="num">${fmtPct(r.yoy_volatility_pct)}</td>
-    <td>${flags}</td>
+  <tr class="line ${openHs === r.hs_code ? "open" : ""}" data-hs="${esc(r.hs_code)}">
+    <td><span class="prod">${esc(r.label.replace(/,\s*(fresh|shelled|in shell)$/i, ""))}</span>
+        <span class="hs">${esc(r.hs_code)}</span></td>
+    <td>${esc(r.top_partner_name || r.top_partner_iso3 || "—")}
+        ${r.status !== "ok" ? `<span class="sub"> · incomplete</span>` : ""}</td>
+    <td class="r ${cls}"><span class="share"><span style="color:var(--ink)">${pct(share)}</span>
+        <span class="track"><i style="width:${Math.min(100, share||0)}%"></i></span></span></td>
+    <td class="r">${usd(atRisk(r))}</td>
+    <td class="r">${n(r.effective_partner_count, 1)}<span class="sub"> / ${n(r.partner_count)}</span></td>
+    <td><span class="st ${cls}"><b>${h ? h.w : "Spread"}</b>${extra > 0 ? `<span class="sub">+${extra}</span>` : ""}</span></td>
   </tr>`;
 }
 
-// ---------------------------------------------------------------------------
-// detail
-// ---------------------------------------------------------------------------
-async function openDetail(hs) {
-  selected = hs;
-  renderPortfolio();
-  const card = $("detailCard");
-  card.classList.remove("hidden");
-  const row = portfolio.rows.find((r) => r.hs_code === hs);
-  $("detailTitle").textContent = row ? row.label : "HS " + hs;
-  $("detailSub").textContent = `HS ${hs} · ${portfolio.year}`;
-  $("detailBody").innerHTML = `<p class="empty"><span class="spinner"></span> Fetching the origin breakdown…</p>`;
-  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+function renderRows() {
+  const rows = visible();
+  $("rows").innerHTML = rows.length ? rows.map(rowHtml).join("")
+    : `<tr><td colspan="6" class="note" style="height:60px">No line matches.</td></tr>`;
+  $("count").textContent = `${rows.length} of ${data.rows.length}`;
+  $("segAll").setAttribute("aria-pressed", String(!riskOnly));
+  $("segRisk").setAttribute("aria-pressed", String(riskOnly));
+  $("rows").querySelectorAll("tr.line").forEach(tr =>
+    tr.addEventListener("click", () => toggle(tr.dataset.hs)));
+  if (openHs && rows.some(r => r.hs_code === openHs)) expand(openHs);
+}
 
+/* Detail opens in place. One row at a time, so the list never becomes a wall. */
+function toggle(hs) {
+  openHs = openHs === hs ? null : hs;
+  renderRows();
+}
+
+async function expand(hs) {
+  const tr = $("rows").querySelector(`tr.line[data-hs="${hs}"]`);
+  if (!tr || tr.nextElementSibling?.classList.contains("detail")) return;
+  const host = document.createElement("tr");
+  host.className = "detail";
+  host.innerHTML = `<td colspan="6"><div class="exp"><div class="note">Loading…</div></div></td>`;
+  tr.after(host);
+
+  const row = data.rows.find(r => r.hs_code === hs);
   try {
-    const d = await (await fetch(`/api/commodity/${hs}?year=${$("year").value}`)).json();
-    renderDetail(d, row);
+    const d = await (await fetch(`/api/commodity/${hs}?year=2024`)).json();
+    const flows = d.flows || {}, risk = d.risk || {};
+    const top = (flows.rows || []).slice(0, 5);
+    const all = conds(row);
+
+    host.querySelector(".exp").innerHTML = `
+      <div>
+        <h3>Origins</h3>
+        <table class="mini"><tbody>
+          ${top.map((r, i) => `<tr>
+            <td>${esc(r.partner_name)}${i === 0 ? ' <span class="sub">lead</span>' : ""}</td>
+            <td class="r" style="width:64px">${pct(r.share_of_total_pct, 1)}</td>
+            <td class="r" style="width:64px">${usd(r.value_usd)}</td>
+            <td class="r" style="width:64px">${r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2) + "/kg"}</td>
+          </tr>`).join("")}
+        </tbody></table>
+        ${(flows.rows || []).length > 5
+          ? `<div class="note" style="margin-top:6px">${flows.rows.length - 5} smaller origins not shown.</div>` : ""}
+      </div>
+      <div>
+        <h3>Detail</h3>
+        <dl class="facts">
+          <dt>Imports</dt><dd>${usd(flows.total_value_usd)}</dd>
+          <dt>Effective origins</dt><dd>${n(risk.effective_partner_count, 1)} of ${n(flows.partner_count)}</dd>
+          <dt>Volume swing</dt><dd>${pct(risk.yoy_volatility_pct, 0)} year to year</dd>
+          <dt>Conditions</dt><dd>${all.length
+            ? all.map(c => `<span title="${esc(c.why)}">${c.w}</span>`).join(", ") : "none"}</dd>
+        </dl>
+      </div>
+      <div class="acts">
+        <button class="go" data-open="${esc(hs)}">Open full analysis</button>
+        <span class="note">Costs and ranks alternative origins. Several minutes.</span>
+      </div>`;
+    host.querySelector("[data-open]").addEventListener("click", e => {
+      e.stopPropagation(); openLine(hs);
+    });
   } catch (e) {
-    $("detailBody").innerHTML = `<p class="caveat">Could not load the detail: ${esc(e)}</p>`;
+    host.querySelector(".exp").innerHTML = `<div class="note">Could not load: ${esc(e)}</div>`;
   }
 }
 
-function renderDetail(d, row) {
-  const risk = d.risk || {}, flows = d.flows || {};
-  const kpi = (k, v, u = "") => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="u">${u}</div></div>`;
-
-  const rows = (flows.rows || []).map((r) => `
-    <tr>
-      <td>${esc(r.partner_name)} <span class="hs">${esc(r.partner_iso3)}</span></td>
-      <td class="num">${fmtUsd(r.value_usd)}</td>
-      <td class="num">${fmtPct(r.share_of_total_pct)}</td>
-      <td class="num">${r.net_weight_kg == null ? "—" : fmtNum(r.net_weight_kg / 1000, 0) + " t"}</td>
-      <td class="num">${r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2)}</td>
-    </tr>`).join("");
-
-  const caveats = [
-    ...(flows.notes || []),
-    risk.mirror_gap_pct != null
-      ? `Mirror gap ${risk.mirror_gap_pct.toFixed(1)}%: partners' reported exports differ from Ukraine's reported imports. FOB against CIF makes some gap normal.`
-      : null,
-  ].filter(Boolean);
-
-  $("detailBody").innerHTML = `
-    <div class="kpis">
-      ${kpi("Imports", fmtUsd(flows.total_value_usd), `${fmtNum(flows.partner_count)} origins, ${d.year}`)}
-      ${kpi("HHI", fmtNum(risk.hhi, 0), "10000 = one supplier")}
-      ${kpi("Eff. sources", fmtNum(risk.effective_partner_count, 1), "equally sized equivalent")}
-      ${kpi("Lead share", fmtPct(risk.top_partner_share_pct), esc(risk.top_partner_name || ""))}
-      ${kpi("Volatility", fmtPct(risk.yoy_volatility_pct), "year on year")}
-    </div>
-
-    ${risk.flags?.length ? `<div class="flags" style="margin-bottom:12px">${risk.flags.map(flagPill).join("")}</div>` : ""}
-    ${risk.interpretation ? `<p style="margin:0 0 14px">${esc(risk.interpretation)}</p>` : ""}
-
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr>
-          <th>Origin</th><th class="num">Value</th><th class="num">Share</th>
-          <th class="num">Weight</th><th class="num">Unit value</th>
-        </tr></thead>
-        <tbody>${rows || `<tr><td colspan="5" class="empty">No origins reported.</td></tr>`}</tbody>
-      </table>
-    </div>
-    <p class="note">Unit value is value divided by weight, not a quoted market price.</p>
-
-    ${caveats.length ? `<div class="caveat" style="margin-top:12px">${caveats.map(esc).join("<br>")}</div>` : ""}
-
-    <div style="display:flex;gap:9px;margin-top:14px;align-items:center;flex-wrap:wrap">
-      <button id="runAgentBtn">Run full sourcing analysis</button>
-      <label class="check"><input type="checkbox" id="optReplay"> offline (replay fixtures)</label>
-      <label class="check"><input type="checkbox" id="optPw" checked> attach Playwright MCP</label>
-      <span class="grow"></span>
-      <button class="ghost" id="breakPwBtn"
-        title="Points the browser at an unresolvable host, so a real failure of the existing MCP server surfaces">
-        Demo: break Playwright</button>
-    </div>
-    <p class="note">
-      Runs on the capable model: roughly 10 minutes and a dozen throttled calls. The failure demo
-      changes the input, not the code — the browser is sent to a host that cannot resolve.
-    </p>`;
-
-  $("runAgentBtn").addEventListener("click", () => runAgent(d));
-  $("breakPwBtn").addEventListener("click", () => runAgent(d, { breakPlaywright: true }));
+async function load(refresh = false) {
+  $("rows").innerHTML = Array.from({length: 6}, () => `<tr><td colspan="6" class="sk"></td></tr>`).join("");
+  try {
+    data = await (await fetch(`/api/portfolio?year=2024${refresh ? "&refresh=true" : ""}`)).json();
+    renderStrip(); renderRows();
+  } catch (e) {
+    $("rows").innerHTML = `<tr><td colspan="6" class="note" style="height:60px">Could not load: ${esc(e)}</td></tr>`;
+  }
 }
 
-// ---------------------------------------------------------------------------
-// agent run (SSE)
-// ---------------------------------------------------------------------------
-function runAgent(d, opts = {}) {
-  const hs = d.hs_code, label = d.label;
-  const q = `Where should Ukraine source ${label} (HS ${hs}) from? Assume a 120 tonne shipment. ` +
-    `Reference year ${d.year}. If the current supply is concentrated, look beyond the incumbent leaders.`;
+/* ---------------- drill-down ---------------- */
+function view(v) {
+  $("vList").classList.toggle("hide", v !== "list");
+  $("vLine").classList.toggle("hide", v !== "line");
+  window.scrollTo({ top: 0 });
+}
 
-  const params = new URLSearchParams({ question: q });
-  if ($("optReplay")?.checked) params.set("replay", "true");
-  if ($("optPw") && !$("optPw").checked) params.set("playwright", "false");
-  if (opts.breakPlaywright) params.set("break_playwright", "true");
+async function openLine(hs) {
+  const row = data.rows.find(r => r.hs_code === hs);
+  view("line");
+  $("crumb").textContent = row ? row.label : hs;
+  $("lineBody").innerHTML = `<div class="note">Loading…</div>`;
+  const d = await (await fetch(`/api/commodity/${hs}?year=2024`)).json();
+  const flows = d.flows || {}, risk = d.risk || {};
+  const rows = flows.rows || [];
 
-  $("runCard").classList.remove("hidden");
-  $("runMeta").textContent = `· ${label} · HS ${hs}` +
-    (opts.breakPlaywright ? " · failure demo" : "") +
-    ($("optReplay")?.checked ? " · offline" : "");
-  $("runAnswer").textContent = "";
-  $("trace").innerHTML = "";
-  $("runStatus").innerHTML = `<span class="spinner"></span> starting the agent…`;
-  $("runCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $("lineBody").innerHTML = `
+  <div class="block">
+    <div class="hd">Origins <span class="note" style="font-weight:400">${esc(period(flows.provenance?.as_of || data.period_label))} · HS ${esc(d.hs_code)} · ${rows.length} reporting</span></div>
+    <table>
+      <thead><tr><th>Origin</th><th class="r">Share</th><th class="r">Value</th><th class="r">Weight</th><th class="r">Unit value</th></tr></thead>
+      <tbody>${rows.map((r,i) => `<tr>
+        <td>${esc(r.partner_name)} <span class="hs">${esc(r.partner_iso3)}</span>${i===0?' <span class="sub">lead</span>':""}</td>
+        <td class="r">${pct(r.share_of_total_pct,1)}</td>
+        <td class="r">${usd(r.value_usd)}</td>
+        <td class="r">${r.net_weight_kg == null ? "—" : n(r.net_weight_kg/1000) + " t"}</td>
+        <td class="r">${r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2)}</td>
+      </tr>`).join("")}</tbody>
+    </table>
+    <details><summary>How these numbers were made</summary><div class="bd">
+      ${risk.interpretation ? `<p style="margin:0 0 9px">${esc(risk.interpretation)}</p>` : ""}
+      ${(flows.notes||[]).length ? `<div class="warn">${(flows.notes||[]).map(esc).join("<br>")}</div>` : ""}
+      <p class="note" style="margin:9px 0 0">Unit value is value over weight, not a quoted price.</p>
+    </div></details>
+  </div>
 
-  stream(`/api/run?${params.toString()}`, {
-    onStatus: (e) => {
-      if (e.data?.servers) {
-        const names = Object.keys(e.data.servers).join(" + ");
-        $("runStatus").innerHTML = `<span class="spinner"></span> connected: ${esc(names)}`;
-      } else {
-        $("runStatus").innerHTML = `<span class="spinner"></span> ${esc(e.text || "working")}`;
-      }
+  <div class="block">
+    <div class="hd">Sourcing analysis</div>
+    <div class="bd">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="go" id="run">Run</button>
+        <label class="note"><input type="checkbox" id="optReplay"> offline</label>
+        <label class="note"><input type="checkbox" id="optPw" checked> browser server</label>
+        <span class="grow"></span>
+        <button id="breakPw">Break browser server</button>
+      </div>
+      <p class="note" id="runNote" style="margin:9px 0 0">Ranks alternative origins on cost, logistics, duty and demonstrated supply.</p>
+      <div class="out" id="out" style="margin-top:12px"></div>
+    </div>
+    <details id="logWrap" class="hide"><summary>Steps</summary><div class="bd log" id="log"></div></details>
+  </div>`;
+
+  $("run").addEventListener("click", () => run(d));
+  $("breakPw").addEventListener("click", () => run(d, { broken: true }));
+}
+
+function run(d, opts = {}) {
+  const q = `Where should Ukraine source ${d.label} (HS ${d.hs_code}) from? Assume a 120 tonne shipment. ` +
+            `If current supply is concentrated, look beyond the incumbent leaders.`;
+  const p = new URLSearchParams({ question: q });
+  if ($("optReplay").checked) p.set("replay", "true");
+  if (!$("optPw").checked) p.set("playwright", "false");
+  if (opts.broken) p.set("break_playwright", "true");
+
+  $("out").textContent = "";
+  $("log").innerHTML = "";
+  $("logWrap").classList.remove("hide");
+  $("logWrap").open = true;
+  $("runNote").textContent = opts.broken ? "Failure demo — running…" : "Running…";
+  $("run").disabled = true;
+
+  stream(`/api/run?${p}`, {
+    status: e => { const s = e.data?.servers;
+      $("runNote").textContent = s ? `Connected: ${Object.keys(s).join(", ")}` : (e.text || "working"); },
+    trace: e => {
+      const bad = e.data?.is_error;
+      const div = document.createElement("div");
+      div.innerHTML = `<span class="st2 ${bad ? "bad" : ""}">${e.kind === "tool_call" ? "›" : bad ? "×" : "✓"}</span>
+        <span class="t">${esc(e.server||"")}.${esc(e.tool||"")}</span>`;
+      $("log").appendChild(div);
     },
-    onTrace: traceStep,
-    onText: (e) => { $("runAnswer").textContent = e.text; },
-    onDone: (e) => {
-      const d2 = e.data || {};
-      $("runStatus").innerHTML =
-        `finished · ${d2.turns ?? "?"} turns · ${((d2.duration_ms || 0) / 1000).toFixed(0)}s` +
-        (d2.cost_usd ? ` · $${d2.cost_usd.toFixed(3)}` : "");
-    },
-    onError: (e) => { $("runStatus").innerHTML = `<span class="pill bad">▲ failed</span> ${esc(e.text)}`; },
+    text: e => { $("out").textContent = e.text; },
+    done: e => { const t = e.data||{};
+      $("runNote").textContent = `Done · ${t.turns ?? "?"} steps · ${Math.round((t.duration_ms||0)/1000)}s${t.cost_usd ? ` · $${t.cost_usd.toFixed(2)}` : ""}`;
+      $("run").disabled = false; },
+    error: e => { $("runNote").textContent = "Failed: " + e.text; $("run").disabled = false; },
   });
 }
 
-function traceStep(e) {
-  const cls = e.kind === "tool_call" ? "call" : (e.data?.is_error ? "err" : "res");
-  const div = document.createElement("div");
-  div.className = "step " + cls;
-  const detail = e.kind === "tool_call" ? e.data?.arguments : e.data?.content;
-  div.innerHTML = `
-    <div class="step-head">
-      <span class="srv">${esc(e.server || "")}</span>
-      <span class="tool">${esc(e.tool || "")}</span>
-      <span class="pill ${e.kind === "tool_call" ? "" : (e.data?.is_error ? "bad" : "ok")}">
-        ${e.kind === "tool_call" ? "call" : (e.data?.is_error ? "▲ error" : "✓ result")}</span>
-    </div>
-    ${detail ? `<pre>${esc(JSON.stringify(detail, null, 1)).slice(0, 1600)}</pre>` : ""}`;
-  $("trace").appendChild(div);
-  $("trace").scrollTop = $("trace").scrollHeight;
-}
-
-// One shared SSE reader. Opening a second run closes the first, so two streams
-// can never interleave into the same panel.
-function stream(url, handlers) {
-  if (liveStream) liveStream.close();
-  const es = new EventSource(url);
-  liveStream = es;
-  es.onmessage = (m) => {
+function stream(url, on) {
+  if (live) live.close();
+  const es = new EventSource(url); live = es;
+  es.onmessage = m => {
     const e = JSON.parse(m.data);
-    if (e.kind === "status") handlers.onStatus?.(e);
-    else if (e.kind === "tool_call" || e.kind === "tool_result") handlers.onTrace?.(e);
-    else if (e.kind === "text") handlers.onText?.(e);
-    else if (e.kind === "done") handlers.onDone?.(e);
-    else if (e.kind === "error") handlers.onError?.(e);
+    ({ status: on.status, tool_call: on.trace, tool_result: on.trace,
+       text: on.text, done: on.done, error: on.error })[e.kind]?.(e);
   };
-  es.addEventListener("end", () => { es.close(); if (liveStream === es) liveStream = null; });
-  es.onerror = () => { es.close(); if (liveStream === es) liveStream = null; };
-  return es;
+  const close = () => { es.close(); if (live === es) live = null; };
+  es.addEventListener("end", close); es.onerror = close;
 }
 
-// ---------------------------------------------------------------------------
-// chat
-// ---------------------------------------------------------------------------
-function chatContext() {
-  // Hand the model the numbers already on screen, so a follow-up question does
-  // not pay for the whole analysis again just to restate one of them.
-  if (!portfolio) return "";
-  const lines = portfolio.rows.map((r) =>
-    `${r.label} (HS ${r.hs_code}): ${fmtUsd(r.total_value_usd)} imports, ` +
-    `lead ${r.top_partner_iso3 || "?"} ${fmtPct(r.top_partner_share_pct)}, ` +
-    `HHI ${fmtNum(r.hhi)}, effective sources ${fmtNum(r.effective_partner_count, 1)}, ` +
-    `flags ${r.flags?.join("/") || "none"}`);
-  return `Portfolio on screen (${portfolio.year} data, source UN Comtrade via the trade-sourcing MCP server):\n` +
-    lines.join("\n");
+/* ---------------- ask ---------------- */
+function ctx() {
+  if (!data) return "";
+  return `Lines on screen (${period(data.period_label)}, UN Comtrade via the trade-sourcing MCP server):\n` +
+    data.rows.map(r => `${r.label} (HS ${r.hs_code}): ${usd(r.total_value_usd)} imports, lead ` +
+      `${r.top_partner_iso3} ${pct(r.top_partner_share_pct,1)}, ${usd(atRisk(r))} with the lead, ` +
+      `effective origins ${n(r.effective_partner_count,1)}, conditions ${r.flags?.join("/") || "none"}`).join("\n");
 }
 
-async function sendChat() {
-  const input = $("chatInput");
-  const q = input.value.trim();
-  if (!q) return;
-  input.value = "";
-  const log = $("chatLog");
-  log.querySelector(".empty")?.remove();
-
-  const mine = document.createElement("div");
-  mine.className = "msg me";
-  mine.textContent = q;
-  log.appendChild(mine);
-
-  const bot = document.createElement("div");
-  bot.className = "msg bot thinking";
-  bot.textContent = "thinking…";
-  log.appendChild(bot);
-  log.scrollTop = log.scrollHeight;
-
-  $("chatSend").disabled = true;
-  stream(`/api/chat?question=${encodeURIComponent(q)}&context=${encodeURIComponent(chatContext())}`, {
-    onText: (e) => { bot.className = "msg bot"; bot.textContent = e.text; log.scrollTop = log.scrollHeight; },
-    onTrace: (e) => {
-      if (e.kind === "tool_call") { bot.textContent = `checking ${e.tool}…`; }
-    },
-    onDone: () => { $("chatSend").disabled = false; bot.className = "msg bot"; },
-    onError: (e) => {
-      bot.className = "msg bot";
-      bot.textContent = "failed: " + e.text;
-      $("chatSend").disabled = false;
-    },
+function send() {
+  const q = $("ask").value.trim(); if (!q) return;
+  $("ask").value = "";
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<div class="q">${esc(q)}</div><div class="a">…</div>`;
+  $("qa").appendChild(wrap);
+  const a = wrap.querySelector(".a");
+  $("askBtn").disabled = true;
+  stream(`/api/chat?question=${encodeURIComponent(q)}&context=${encodeURIComponent(ctx())}`, {
+    trace: e => { if (e.kind === "tool_call") a.textContent = `checking ${e.tool}…`; },
+    text: e => { a.textContent = e.text; },
+    done: () => { $("askBtn").disabled = false; },
+    error: e => { a.textContent = "failed: " + e.text; $("askBtn").disabled = false; },
   });
 }
 
-// ---------------------------------------------------------------------------
-// wiring
-// ---------------------------------------------------------------------------
-$("fSearch").addEventListener("input", () => portfolio && renderPortfolio());
-$("fGroup").addEventListener("change", () => portfolio && renderPortfolio());
-$("fRisk").addEventListener("change", () => portfolio && renderPortfolio());
-$("year").addEventListener("change", () => { selected = null; $("detailCard").classList.add("hidden"); loadPortfolio(); });
-$("refreshBtn").addEventListener("click", () => loadPortfolio(true));
-$("closeDetail").addEventListener("click", () => {
-  $("detailCard").classList.add("hidden"); selected = null; renderPortfolio();
-});
-$("chatSend").addEventListener("click", sendChat);
-$("chatInput").addEventListener("keydown", (ev) => {
-  if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); sendChat(); }
+/* ---------------- sources ---------------- */
+async function sources() {
+  try {
+    const h = await (await fetch("/api/health")).json();
+    $("sysBody").innerHTML = Object.entries(h.servers).map(([k,s]) =>
+      `<div style="margin-bottom:7px"><span class="log" style="color:var(--ink)">${esc(k)}</span>
+       <span class="note"> ${esc(s.transport)} · ${s.declared_tools.length} tools</span>
+       <div class="note">${s.declared_tools.map(esc).join(", ")}</div></div>`).join("") +
+      `<div class="note">mode ${esc(h.data_mode)} · model ${esc(h.model)} · credential ${esc(h.credential)}</div>`;
+  } catch (e) { $("sysBody").textContent = String(e); }
+}
+
+$("segAll").addEventListener("click", () => { riskOnly = false; renderRows(); });
+$("segRisk").addEventListener("click", () => { riskOnly = true; renderRows(); });
+$("refresh").addEventListener("click", () => load(true));
+$("back").addEventListener("click", () => view("list"));
+$("askBtn").addEventListener("click", send);
+$("ask").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+$("sysBtn").addEventListener("click", () => {
+  view("list");
+  $("sysWrap").open = !$("sysWrap").open;
+  if ($("sysWrap").open) $("sysWrap").scrollIntoView({ block: "center" });
 });
 
-loadHealth();
-loadPortfolio();
+sources(); load();
 </script>
 </body>
 </html>
