@@ -62,16 +62,21 @@ Open <http://127.0.0.1:8000>. The badge top right shows data mode, and the *MCP 
 panel on the right shows both servers, their transport, their tool counts, the analysis model
 and which credential source is in use.
 
-The landing screen is the **portfolio**: six tracked import lines, worst-first, with lead
-supplier share, effective number of sources, volatility and risk flags. Lead with what it says
-rather than with the architecture:
+The landing screen is the **worklist**: six import lines, one row each, ordered by risk band and
+then by money at stake. Lead with the summary strip, not the architecture:
 
-> *Three of these six lines lead back to the same supplier. That is a shared point of failure,
-> and you cannot see it by looking at any one line.*
+> *554m dollars imported over the last twelve months. 346m of that — 62 percent — sits with a
+> single origin per line. And Türkiye leads three of the six, 183m of the exposure: lines that
+> would fail together. You cannot see that by looking at any one product.*
 
 Then say where the numbers came from: *this screen is computed by the custom MCP server over a
-plain stdio session — no model in the loop. The agent is what you press afterwards, on one line,
+plain stdio session — no model in the loop. The agent is what you press afterwards, on one row,
 deliberately.*
+
+**If asked why not the latest calendar year:** the annual series lags about two years, so the
+list runs on a rolling twelve-month window from monthly reports, ending at the month the source
+has actually published to. It matters — on annual 2024 tomatoes read 71.8 percent Turkish and
+carried a single-source flag; on the window they read 64.6 percent and do not.
 
 Architecture in one breath: *three processes. The agent has no built-in tools at all — no shell,
 no filesystem — so its whole capability surface is these two MCP servers.*
@@ -82,7 +87,8 @@ no filesystem — so its whole capability surface is these two MCP servers.*
 
 > Requirements 2, 3, 4, 5.
 
-Click the worst line (**Tomatoes, fresh**), then press **Run full sourcing analysis**.
+Open the top row (**Mandarins** — the largest single-source exposure), then **Open full
+analysis** and **Run**.
 
 - **Requirement 2 — both connections discovered.** The *MCP connections* panel fills in from the
   live session: `trade-sourcing` with 5 tools, `playwright` with 3. Say that this is read from
@@ -121,15 +127,20 @@ Click the worst line (**Tomatoes, fresh**), then press **Run full sourcing analy
 
 Let the same run finish. Walk the trace top to bottom:
 
-Figures below are for **Tomatoes, fresh (HS 070200), 2024** — the line Segment 2 opened. The
-grape case (HS 080610: 20 origins, Türkiye 64.8 %, 43 M USD, HHI 4,503) is the fully rehearsed
-fallback if the live run misbehaves.
+Figures below are for **Tomatoes, fresh (HS 070200)** over the rolling window Oct 2024 to Sep
+2025 — the line Segment 2 opened. The grape case (HS 080610: 23 origins, Türkiye 58.0 %, 50m USD,
+HHI 3,624) is the fully rehearsed fallback if the live run misbehaves.
+
+One thing to say before they spot it: the **analysis** still runs on the annual basis, so the
+agent's own figures are the 2024 ones and will differ from the screen. That is deliberate — the
+window is the currency view, the annual year is the settled one, and every result names which
+basis produced it.
 
 | Step | What to say |
 |---|---|
 | `validate_sourcing_brief` | Resolved the request to HS 070200 against the 6,939-entry HS2022 nomenclature. Offline — `openWorldHint: false`. |
-| `get_import_flows` | 17 origins, Türkiye 71.8 %, about 113 M USD total. Note `rows_dropped_as_duplicates: 18`. |
-| `assess_supply_concentration_risk` | HHI 5,356 — equivalent to **1.9** equally sized origins, on a 113 M USD line. `SINGLE_SOURCE` **and** `HIGH_CONCENTRATION`. |
+| `get_import_flows` | 16 origins, Türkiye 64.6 %, about 126m USD on the window. Duplicate rows are reported dropped, never silently collapsed. |
+| `assess_supply_concentration_risk` | HHI 4,469 — equivalent to **2.2** equally sized origins, on a 126m USD line. `HIGH_CONCENTRATION`. Volatility comes from the annual series and the result says so. |
 | **the decision** | This flag is what changes the next step: the agent widens its candidate list beyond the incumbents and reweights, because on a concentrated product the goal is diversification. Point at the weights it chose and its stated reason. |
 | `estimate_landed_cost` | Itemised: goods, freight, duty **on the CIF value**, brokerage. Each line labelled measured or estimated. |
 | `rank_sourcing_countries` | The score decomposition. Contributions sum to the score. |
@@ -154,8 +165,8 @@ instructions tell the model not to retry it.
 
 > Requirement 9: demonstrate a realistic failure of the existing MCP server.
 
-Press **Demo: break Playwright**. This points the browser at an unresolvable host — the
-*input* changes, nothing is faked.
+Open a row, press **Open full analysis**, then **Break browser server**. This points the browser
+at an unresolvable host — the *input* changes, nothing is faked.
 
 What to show: the `browser_navigate` step turns red with a navigation error; the agent states
 that the current-year figure is unavailable, marks the recency check as failed, and **still
@@ -166,7 +177,7 @@ contributing input, not a precondition.*
 If asked for a second failure mode, stop the Playwright process in terminal 2 and re-run: the
 connection itself fails rather than the navigation.
 
-**Offline mode.** Tick **Offline (replay fixtures)** and re-run, or in a terminal:
+**Offline mode.** Tick **offline** in the analysis block and re-run, or in a terminal:
 
 ```bash
 REPLAY=1 python scripts/smoke_tools.py
@@ -249,9 +260,9 @@ the system.
 | Symptom | Do this |
 |---|---|
 | Agent fails to authenticate | `claude` → `/login`, or set `ANTHROPIC_API_KEY` in `.env`. The badge shows which source is in use. |
-| Comtrade returns `RATE_LIMITED` | Tick **offline (replay fixtures)** in the line detail and re-run; explain the 1 req/s limit and the retry with backoff. |
+| Comtrade returns `RATE_LIMITED` | Tick **offline** in the analysis block and re-run; explain the 1 req/s limit and the retry with backoff. |
 | WITS times out | Expected; it is slow. The tool records the assumption and continues with the duty as a lower bound. |
 | `npx` not found | Node is not on the PATH. Fall back to explaining the Playwright contract from the docs, and demonstrate the failure path instead. |
 | Nothing renders in the UI | Fall back to `python scripts/smoke_tools.py` — the same tools, in the terminal. |
-| The portfolio is slow on first load | Expected: six lines is a dozen throttled Comtrade calls on a cold cache, about 40 s. It is cached per year afterwards, and `Refresh from server` forces a re-query. |
-| A portfolio row shows `partial` | Flows resolved but the risk call did not. Say so — the row is deliberately marked rather than shown with a blank HHI, because a missing number must not read as a low one. |
+| The worklist is slow on first load | Expected: six lines over a twelve-month window is roughly eighty throttled Comtrade calls on a cold cache. Cached per year afterwards — warm it is about 3 s — and **Refresh** forces a re-query. |
+| A row shows `incomplete` | Flows resolved but the risk call did not. Say so — the row is deliberately marked rather than shown with a blank figure, because a missing number must not read as a low one. |

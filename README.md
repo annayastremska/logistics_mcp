@@ -17,18 +17,25 @@ API credentials of any kind.
 
 ## What you see first
 
-The landing screen is a **portfolio, not a chat box**. Six tracked import lines are shown
-worst-first, each with its lead supplier's share, the effective number of sources
-(`10000 / HHI`), year-on-year volatility and risk flags. Filter by product, group or
-severity; open a line for its full origin breakdown; run the agent from there when a line
-warrants it. Follow-up questions go to a side panel on a smaller model.
+A worklist, not a chat box. Six tracked import lines, one row each, ordered by risk band and
+then by money: lead supplier, its share, **what that share is worth**, how many effective
+origins sit behind it, and a one-word status. Opening a row expands its origin detail in
+place; the agent run is a deliberate action from there.
 
-That screen is computed, not reasoned about: `web/portfolio.py` opens one MCP stdio session
-to the same custom server the agent uses and calls the tools directly, with no model in the
-loop. The first screen a visitor loads should not wait on an agent or cost anything.
+Above the list, a strip of aggregates. On the current window: **554m USD imported, 346m of it
+concentrated in a single origin per line (62%), and Türkiye leading 3 of the 6 lines — 183m of
+the exposure.** That last figure is the one no per-product report can show: lines that would
+fail together.
 
-It also surfaces one thing no single row can show — a supplier that several independent
-lines all lean on. On 2024 data, Türkiye leads three of the six.
+The list is computed, not reasoned about. `web/portfolio.py` opens one MCP stdio session to the
+same custom server the agent uses and calls the tools directly, with no model in the loop. The
+first screen a visitor loads should not wait on an agent or cost anything.
+
+**Currency.** The annual trade series lags by about two years, so the list runs on a rolling
+twelve-month window built from monthly reports, ending at whatever month the source has actually
+published to — currently **Oct 2024 to Sep 2025**, roughly eleven months ahead of the latest
+complete annual year. That is not cosmetic: on annual 2024 data fresh tomatoes read 71.8 percent
+Turkish and carried a single-source flag; on the window they read 64.6 percent and do not.
 
 ---
 
@@ -227,8 +234,10 @@ Stated up front rather than buried:
   modelled figure is labelled `estimated` in the tool output.
 - **Duty is the MFN rate.** WITS returns HTTP 404 for preferential rates, so agreements such
   as the EU DCFTA are flagged as possible but not applied.
-- **Comtrade annual data lags by about two years.** In August 2026 Ukraine had reported 2024
-  but not 2025.
+- **The annual series lags by about two years.** In August 2026 Ukraine had reported 2024 but
+  not 2025. The monthly series reaches September 2025, which is what the worklist uses. The
+  landed-cost and ranking tools still run on the annual basis, and duty comes from an older
+  observation again — each result names the basis it used.
 - **Unit values are not prices.** A Comtrade unit value is total value over total weight, not
   a quotation.
 - **The Logistics Performance Index is not an annual series.** 2022 is the latest observation.

@@ -192,7 +192,7 @@ writing the quickstart. Ordered by risk of the defect silently returning.
 - [x] T065 [P] Add a regression test asserting a recording is written on a warm cache hit, in tests/test_http_transport.py
 - [x] T066 [P] Add a regression test asserting the tariff fallback survives one missing recording and raises when all are missing, in tests/test_http_transport.py
 - [x] T067 [P] Add a regression test asserting the capability server is spawned under the running interpreter, in tests/test_agent_config.py
-- [ ] T068 Record fixtures for reference years 2023 and 2022, or restrict the year selector to years with recordings — offline currently covers 2024 only, so selecting another year fails, in web/index.html and fixtures/
+- [ ] T068 Record fixtures for a second reference window, so offline is not pinned to one period — the year selector was removed in the interface rebuild, which hid the problem rather than fixing it, in fixtures/
 - [ ] T069 Run /speckit-converge to check the delivered system against this specification rather than assuming they agree
 
 ---

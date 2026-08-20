@@ -83,7 +83,7 @@ substitute a default.
 
 ---
 
-## 4. The portfolio, offline and deterministic (1 minute)
+## 4. The worklist, offline and deterministic (1 minute)
 
 *Validates FR-001, FR-006 and SC-004.*
 
@@ -91,20 +91,29 @@ substitute a default.
 SOURCING_MODE=replay python -m web.portfolio
 ```
 
-**Expect** all six lines, worst-first, matching these figures exactly — offline they are fixed, so
-any difference is a regression:
+**Expect** `basis: trailing_12m covering 202410-202509`, then all six lines worst-first, matching
+these figures exactly — offline they are fixed, so any difference is a regression:
 
-| Line | Imports | Lead | HHI | Flags |
-|---|---|---|---|---|
-| Tomatoes 070200 | $113.2M | TUR 71.8% | 5,356 | `SINGLE_SOURCE`, `HIGH_CONCENTRATION` |
-| Mandarins 080521 | $112.9M | TUR 75.8% | 5,850 | `SINGLE_SOURCE`, `HIGH_CONCENTRATION` |
-| Almonds 080212 | $15.0M | USA 94.0% | 8,865 | `SINGLE_SOURCE`, `HIGH_CONCENTRATION`, `VOLATILE_SUPPLY`, `MIRROR_DISCREPANCY` |
-| Bananas 080390 | $201.9M | ECU 58.0% | 3,959 | `HIGH_CONCENTRATION`, `MIRROR_DISCREPANCY` |
-| Grapes 080610 | $43.0M | TUR 64.8% | 4,503 | `HIGH_CONCENTRATION` |
-| Kiwifruit 081050 | $22.3M | GRC 64.4% | 4,552 | `HIGH_CONCENTRATION`, `VOLATILE_SUPPLY` |
+| Line | Imports | Lead | HHI | Effective | Flags |
+|---|---|---|---|---|---|
+| Mandarins 080521 | $98M | TUR 73.4% | 5,516 | 1.8 / 19 | `SINGLE_SOURCE`, `HIGH_CONCENTRATION` |
+| Almonds 080212 | $19M | USA 98.2% | 9,641 | 1.0 / 9 | `SINGLE_SOURCE`, `HIGH_CONCENTRATION`, `VOLATILE_SUPPLY`, `MIRROR_DISCREPANCY` |
+| Bananas 080390 | $231M | ECU 54.1% | 3,728 | 2.7 / 17 | `HIGH_CONCENTRATION`, `MIRROR_DISCREPANCY` |
+| Tomatoes 070200 | $126M | TUR 64.6% | 4,469 | 2.2 / 16 | `HIGH_CONCENTRATION` |
+| Grapes 080610 | $50M | TUR 58.0% | 3,624 | 2.8 / 23 | `HIGH_CONCENTRATION` |
+| Kiwifruit 081050 | $29M | GRC 65.7% | 4,758 | 2.1 / 15 | `HIGH_CONCENTRATION`, `VOLATILE_SUPPLY` |
 
 Run it twice: the figures must be identical. Drop `SOURCING_MODE=replay` and they must match live
 as well.
+
+**Then check the basis is doing something.** The same six lines on the annual year they replaced:
+
+```bash
+SOURCING_MODE=replay python -c "import asyncio,sys; sys.path.insert(0,'.'); from web.portfolio import build_portfolio; r=asyncio.run(build_portfolio(2024, window=False)); [print(x['hs_code'], x['top_partner_iso3'], round(x['top_partner_share_pct'],1), x['flags']) for x in r['rows']]"
+```
+
+**Expect** tomatoes at **71.8%** with `SINGLE_SOURCE`, against 64.6% and no such flag on the
+window. If the two bases agree exactly, the window is not being applied.
 
 ---
 
@@ -118,25 +127,30 @@ python -m web.app          # http://127.0.0.1:8000
 
 **Expect on the landing screen**, with nothing typed:
 
-- Six lines, worst-first, with lead share, effective source count, volatility and flags.
-- Under the table: *"Across these lines, **TUR** leads 3 of them …"* — the shared dependency that
-  no single row reveals. This is SC-003.
-- The MCP connections panel showing `trade-sourcing` with 5 tools and `playwright` with 3, read
-  from the live session rather than from configuration.
+- A summary strip reading **6 lines · $554m imports · $346m concentrated in one origin (62%) ·
+  Türkiye, 3 lines, $183m · 2 of 6 need attention**. The Türkiye cell is SC-003 — the shared
+  dependency no single row reveals.
+- Six rows, one per line, ordered by risk band then by money at stake. Mandarins first (largest
+  single-source exposure), then almonds; bananas above tomatoes on money.
 - Warm load under 5 seconds. Cold is bounded by the upstream one-request-per-second limit.
 
-**Then check what should *not* be there**: no question box as the entry point. The portfolio is the
-entry point.
+**Then check what should *not* be there**: no question box as the entry point, and no prose
+explaining the screen. The list is the entry point and the figures are the argument.
 
-**Filters**: narrowing to *Single source only* leaves exactly the three `SINGLE_SOURCE` lines and
-the header restates the shown-versus-total count.
+**Filter**: *Needs attention* must actually narrow — 2 of 6, the two single-source lines. A filter
+matching every row is a filter doing nothing, which is what "any flag" did.
 
-**Accessibility**: view in greyscale. Every severity must still be distinguishable — each flag
-carries a glyph (`▲`, `~`, `≠`, `·`) as well as a colour.
+**Progressive disclosure**: click a row. Detail opens **in place**, not on another screen: the top
+five origins with shares and unit values, and the conditions kept off the list row. The status
+cell shows one word plus `+n` for the rest rather than stacking four badges.
 
-**Line detail**: click any row. Expect the full origin table with shares, quantities and unit
-values, the plain-language concentration reading, and the source caveats on screen. For tomatoes:
-17 origins, Türkiye at $81.2M / 71.8%, and a note that 18 duplicate rows were collapsed.
+**Accessibility**: view in greyscale, and check contrast. Status is a coloured rule plus a word, so
+severity survives without colour. Every text token clears 4.5:1 on both surfaces in both modes;
+interactive boundaries clear 3:1 (3.33 light, 4.16 dark) while row rules stay deliberately lighter,
+being decorative.
+
+**Full line view**: from the expanded row, *Open full analysis*. Expect every reporting origin with
+share, value, weight and unit value, and the source caveats behind one disclosure.
 
 ---
 
