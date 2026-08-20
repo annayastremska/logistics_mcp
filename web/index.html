@@ -6,62 +6,49 @@
 <title>Sourcing Risk</title>
 <style>
   /* ===================================================================
-     Built as an analyst's worklist, not a landing page. The rules that
-     keep it out of the generic-template centre of gravity:
+     One job: show a buyer which import lines depend on a single country,
+     what that dependency is worth, and where else the goods already come
+     from. Everything on screen answers one of those three; anything that
+     answered none of them was removed.
 
-       no hero headline, no card grid of equal-weight tiles, no shadows,
-       no blur, no gradient, no hover lift, no filled status pills, and
-       no Inter -- the platform UI face instead.
+     Cards, but not the template kind. What was cut, and why:
+       hero headline with one coloured word -> a strip of measured facts
+       six identical tiles of equal weight -> the worst line leads, at size
+       drop shadows / blur / gradients     -> hairlines, flat surfaces
+       hover lift                          -> border and tint only
+       filled status pills                 -> a rule plus a word
+       Inter                               -> the platform UI face
 
-     Density is the point: a 40px row, hairline rules, right-aligned
-     tabular figures, and detail that opens in place instead of on
-     another screen.
+     Contrast was measured, not judged: every text token clears 4.5:1 on
+     both surfaces in both modes; interactive borders clear 3:1.
      =================================================================== */
   :root {
     color-scheme: light;
-
-    --bg:        #ffffff;
-    --bg-sunk:   #f7f7f5;
-    --bg-hover:  #f2f2ef;
-
-    --ink:       #16150f;
-    --ink-2:     #5c5a52;
-    --ink-3:     #8f8d84;
-
-    --line:      #e6e4dd;   /* row rules: decorative, deliberately light */
-    --line-2:    #cfccc2;   /* header rule */
-    --control:   #8f8d84;   /* interactive boundaries -- 3.33:1, clears the 3:1 gate */
-
-    --sel:       #1a4f8a;
-    --sel-bg:    #eef3f9;
-
-    --crit:      #b3261e;
-    --high:      #a2560f;
-    --mod:       #7a6a12;
-    --ok:        #1d6b2b;
-
-    --bar:       #dedcd4;
+    --bg: #ffffff; --sunk: #f7f7f5; --hover: #f2f2ef;
+    --ink: #16150f; --ink-2: #5c5a52; --ink-3: #8f8d84;
+    --line: #e6e4dd; --control: #8f8d84;
+    --sel: #1a4f8a;
+    --crit: #b3261e; --high: #a2560f; --mod: #7a6a12; --ok: #1d6b2b;
+    --track: #e3e1d9;
     --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #17171a; --bg-sunk: #1e1e21; --bg-hover: #26262a;
+      --bg: #17171a; --sunk: #1e1e21; --hover: #26262a;
       --ink: #f2f1ec; --ink-2: #a8a69e; --ink-3: #7c7a73;
-      --line: #2b2b2f; --line-2: #3d3d42; --control: #7c7a73;  /* 4.16:1 */
-      --sel: #7fb0ea; --sel-bg: #1b2735;
+      --line: #2b2b2f; --control: #7c7a73; --sel: #7fb0ea;
       --crit: #f08a82; --high: #e0a457; --mod: #cfc05a; --ok: #79c489;
-      --bar: #323236;
+      --track: #303034;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #17171a; --bg-sunk: #1e1e21; --bg-hover: #26262a;
+    --bg: #17171a; --sunk: #1e1e21; --hover: #26262a;
     --ink: #f2f1ec; --ink-2: #a8a69e; --ink-3: #7c7a73;
-    --line: #2b2b2f; --line-2: #3d3d42; --control: #7c7a73;
-    --sel: #7fb0ea; --sel-bg: #1b2735;
+    --line: #2b2b2f; --control: #7c7a73; --sel: #7fb0ea;
     --crit: #f08a82; --high: #e0a457; --mod: #cfc05a; --ok: #79c489;
-    --bar: #323236;
+    --track: #303034;
   }
 
   * { box-sizing: border-box; }
@@ -69,277 +56,217 @@
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     display: flex; flex-direction: column;
-    /* Platform UI face. Deliberately not Inter or Roboto. */
     font: 13px/1.45 -apple-system, "Segoe UI Variable Text", "Segoe UI",
           ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
     font-variant-numeric: tabular-nums;
   }
-  h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.005em; }
-  a { color: var(--sel); }
-  :focus-visible { outline: 2px solid var(--sel); outline-offset: -1px; }
+  h1,h2,h3 { margin: 0; font-weight: 600; letter-spacing: -0.008em; }
+  :focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
 
-  /* ---------------- header ---------------- */
+  /* one measured column; every element aligns to its text edge */
+  .wrap { max-width: 1180px; margin: 0 auto; width: 100%; padding: 0 20px; }
+
   header { border-bottom: 1px solid var(--line); }
-  /* The bar spans the window; its contents align to the same column as the
-     table below it, or the brand floats off on its own at wide widths. */
-  header > .wrap { height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 16px; }
-  .name { font-weight: 600; font-size: 13px; letter-spacing: -0.01em; }
-  .name span { color: var(--ink-3); font-weight: 400; margin-left: 7px; }
+  header .wrap { height: 46px; display: flex; align-items: center; gap: 12px; }
+  .name { font-weight: 600; }
+  .name i { font-style: normal; color: var(--ink-3); font-weight: 400; margin-left: 8px; }
   .grow { flex: 1; }
 
   button {
-    appearance: none; font: inherit; cursor: pointer;
-    border: 1px solid var(--control); background: var(--bg); color: var(--ink);
-    height: 26px; padding: 0 10px; border-radius: 4px;
-  }
-  button:hover { background: var(--bg-hover); }
-  button.plain { border-color: transparent; background: none; color: var(--ink-2); }
-  button.plain:hover { background: var(--bg-hover); color: var(--ink); }
-  button.go { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 500; }
-  :root[data-theme="dark"] button.go, :root:not([data-theme="light"]) button.go { color: #14141a; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) button.go { color: #fff; } }
-  button:disabled { opacity: .45; cursor: default; }
-
-  /* segmented control, not chips */
-  .seg { display: inline-flex; border: 1px solid var(--control); border-radius: 4px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; height: 24px; color: var(--ink-2); }
-  .seg button + button { border-left: 1px solid var(--line); }
-  .seg button[aria-pressed="true"] { background: var(--bg-sunk); color: var(--ink); font-weight: 550; }
-
-  /* ---------------- layout ----------------
-     A measured content column, and the leftover width spent on a detail rail
-     rather than on stretching six columns across a monitor. Below 1140px the
-     rail drops under the list and the page reads as one column. */
-  .wrap { max-width: 1400px; margin: 0 auto; width: 100%; }
-  .split { display: grid; grid-template-columns: minmax(0,1fr) 400px; align-items: start; }
-  .split > .rail { border-left: 1px solid var(--line); min-height: 100%; }
-  @media (max-width: 1139px) {
-    .split { grid-template-columns: minmax(0,1fr); }
-    .split > .rail { border-left: 0; border-top: 1px solid var(--line); }
-  }
-
-  /* ---------------- summary strip ---------------- */
-  .strip {
-    display: flex; align-items: stretch; flex-wrap: wrap;
-    border-bottom: 1px solid var(--line); background: var(--bg-sunk);
-  }
-  .strip .cell { padding: 9px 16px; border-right: 1px solid var(--line); min-width: 132px; }
-  .strip .cell:last-child { border-right: 0; }
-  .strip .k {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--ink-3); font-weight: 600;
-  }
-  .strip .v { font-size: 16px; font-weight: 600; letter-spacing: -0.015em; margin-top: 1px; }
-  .strip .v small { font-size: 11.5px; font-weight: 400; color: var(--ink-2); margin-left: 4px; letter-spacing: 0; }
-
-  /* ---------------- toolbar ---------------- */
-  .bar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 16px; border-bottom: 1px solid var(--line);
-  }
-  .count { font-size: 12px; color: var(--ink-3); }
-
-  /* ---------------- table ---------------- */
-  table { width: 100%; border-collapse: collapse; }
-  thead th {
-    position: sticky; top: 0; z-index: 2; background: var(--bg);
-    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--ink-3); font-weight: 600; padding: 7px 12px; height: 28px;
-    border-bottom: 1px solid var(--line-2); white-space: nowrap;
-  }
-  tbody td { padding: 0 12px; height: 40px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  /* Names stay left, every figure sits in one right-hand block, so a row can be
-     read without the eye travelling the width of the screen. */
-  table { table-layout: fixed; }
-  /* Edge cells carry the page gutter so the first column lines up with the
-     brand and the toolbar above it. */
-  thead th:first-child, tbody td:first-child { padding-left: 16px; }
-  thead th:last-child,  tbody td:last-child  { padding-right: 16px; }
-  tbody tr.line { cursor: pointer; }
-  tbody tr.line:hover td { background: var(--bg-hover); }
-  tbody tr.line.open td { background: var(--sel-bg); }
-  .r { text-align: right; }
-  .prod { font-weight: 550; }
-  .hs { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); margin-left: 6px; }
-  .sub { font-size: 11.5px; color: var(--ink-3); }
-
-  /* share cell: bar is scanning aid, number is the fact */
-  .share { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-  .track { width: 46px; height: 3px; background: var(--bar); flex: none; }
-  .track > i { display: block; height: 100%; background: currentColor; }
-
-  /* status: a rule and a word, never a filled pill */
-  .st { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 12px; }
-  .st::before { content: ""; width: 3px; height: 12px; background: currentColor; flex: none; }
-  .c-crit { color: var(--crit); } .c-high { color: var(--high); }
-  .c-mod  { color: var(--mod);  } .c-ok   { color: var(--ok); }
-  .st b { font-weight: 550; color: var(--ink); }
-
-  /* ---------------- detail tables ---------------- */
-  .mini { width: 100%; border-collapse: collapse; }
-  .mini td { height: 24px; padding: 0 8px 0 0; border: 0; font-size: 12.5px; }
-  .mini td.r { padding-right: 0; }
-  .facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font-size: 12.5px; }
-  .facts dt { color: var(--ink-3); white-space: nowrap; }
-  .facts dd { margin: 0; }
-
-  /* ---------------- detail rail ---------------- */
-  .rail .rhead { padding: 11px 14px; border-bottom: 1px solid var(--line); }
-  .rail .rhead b { font-size: 13.5px; }
-  .rail .rhead .sub { display: block; margin-top: 1px; }
-  .rail .sect { padding: 12px 14px; border-bottom: 1px solid var(--line); }
-  .rail .sect h3 {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--ink-3); margin-bottom: 8px; font-weight: 600;
-  }
-  .rail .empty { padding: 22px 14px; color: var(--ink-3); font-size: 12px; }
-
-  /* ---------------- drill-down page ---------------- */
-  .crumbs { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
-  .pad { padding: 16px; }
-  .block { border: 1px solid var(--line); border-radius: 5px; margin-bottom: 12px; }
-  .block > .hd {
-    padding: 9px 13px; border-bottom: 1px solid var(--line); background: var(--bg-sunk);
-    font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px;
-  }
-  .block > .bd { padding: 13px; }
-  .block table td { padding: 0 13px; }
-  .block table th { padding: 7px 13px; }
-
-  details { border-top: 1px solid var(--line); }
-  details > summary {
-    list-style: none; cursor: pointer; padding: 8px 13px; font-size: 12px; color: var(--ink-2);
-    display: flex; align-items: center; gap: 7px;
-  }
-  details > summary::-webkit-details-marker { display: none; }
-  details > summary::before { content: "+"; color: var(--ink-3); font-family: var(--mono); }
-  details[open] > summary::before { content: "−"; }
-  details > summary:hover { color: var(--ink); background: var(--bg-hover); }
-  details .bd { padding: 4px 13px 14px; }
-
-  /* Which columns the order actually follows -- two keys, so a single caret
-     would misreport it. */
-  .ord { font-weight: 400; color: var(--ink-3); font-size: 9.5px; letter-spacing: .04em; margin-left: 3px; }
-  .note { font-size: 11.5px; color: var(--ink-3); }
-  .warn { border-left: 2px solid var(--mod); padding: 7px 11px; font-size: 11.5px; color: var(--ink-2); background: var(--bg-sunk); }
-
-  /* ---------------- run log ---------------- */
-  .log { font-family: var(--mono); font-size: 11.5px; }
-  .log div { display: flex; gap: 10px; padding: 2px 0; color: var(--ink-2); }
-  .log .t { color: var(--ink); }
-  .log .bad { color: var(--crit); }
-  .log .st2 { width: 12px; flex: none; }
-  .out { white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
-
-  /* ---------------- ask ---------------- */
-  .ask { border-top: 1px solid var(--line); padding: 8px 16px; }
-  .ask input {
-    flex: 1; font: inherit; height: 28px; padding: 0 9px;
+    appearance: none; font: inherit; cursor: pointer; height: 27px; padding: 0 11px;
     border: 1px solid var(--control); border-radius: 4px; background: var(--bg); color: var(--ink);
   }
-  .qa { padding: 0 16px 10px; }
-  .qa .q { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+  button:hover { background: var(--hover); }
+  button.q { border-color: transparent; background: none; color: var(--ink-2); }
+  button.q:hover { background: var(--hover); color: var(--ink); }
+  button.go { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 500; }
+  :root[data-theme="dark"] button.go { color: #14141a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.go { color: #14141a; } }
+  button:disabled { opacity: .45; cursor: default; }
+
+  /* ---------- portfolio state, as facts ---------- */
+  .strip { border-bottom: 1px solid var(--line); background: var(--sunk); }
+  .strip .wrap { display: flex; flex-wrap: wrap; }
+  .fact { padding: 10px 22px 10px 0; margin-right: 22px; border-right: 1px solid var(--line); }
+  .fact:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+  .fact .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 600; }
+  .fact .v { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; margin-top: 1px; }
+  .fact .v s { text-decoration: none; font-size: 11.5px; font-weight: 400; color: var(--ink-2); margin-left: 5px; letter-spacing: 0; }
+  .fact.key .v { color: var(--crit); }
+
+  .tools { display: flex; align-items: center; gap: 10px; padding: 13px 0 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--control); border-radius: 4px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; height: 25px; color: var(--ink-2); }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--sunk); color: var(--ink); font-weight: 550; }
+  .cnt { font-size: 12px; color: var(--ink-3); }
+
+  /* ---------- cards, with hierarchy ---------- */
+  .grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px;
+    /* Dense, so the lead card spanning two columns cannot leave a hole at the
+       end of the grid -- an empty cell shows the grid background and reads as
+       a grey slab. */
+    grid-auto-flow: row dense;
+    background: var(--line); border: 1px solid var(--line); border-radius: 5px; overflow: hidden;
+  }
+  @media (max-width: 880px) { .grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 580px) { .grid { grid-template-columns: minmax(0,1fr); } }
+
+  .card {
+    appearance: none; font: inherit; text-align: left; cursor: pointer;
+    background: var(--bg); border: 0; border-radius: 0; height: auto;
+    padding: 14px 16px 15px; position: relative;
+    /* A button centres its own contents, and display:block does not undo it --
+       a short card in a tall row floated in the middle of its cell. */
+    display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  }
+  .card:hover { background: var(--hover); }
+  .card::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: currentColor; }
+  /* Unequal risk should not get equal weight. The worst line takes two
+     columns and answers the next question -- where else? -- without a click. */
+  /* Two columns and two rows: with six lines in three columns that tiles
+     exactly, so hierarchy costs no empty cells. */
+  .card.lead { grid-column: span 2; grid-row: span 2; }
+  @media (max-width: 880px) { .card.lead { grid-column: span 2; grid-row: span 1; } }
+  @media (max-width: 580px) { .card.lead { grid-column: span 1; grid-row: span 1; } }
+
+  .c-crit { color: var(--crit); } .c-high { color: var(--high); }
+  .c-mod { color: var(--mod); }   .c-ok { color: var(--ok); }
+
+  .top { display: flex; align-items: baseline; gap: 8px; }
+  .nm { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .hs { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+  .gp { margin-left: auto; font-size: 11px; color: var(--ink-3); }
+
+  .big { display: flex; align-items: baseline; gap: 6px; margin-top: 13px; }
+  .big em { font-style: normal; font-size: 26px; font-weight: 600; letter-spacing: -0.03em; color: var(--ink); line-height: 1; }
+  .card.lead .big em { font-size: 34px; }
+  .big span { font-size: 12px; color: var(--ink-2); }
+  .who { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+  .who b { color: var(--ink); font-weight: 600; }
+
+  .track { height: 3px; background: var(--track); margin-top: 12px; }
+  .track i { display: block; height: 100%; background: currentColor; }
+
+  .st { display: flex; align-items: baseline; gap: 7px; font-size: 12px; margin-top: 12px; }
+  .st b { font-weight: 550; color: var(--ink); }
+  .st s { text-decoration: none; color: var(--ink-3); }
+
+  .kv { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 12px 0 0; padding-top: 11px; border-top: 1px solid var(--line); }
+  .kv dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; }
+  .kv dd { margin: 2px 0 0; font-size: 13px; font-weight: 550; color: var(--ink); }
+  .kv dd small { display: block; font-size: 11px; font-weight: 400; color: var(--ink-3); margin-top: 1px; }
+
+  .alts { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); }
+  .card.lead .alts { margin-top: auto; }
+  .alts .h { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; margin-bottom: 7px; }
+  .alts table { width: 100%; border-collapse: collapse; }
+  .alts td { padding: 2px 0; font-size: 12.5px; color: var(--ink-2); }
+  .alts td.r { text-align: right; color: var(--ink); }
+
+  /* ---------- one line ---------- */
+  .crumbs { display: flex; align-items: center; gap: 9px; padding: 11px 0; font-size: 12px; color: var(--ink-3); }
+  .block { border: 1px solid var(--line); border-radius: 5px; margin-bottom: 12px; }
+  .block .hd { padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--sunk); font-size: 12px; font-weight: 600; }
+  .block .bd { padding: 14px; }
+  table.data { width: 100%; border-collapse: collapse; }
+  table.data th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; padding: 8px 14px; border-bottom: 1px solid var(--line); }
+  table.data td { padding: 0 14px; height: 34px; border-bottom: 1px solid var(--line); }
+  table.data tr:last-child td { border-bottom: 0; }
+  .r { text-align: right; }
+  .sub { font-size: 11.5px; color: var(--ink-3); }
+
+  details { border-top: 1px solid var(--line); }
+  details summary { list-style: none; cursor: pointer; padding: 9px 14px; font-size: 12px; color: var(--ink-2); display: flex; gap: 7px; align-items: center; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "+"; font-family: var(--mono); color: var(--ink-3); }
+  details[open] summary::before { content: "\2212"; }
+  details summary:hover { color: var(--ink); background: var(--hover); }
+  details .bd { padding: 4px 14px 14px; }
+
+  .note { font-size: 11.5px; color: var(--ink-3); }
+  .warn { border-left: 2px solid var(--mod); padding: 8px 11px; font-size: 11.5px; color: var(--ink-2); background: var(--sunk); }
+  .log { font-family: var(--mono); font-size: 11.5px; }
+  .log div { padding: 2px 0; color: var(--ink-2); }
+  .log .bad { color: var(--crit); }
+  .out { white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
+
+  .ask { border-top: 1px solid var(--line); padding: 9px 0; margin-top: auto; }
+  .ask .wrap { display: flex; gap: 8px; align-items: center; }
+  .ask input { flex: 1; font: inherit; height: 29px; padding: 0 10px; border: 1px solid var(--control); border-radius: 4px; background: var(--bg); color: var(--ink); }
+  .qa .q { font-size: 12px; color: var(--ink-3); margin-top: 12px; }
   .qa .a { font-size: 13px; white-space: pre-wrap; margin-top: 3px; }
 
-  /* The worklist takes the slack, so the ask row rests on the bottom edge
-     instead of floating halfway up an empty page. */
-  #vList, #vLine { flex: 1 1 auto; }
+  #main { flex: 1 1 auto; }
   .hide { display: none !important; }
-  .sk { height: 40px; border-bottom: 1px solid var(--line); background:
-        linear-gradient(90deg, var(--bg) 0%, var(--bg-hover) 50%, var(--bg) 100%); }
+  .sk { background: var(--sunk); height: 176px; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <span class="name">Sourcing Risk <span id="period"></span></span>
-    <span class="grow"></span>
-    <button class="plain" id="sysBtn">Sources</button>
-  </div>
-</header>
+<header><div class="wrap">
+  <span class="name">Sourcing Risk <i id="period"></i></span>
+  <span class="grow"></span>
+  <button class="q" id="sysBtn">Sources</button>
+</div></header>
 
-<div class="wrap"><div class="strip" id="strip"></div></div>
+<div class="strip"><div class="wrap" id="strip"></div></div>
 
-<!-- ============== worklist ============== -->
-<section id="vList" class="wrap split">
- <div>
-  <div class="bar">
-    <div class="seg">
-      <button id="segAll" aria-pressed="true">All</button>
-      <button id="segRisk" aria-pressed="false">Needs attention</button>
+<div id="main">
+  <section id="vList" class="wrap">
+    <div class="tools">
+      <div class="seg">
+        <button id="segAll" aria-pressed="true">All</button>
+        <button id="segRisk" aria-pressed="false">Needs attention</button>
+      </div>
+      <span class="cnt" id="cnt"></span>
+      <span class="grow"></span>
+      <button class="q" id="refresh">Refresh</button>
     </div>
-    <span class="count" id="count"></span>
-    <span class="grow"></span>
-    <button class="plain" id="refresh">Refresh</button>
-  </div>
+    <div class="grid" id="grid"></div>
+    <div class="block" style="margin-top:14px">
+      <details id="sysWrap"><summary>Data sources and connections</summary>
+        <div class="bd" id="sysBody">checking&#8230;</div></details>
+    </div>
+  </section>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width:30%">Line</th>
-        <th style="width:20%">Lead supplier</th>
-        <th class="r" style="width:14%">Share</th>
-        <th class="r" style="width:12%">At risk <span class="ord">2</span></th>
-        <th class="r" style="width:13%">Alternatives</th>
-        <th style="width:23%">Status <span class="ord">1 ↓</span></th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
-
-  <details id="sysWrap">
-    <summary>Data sources and connections</summary>
-    <div class="bd" id="sysBody">checking…</div>
-  </details>
- </div>
- <aside class="rail" id="rail"><div class="empty">Select a line to see where it comes from.</div></aside>
-</section>
-
-<!-- ============== one line ============== -->
-<section id="vLine" class="hide wrap">
-  <div class="crumbs">
-    <button class="plain" id="back">← Lines</button>
-    <span id="crumb"></span>
-  </div>
-  <div class="pad" id="lineBody"></div>
-</section>
-
-<div class="wrap"><div class="qa" id="qa"></div></div>
-<div class="ask">
-  <span class="wrap" style="display:flex;gap:8px;align-items:center">
-    <input id="ask" placeholder="Ask about these lines" autocomplete="off">
-    <button class="go" id="askBtn">Ask</button>
-  </span>
+  <section id="vLine" class="wrap hide">
+    <div class="crumbs"><button class="q" id="back">&#8592; Lines</button><span id="crumb"></span></div>
+    <div id="lineBody"></div>
+  </section>
 </div>
+
+<div class="wrap qa" id="qa"></div>
+<div class="ask"><div class="wrap">
+  <input id="ask" placeholder="Ask about these lines" autocomplete="off">
+  <button class="go" id="askBtn">Ask</button>
+</div></div>
 
 <script>
 "use strict";
 
-/* Server enums are not user language. Each maps to a word an analyst can act
-   on, a severity class, and whether it is worth a place in the worklist's
-   single status cell -- the rest surface when a row is opened. */
+/* Server enums are not buyer language. Each maps to a word that can be acted
+   on, a severity, and whether it belongs on the card face -- the rest surface
+   on the line view. Four badges on a tile is how the last version became
+   unreadable. */
 const COND = {
-  SINGLE_SOURCE:          { w: "Single source",   c: "c-crit", rank: 4, list: true,
-                            why: "One country supplies over 40% of this line." },
-  HIGH_CONCENTRATION:     { w: "Concentrated",    c: "c-high", rank: 3, list: true,
+  SINGLE_SOURCE:          { w: "Single source", c: "c-crit", rank: 4, face: true,
+                            why: "One country supplies over 70% of this line." },
+  HIGH_CONCENTRATION:     { w: "Concentrated",  c: "c-high", rank: 3, face: true,
                             why: "Supply sits with very few countries." },
-  MODERATE_CONCENTRATION: { w: "Moderate",        c: "c-mod",  rank: 2, list: true,
+  MODERATE_CONCENTRATION: { w: "Moderate",      c: "c-mod",  rank: 2, face: true,
                             why: "Supply is moderately concentrated." },
-  VOLATILE_SUPPLY:        { w: "Volumes swing",   c: "c-mod",  rank: 2, list: false,
+  VOLATILE_SUPPLY:        { w: "Volumes swing", c: "c-mod",  rank: 2, face: false,
                             why: "Volumes move sharply year to year." },
-  MIRROR_DISCREPANCY:     { w: "Reporting gap",   c: "c-mod",  rank: 1, list: false,
+  MIRROR_DISCREPANCY:     { w: "Reporting gap", c: "c-mod",  rank: 1, face: false,
                             why: "Partner export reports disagree with Ukraine's import figures." },
-  THIN_DATA:              { w: "Thin data",       c: "c-mod",  rank: 1, list: false,
+  THIN_DATA:              { w: "Thin data",     c: "c-mod",  rank: 1, face: false,
                             why: "Too few reporting origins to be confident." },
 };
 
-/* The threshold the filter uses. Everything in this portfolio is concentrated
-   to some degree, so filtering on "has any flag" returned all six rows and the
-   control did nothing. Single-source is the band that warrants action. */
-const ATTENTION = 4;
-
-let data = null, riskOnly = false, openHs = null, live = null;
+const ATTENTION = 4;     // single-source. "Any flag" matched all six rows.
+let data = null, riskOnly = false, live = null;
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -351,166 +278,119 @@ const pct = (v, d = 0) => v == null ? "—" : v.toFixed(d) + "%";
 const n = (v, d = 0) => v == null ? "—" : v.toLocaleString("en-US", { maximumFractionDigits: d });
 
 const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-function period(label) {
-  if (!label) return "";
-  const one = p => `${MON[+p.slice(4)-1]} ${p.slice(2,4)}`;
-  const m = String(label).match(/^(\d{6})-(\d{6})$/);
-  return m ? `${one(m[1])}–${one(m[2])}` : String(label);
-}
+const period = (l) => {
+  if (!l) return "";
+  const one = p => MON[+p.slice(4)-1] + " " + p.slice(2,4);
+  const m = String(l).match(/^(\d{6})-(\d{6})$/);
+  return m ? one(m[1]) + "–" + one(m[2]) : String(l);
+};
 
-/* Money the lead supplier controls. Share alone ranks a $19m line above a
-   $231m one; a buyer allocating attention needs the money. */
+/* Money the lead supplier controls. Ranking on share alone puts a $19m line
+   above a $231m one, which is backwards for allocating attention. */
 const atRisk = (r) => (r.total_value_usd == null || r.top_partner_share_pct == null)
   ? null : r.total_value_usd * r.top_partner_share_pct / 100;
-
 const conds = (r) => (r.flags || []).map(f => COND[f]).filter(Boolean).sort((a,b) => b.rank - a.rank);
-const headline = (r) => conds(r).find(c => c.list) || null;
+const face = (r) => conds(r).find(c => c.face) || null;
+const shortName = (r) => r.label.replace(/,\s*(fresh|shelled|in shell)$/i, "");
 
-/* ---------------- strip: aggregate facts, no prose ---------------- */
-function renderStrip() {
+/* ---------------- portfolio state ---------------- */
+function strip() {
   const rows = data.rows.filter(r => r.top_partner_share_pct != null);
   const total = rows.reduce((s,r) => s + (r.total_value_usd||0), 0);
-  const risk = rows.reduce((s,r) => s + (atRisk(r)||0), 0);
-
+  const risk  = rows.reduce((s,r) => s + (atRisk(r)||0), 0);
   const byLead = {};
   rows.forEach(r => (byLead[r.top_partner_name || r.top_partner_iso3] ??= []).push(r));
-  const shared = Object.entries(byLead).sort((a,b) => b[1].length - a[1].length)[0];
-  const sharedRisk = shared ? shared[1].reduce((s,r) => s + (atRisk(r)||0), 0) : 0;
-  const flagged = rows.filter(r => (r.severity||0) >= ATTENTION).length;
+  const top = Object.entries(byLead).sort((a,b) => b[1].length - a[1].length)[0];
+  const topRisk = top ? top[1].reduce((s,r) => s + (atRisk(r)||0), 0) : 0;
 
-  const cell = (k, v, s) => `<div class="cell"><div class="k">${k}</div>
-    <div class="v">${v}${s ? `<small>${s}</small>` : ""}</div></div>`;
+  const f = (k, v, s, key) => '<div class="fact' + (key ? " key" : "") + '"><div class="k">' + k +
+    '</div><div class="v">' + v + (s ? "<s>" + s + "</s>" : "") + "</div></div>";
 
   $("strip").innerHTML =
-    cell("Lines", rows.length, `of ${data.rows.length}`) +
-    cell("Imports", usd(total), "") +
-    cell("Concentrated in one origin", usd(risk), total ? `${Math.round(risk/total*100)}%` : "") +
-    (shared && shared[1].length > 1
-      ? cell("Largest single origin", esc(shared[0]), `${shared[1].length} lines · ${usd(sharedRisk)}`)
+    f("Imports", usd(total), period(data.period_label)) +
+    f("Held by one origin", usd(risk), total ? Math.round(risk/total*100) + "%" : "", true) +
+    (top && top[1].length > 1
+      ? f("Largest single origin", esc(top[0]), top[1].length + " lines · " + usd(topRisk))
       : "") +
-    cell("Needs attention", flagged, `of ${rows.length}`);
-
+    f("Needs attention", rows.filter(r => (r.severity||0) >= ATTENTION).length, "of " + rows.length);
   $("period").textContent = period(data.period_label);
 }
 
-/* ---------------- worklist ---------------- */
-function visible() {
-  return data.rows
-    .filter(r => !riskOnly || (r.severity||0) >= ATTENTION)
-    .sort((a,b) => (b.severity - a.severity) || ((atRisk(b)||0) - (atRisk(a)||0)));
-}
+/* ---------------- cards ---------------- */
+const visible = () => data.rows
+  .filter(r => !riskOnly || (r.severity||0) >= ATTENTION)
+  .sort((a,b) => (b.severity - a.severity) || ((atRisk(b)||0) - (atRisk(a)||0)));
 
-function rowHtml(r) {
-  const h = headline(r);
-  const cls = h ? h.c : "c-ok";
-  const extra = conds(r).length - (h ? 1 : 0);
+function card(r, isLead) {
+  const h = face(r), cls = h ? h.c : "c-ok";
+  const rest = conds(r).length - (h ? 1 : 0);
   const share = r.top_partner_share_pct;
-  return `
-  <tr class="line ${openHs === r.hs_code ? "open" : ""}" data-hs="${esc(r.hs_code)}">
-    <td><span class="prod">${esc(r.label.replace(/,\s*(fresh|shelled|in shell)$/i, ""))}</span>
-        <span class="hs">${esc(r.hs_code)}</span></td>
-    <td>${esc(r.top_partner_name || r.top_partner_iso3 || "—")}
-        ${r.status !== "ok" ? `<span class="sub"> · incomplete</span>` : ""}</td>
-    <td class="r ${cls}"><span class="share"><span style="color:var(--ink)">${pct(share)}</span>
-        <span class="track"><i style="width:${Math.min(100, share||0)}%"></i></span></span></td>
-    <td class="r">${usd(atRisk(r))}</td>
-    <td class="r">${n(r.effective_partner_count, 1)}<span class="sub"> / ${n(r.partner_count)}</span></td>
-    <td><span class="st ${cls}"><b>${h ? h.w : "Spread"}</b>${extra > 0 ? `<span class="sub">+${extra}</span>` : ""}</span></td>
-  </tr>`;
+  return '<button class="card ' + cls + (isLead ? " lead" : "") + '" data-hs="' + esc(r.hs_code) + '">' +
+    '<div class="top"><span class="nm">' + esc(shortName(r)) + '</span>' +
+      '<span class="hs">' + esc(r.hs_code) + '</span>' +
+      '<span class="gp">' + esc(r.group) + (r.status !== "ok" ? " · incomplete" : "") + '</span></div>' +
+    '<div class="big"><em>' + pct(share) + '</em><span>from one origin</span></div>' +
+    '<div class="who"><b>' + esc(r.top_partner_name || r.top_partner_iso3 || "—") + '</b> leads</div>' +
+    '<div class="track"><i style="width:' + Math.min(100, share||0) + '%"></i></div>' +
+    '<div class="st"><b>' + (h ? h.w : "Spread") + '</b>' + (rest > 0 ? '<s>+' + rest + '</s>' : "") + '</div>' +
+    '<dl class="kv">' +
+      '<div><dt>At risk</dt><dd>' + usd(atRisk(r)) + '</dd></div>' +
+      '<div><dt>Real alternatives</dt><dd>' + n(r.effective_partner_count,1) +
+        '<small>' + n(r.partner_count) + ' report, this many matter</small></dd></div>' +
+      (isLead ? '<div><dt>Imports</dt><dd>' + usd(r.total_value_usd) + '</dd></div>' +
+                '<div><dt>Volume swing</dt><dd>' + pct(r.yoy_volatility_pct,0) +
+                '<small>year to year</small></dd></div>' : "") +
+    '</dl>' +
+    (isLead ? '<div class="alts" id="alts-' + esc(r.hs_code) + '">' +
+              '<div class="h">Where else it already comes from</div>' +
+              '<div class="note">loading…</div></div>' : "") +
+    '</button>';
 }
 
-function renderRows() {
+function renderCards() {
   const rows = visible();
-  $("rows").innerHTML = rows.length ? rows.map(rowHtml).join("")
-    : `<tr><td colspan="6" class="note" style="height:60px">No line matches.</td></tr>`;
-  $("count").textContent = `${rows.length} of ${data.rows.length}`;
+  $("grid").innerHTML = rows.length
+    ? rows.map((r,i) => card(r, i === 0)).join("")
+    : '<div class="card" style="cursor:default"><span class="note">No line matches.</span></div>';
+  $("cnt").textContent = rows.length + " of " + data.rows.length;
   $("segAll").setAttribute("aria-pressed", String(!riskOnly));
   $("segRisk").setAttribute("aria-pressed", String(riskOnly));
-  $("rows").querySelectorAll("tr.line").forEach(tr =>
-    tr.addEventListener("click", () => toggle(tr.dataset.hs)));
-
-  // Keep a selection valid across filtering, and never leave the rail blank.
-  if (!rows.some(r => r.hs_code === openHs)) {
-    openHs = rows[0]?.hs_code || null;
-    if (openHs) {
-      $("rows").querySelector(`tr.line[data-hs="${openHs}"]`)?.classList.add("open");
-      fillRail(openHs);
-    }
-  }
+  $("grid").querySelectorAll(".card[data-hs]").forEach(el =>
+    el.addEventListener("click", () => openLine(el.dataset.hs)));
+  if (rows[0]) fillAlts(rows[0].hs_code);
 }
 
-/* Selecting a row fills the rail. One selection at a time, and the top row is
-   selected on load so the rail is never an empty column. */
-function toggle(hs) {
-  openHs = hs;
-  renderRows();
-  fillRail(hs);
-}
-
-async function fillRail(hs) {
-  const row = data.rows.find(r => r.hs_code === hs);
-  const rail = $("rail");
-  rail.innerHTML = `<div class="rhead"><b>${esc(row ? row.label : hs)}</b>
-    <span class="sub">HS ${esc(hs)} · loading…</span></div>`;
+/* The lead card earns its width by answering "where else?" up front. */
+async function fillAlts(hs) {
+  const host = $("alts-" + hs);
+  if (!host) return;
+  const title = '<div class="h">Where else it already comes from</div>';
   try {
-    const d = await (await fetch(`/api/commodity/${hs}?year=2024`)).json();
-    if (openHs !== hs) return;              // a later click won the race
-    const flows = d.flows || {}, risk = d.risk || {};
-    const all = conds(row || {});
-    const top = (flows.rows || []).slice(0, 8);
-
-    rail.innerHTML = `
-      <div class="rhead">
-        <b>${esc(row ? row.label : hs)}</b>
-        <span class="sub">HS ${esc(hs)} · ${esc(period(flows.provenance?.as_of || data.period_label))}</span>
-      </div>
-
-      <div class="sect">
-        <h3>Origins</h3>
-        <table class="mini"><tbody>
-          ${top.map((r, i) => `<tr>
-            <td>${esc(r.partner_name)}${i === 0 ? ' <span class="sub">lead</span>' : ""}</td>
-            <td class="r" style="width:52px">${pct(r.share_of_total_pct, 1)}</td>
-            <td class="r" style="width:54px">${usd(r.value_usd)}</td>
-          </tr>`).join("")}
-        </tbody></table>
-        ${(flows.rows || []).length > top.length
-          ? `<div class="note" style="margin-top:7px">${flows.rows.length - top.length} smaller origins not shown.</div>` : ""}
-      </div>
-
-      <div class="sect">
-        <h3>Detail</h3>
-        <dl class="facts">
-          <dt>Imports</dt><dd>${usd(flows.total_value_usd)}</dd>
-          <dt>With the lead</dt><dd>${usd(atRisk(row || {}))}</dd>
-          <dt>Effective origins</dt><dd>${n(risk.effective_partner_count, 1)} of ${n(flows.partner_count)}</dd>
-          <dt>Volume swing</dt><dd>${pct(risk.yoy_volatility_pct, 0)} year to year</dd>
-          <dt>Conditions</dt><dd>${all.length
-            ? all.map(c => `<span title="${esc(c.why)}">${c.w}</span>`).join(", ") : "none"}</dd>
-        </dl>
-      </div>
-
-      <div class="sect" style="border-bottom:0">
-        <button class="go" id="openFull">Open full analysis</button>
-        <p class="note" style="margin:8px 0 0">Costs and ranks alternative origins. Several minutes.</p>
-      </div>`;
-    $("openFull").addEventListener("click", () => openLine(hs));
+    const d = await (await fetch("/api/commodity/" + hs + "?year=2024")).json();
+    const alts = (d.flows && d.flows.rows ? d.flows.rows : []).slice(1, 5);
+    host.innerHTML = title + (alts.length
+      ? '<table><tbody>' + alts.map(a => '<tr><td>' + esc(a.partner_name) + '</td>' +
+          '<td class="r" style="width:56px">' + pct(a.share_of_total_pct,1) + '</td>' +
+          '<td class="r" style="width:58px">' + usd(a.value_usd) + '</td></tr>').join("") +
+        '</tbody></table><div class="note" style="margin-top:6px">' +
+        'Already shipping to Ukraine, so capacity is demonstrated, not hypothetical.</div>'
+      : '<div class="note">No meaningful second origin reports on this line.</div>');
   } catch (e) {
-    if (openHs === hs) rail.innerHTML = `<div class="empty">Could not load: ${esc(e)}</div>`;
+    host.innerHTML = title + '<div class="note">unavailable</div>';
   }
 }
 
-async function load(refresh = false) {
-  $("rows").innerHTML = Array.from({length: 6}, () => `<tr><td colspan="6" class="sk"></td></tr>`).join("");
+async function load(refresh) {
+  $("grid").innerHTML = Array.from({length: 6}, () => '<div class="sk"></div>').join("");
   try {
-    data = await (await fetch(`/api/portfolio?year=2024${refresh ? "&refresh=true" : ""}`)).json();
-    renderStrip(); renderRows();
+    data = await (await fetch("/api/portfolio?year=2024" + (refresh ? "&refresh=true" : ""))).json();
+    strip(); renderCards();
   } catch (e) {
-    $("rows").innerHTML = `<tr><td colspan="6" class="note" style="height:60px">Could not load: ${esc(e)}</td></tr>`;
+    $("grid").innerHTML = '<div class="card" style="cursor:default"><span class="note">Could not load: ' + esc(e) + '</span></div>';
   }
 }
 
-/* ---------------- drill-down ---------------- */
+/* ---------------- one line ---------------- */
 function view(v) {
   $("vList").classList.toggle("hide", v !== "list");
   $("vLine").classList.toggle("hide", v !== "line");
@@ -521,80 +401,83 @@ async function openLine(hs) {
   const row = data.rows.find(r => r.hs_code === hs);
   view("line");
   $("crumb").textContent = row ? row.label : hs;
-  $("lineBody").innerHTML = `<div class="note">Loading…</div>`;
-  const d = await (await fetch(`/api/commodity/${hs}?year=2024`)).json();
+  $("lineBody").innerHTML = '<div class="note" style="padding:14px 0">Loading…</div>';
+  const d = await (await fetch("/api/commodity/" + hs + "?year=2024")).json();
   const flows = d.flows || {}, risk = d.risk || {};
   const rows = flows.rows || [];
+  const all = conds(row || {});
 
-  $("lineBody").innerHTML = `
-  <div class="block">
-    <div class="hd">Origins <span class="note" style="font-weight:400">${esc(period(flows.provenance?.as_of || data.period_label))} · HS ${esc(d.hs_code)} · ${rows.length} reporting</span></div>
-    <table>
-      <thead><tr><th>Origin</th><th class="r">Share</th><th class="r">Value</th><th class="r">Weight</th><th class="r">Unit value</th></tr></thead>
-      <tbody>${rows.map((r,i) => `<tr>
-        <td>${esc(r.partner_name)} <span class="hs">${esc(r.partner_iso3)}</span>${i===0?' <span class="sub">lead</span>':""}</td>
-        <td class="r">${pct(r.share_of_total_pct,1)}</td>
-        <td class="r">${usd(r.value_usd)}</td>
-        <td class="r">${r.net_weight_kg == null ? "—" : n(r.net_weight_kg/1000) + " t"}</td>
-        <td class="r">${r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2)}</td>
-      </tr>`).join("")}</tbody>
-    </table>
-    <details><summary>How these numbers were made</summary><div class="bd">
-      ${risk.interpretation ? `<p style="margin:0 0 9px">${esc(risk.interpretation)}</p>` : ""}
-      ${(flows.notes||[]).length ? `<div class="warn">${(flows.notes||[]).map(esc).join("<br>")}</div>` : ""}
-      <p class="note" style="margin:9px 0 0">Unit value is value over weight, not a quoted price.</p>
-    </div></details>
-  </div>
+  $("lineBody").innerHTML =
+  '<div class="block"><div class="hd">Where it comes from ' +
+    '<span class="note" style="font-weight:400">' +
+    esc(period((flows.provenance || {}).as_of || data.period_label)) + " · HS " + esc(d.hs_code) +
+    " · " + rows.length + " origins reporting" +
+    (all.length ? " · " + all.map(c => esc(c.w)).join(", ") : "") + '</span></div>' +
+    '<table class="data"><thead><tr><th>Origin</th><th class="r">Share</th><th class="r">Value</th>' +
+    '<th class="r">Weight</th><th class="r">Unit value</th></tr></thead><tbody>' +
+    rows.map((r,i) => '<tr><td>' + esc(r.partner_name) + ' <span class="hs">' + esc(r.partner_iso3) + '</span>' +
+      (i === 0 ? ' <span class="sub">lead</span>' : "") + '</td>' +
+      '<td class="r">' + pct(r.share_of_total_pct,1) + '</td>' +
+      '<td class="r">' + usd(r.value_usd) + '</td>' +
+      '<td class="r">' + (r.net_weight_kg == null ? "—" : n(r.net_weight_kg/1000) + " t") + '</td>' +
+      '<td class="r">' + (r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2)) + '</td></tr>').join("") +
+    '</tbody></table>' +
+    '<details><summary>How these numbers were made</summary><div class="bd">' +
+      (risk.interpretation ? '<p style="margin:0 0 9px">' + esc(risk.interpretation) + '</p>' : "") +
+      ((flows.notes||[]).length ? '<div class="warn">' + (flows.notes||[]).map(esc).join("<br>") + '</div>' : "") +
+      '<p class="note" style="margin:9px 0 0">Unit value is value over weight, not a quoted price.</p>' +
+    '</div></details></div>' +
 
-  <div class="block">
-    <div class="hd">Sourcing analysis</div>
-    <div class="bd">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="go" id="run">Run</button>
-        <label class="note"><input type="checkbox" id="optReplay"> offline</label>
-        <label class="note"><input type="checkbox" id="optPw" checked> browser server</label>
-        <span class="grow"></span>
-        <button id="breakPw">Break browser server</button>
-      </div>
-      <p class="note" id="runNote" style="margin:9px 0 0">Ranks alternative origins on cost, logistics, duty and demonstrated supply.</p>
-      <div class="out" id="out" style="margin-top:12px"></div>
-    </div>
-    <details id="logWrap" class="hide"><summary>Steps</summary><div class="bd log" id="log"></div></details>
-  </div>`;
+  '<div class="block"><div class="hd">Find better options</div><div class="bd">' +
+    '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">' +
+      '<button class="go" id="run">Run</button>' +
+      '<label class="note"><input type="checkbox" id="optReplay"> offline</label>' +
+      '<label class="note"><input type="checkbox" id="optPw" checked> browser server</label>' +
+      '<span class="grow"></span>' +
+      '<button id="breakPw">Break browser server</button></div>' +
+    '<p class="note" id="runNote" style="margin:10px 0 0">Ranks alternative origins on landed cost, ' +
+    'logistics, duty and demonstrated supply. Several minutes.</p>' +
+    '<div class="out" id="out" style="margin-top:12px"></div></div>' +
+    '<details id="logWrap" class="hide"><summary>Steps</summary><div class="bd log" id="log"></div></details></div>';
 
   $("run").addEventListener("click", () => run(d));
   $("breakPw").addEventListener("click", () => run(d, { broken: true }));
 }
 
-function run(d, opts = {}) {
-  const q = `Where should Ukraine source ${d.label} (HS ${d.hs_code}) from? Assume a 120 tonne shipment. ` +
-            `If current supply is concentrated, look beyond the incumbent leaders.`;
+function run(d, opts) {
+  opts = opts || {};
+  const q = "Where should Ukraine source " + d.label + " (HS " + d.hs_code + ") from? " +
+    "Assume a 120 tonne shipment. If current supply is concentrated, look beyond the incumbent leaders.";
   const p = new URLSearchParams({ question: q });
   if ($("optReplay").checked) p.set("replay", "true");
   if (!$("optPw").checked) p.set("playwright", "false");
   if (opts.broken) p.set("break_playwright", "true");
 
-  $("out").textContent = "";
-  $("log").innerHTML = "";
-  $("logWrap").classList.remove("hide");
-  $("logWrap").open = true;
+  $("out").textContent = ""; $("log").innerHTML = "";
+  $("logWrap").classList.remove("hide"); $("logWrap").open = true;
   $("runNote").textContent = opts.broken ? "Failure demo — running…" : "Running…";
   $("run").disabled = true;
 
-  stream(`/api/run?${p}`, {
-    status: e => { const s = e.data?.servers;
-      $("runNote").textContent = s ? `Connected: ${Object.keys(s).join(", ")}` : (e.text || "working"); },
+  stream("/api/run?" + p, {
+    status: e => {
+      const s = e.data && e.data.servers;
+      $("runNote").textContent = s ? "Connected: " + Object.keys(s).join(", ") : (e.text || "working");
+    },
     trace: e => {
-      const bad = e.data?.is_error;
+      const bad = e.data && e.data.is_error;
       const div = document.createElement("div");
-      div.innerHTML = `<span class="st2 ${bad ? "bad" : ""}">${e.kind === "tool_call" ? "›" : bad ? "×" : "✓"}</span>
-        <span class="t">${esc(e.server||"")}.${esc(e.tool||"")}</span>`;
+      if (bad) div.className = "bad";
+      div.textContent = (e.kind === "tool_call" ? "›" : bad ? "×" : "✓") +
+        " " + (e.server||"") + "." + (e.tool||"");
       $("log").appendChild(div);
     },
     text: e => { $("out").textContent = e.text; },
-    done: e => { const t = e.data||{};
-      $("runNote").textContent = `Done · ${t.turns ?? "?"} steps · ${Math.round((t.duration_ms||0)/1000)}s${t.cost_usd ? ` · $${t.cost_usd.toFixed(2)}` : ""}`;
-      $("run").disabled = false; },
+    done: e => {
+      const t = e.data || {};
+      $("runNote").textContent = "Done · " + (t.turns == null ? "?" : t.turns) + " steps · " +
+        Math.round((t.duration_ms||0)/1000) + "s" + (t.cost_usd ? " · $" + t.cost_usd.toFixed(2) : "");
+      $("run").disabled = false;
+    },
     error: e => { $("runNote").textContent = "Failed: " + e.text; $("run").disabled = false; },
   });
 }
@@ -604,59 +487,58 @@ function stream(url, on) {
   const es = new EventSource(url); live = es;
   es.onmessage = m => {
     const e = JSON.parse(m.data);
-    ({ status: on.status, tool_call: on.trace, tool_result: on.trace,
-       text: on.text, done: on.done, error: on.error })[e.kind]?.(e);
+    const h = { status: on.status, tool_call: on.trace, tool_result: on.trace,
+                text: on.text, done: on.done, error: on.error }[e.kind];
+    if (h) h(e);
   };
   const close = () => { es.close(); if (live === es) live = null; };
   es.addEventListener("end", close); es.onerror = close;
 }
 
 /* ---------------- ask ---------------- */
-function ctx() {
-  if (!data) return "";
-  return `Lines on screen (${period(data.period_label)}, UN Comtrade via the trade-sourcing MCP server):\n` +
-    data.rows.map(r => `${r.label} (HS ${r.hs_code}): ${usd(r.total_value_usd)} imports, lead ` +
-      `${r.top_partner_iso3} ${pct(r.top_partner_share_pct,1)}, ${usd(atRisk(r))} with the lead, ` +
-      `effective origins ${n(r.effective_partner_count,1)}, conditions ${r.flags?.join("/") || "none"}`).join("\n");
-}
+const ctx = () => !data ? "" :
+  "Lines on screen (" + period(data.period_label) + ", UN Comtrade via the trade-sourcing MCP server):\n" +
+  data.rows.map(r => r.label + " (HS " + r.hs_code + "): " + usd(r.total_value_usd) + " imports, lead " +
+    r.top_partner_iso3 + " " + pct(r.top_partner_share_pct,1) + ", " + usd(atRisk(r)) + " with the lead, " +
+    "effective origins " + n(r.effective_partner_count,1) + ", conditions " +
+    ((r.flags||[]).join("/") || "none")).join("\n");
 
 function send() {
   const q = $("ask").value.trim(); if (!q) return;
   $("ask").value = "";
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `<div class="q">${esc(q)}</div><div class="a">…</div>`;
-  $("qa").appendChild(wrap);
-  const a = wrap.querySelector(".a");
+  const w = document.createElement("div");
+  w.innerHTML = '<div class="q">' + esc(q) + '</div><div class="a">…</div>';
+  $("qa").appendChild(w);
+  const a = w.querySelector(".a");
   $("askBtn").disabled = true;
-  stream(`/api/chat?question=${encodeURIComponent(q)}&context=${encodeURIComponent(ctx())}`, {
-    trace: e => { if (e.kind === "tool_call") a.textContent = `checking ${e.tool}…`; },
+  stream("/api/chat?question=" + encodeURIComponent(q) + "&context=" + encodeURIComponent(ctx()), {
+    trace: e => { if (e.kind === "tool_call") a.textContent = "checking " + e.tool + "…"; },
     text: e => { a.textContent = e.text; },
     done: () => { $("askBtn").disabled = false; },
     error: e => { a.textContent = "failed: " + e.text; $("askBtn").disabled = false; },
   });
 }
 
-/* ---------------- sources ---------------- */
 async function sources() {
   try {
     const h = await (await fetch("/api/health")).json();
-    $("sysBody").innerHTML = Object.entries(h.servers).map(([k,s]) =>
-      `<div style="margin-bottom:7px"><span class="log" style="color:var(--ink)">${esc(k)}</span>
-       <span class="note"> ${esc(s.transport)} · ${s.declared_tools.length} tools</span>
-       <div class="note">${s.declared_tools.map(esc).join(", ")}</div></div>`).join("") +
-      `<div class="note">mode ${esc(h.data_mode)} · model ${esc(h.model)} · credential ${esc(h.credential)}</div>`;
+    $("sysBody").innerHTML = Object.entries(h.servers).map(kv =>
+      '<div style="margin-bottom:8px"><span class="log" style="color:var(--ink)">' + esc(kv[0]) + '</span>' +
+      '<span class="note"> ' + esc(kv[1].transport) + " · " + kv[1].declared_tools.length + ' tools</span>' +
+      '<div class="note">' + kv[1].declared_tools.map(esc).join(", ") + '</div></div>').join("") +
+      '<div class="note">mode ' + esc(h.data_mode) + " · model " + esc(h.model) +
+      " · credential " + esc(h.credential) + '</div>';
   } catch (e) { $("sysBody").textContent = String(e); }
 }
 
-$("segAll").addEventListener("click", () => { riskOnly = false; renderRows(); });
-$("segRisk").addEventListener("click", () => { riskOnly = true; renderRows(); });
+$("segAll").addEventListener("click", () => { riskOnly = false; renderCards(); });
+$("segRisk").addEventListener("click", () => { riskOnly = true; renderCards(); });
 $("refresh").addEventListener("click", () => load(true));
 $("back").addEventListener("click", () => view("list"));
 $("askBtn").addEventListener("click", send);
 $("ask").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
 $("sysBtn").addEventListener("click", () => {
-  view("list");
-  $("sysWrap").open = !$("sysWrap").open;
+  view("list"); $("sysWrap").open = !$("sysWrap").open;
   if ($("sysWrap").open) $("sysWrap").scrollIntoView({ block: "center" });
 });
 
