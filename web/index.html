@@ -348,6 +348,12 @@ details .bd { padding: 4px 16px 16px; }
   content: " incomplete"; font-family: var(--din); font-size: 11px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--watch); font-weight: 600;
 }
+/* A price the caller supplied, because the origin does not ship here yet and no
+   unit value can be derived from trade that did not happen. Marked on the figure
+   itself, not only in the caveats underneath. */
+.rank .proxy { font-family: var(--din); font-size: 10px; font-weight: 700;
+               letter-spacing: .1em; text-transform: uppercase; color: var(--watch);
+               margin-left: 5px; cursor: help; }
 
 /* Launcher, always in the corner. A stamped block, in the page's own
    language, rather than a chat bubble borrowed from somewhere else. */
@@ -822,7 +828,10 @@ function rankTable(payload, volumeKg) {
       '<td class="who">' + esc(r.name || r.iso3) + ' <span class="code">' + esc(r.iso3) + '</span></td>' +
       '<td class="r"><span class="score"><b>' + (r.score == null ? "—" : r.score.toFixed(1)) + '</b>' +
         '<span class="sbar"><i style="width:' + Math.round((r.score || 0) / best * 100) + '%"></i></span></span></td>' +
-      '<td class="r n">' + (r.landed_cost_per_kg_usd == null ? "—" : "$" + r.landed_cost_per_kg_usd.toFixed(2)) + '</td>' +
+      '<td class="r n">' + (r.landed_cost_per_kg_usd == null ? "—" : "$" + r.landed_cost_per_kg_usd.toFixed(2)) +
+        (r.price_basis === "caller_supplied"
+          ? '<span class="proxy" title="No trade with this origin to derive a unit value from, so the price is a proxy the caller supplied.">proxy</span>'
+          : "") + '</td>' +
       '<td class="r">' + (r.duty_rate_pct == null ? "—" : pct(r.duty_rate_pct, 0)) + '</td>' +
       '<td class="r">' + (r.lpi_overall == null ? "—" : r.lpi_overall.toFixed(1)) + '</td>' +
       '<td class="r">' + (r.supply_share_pct == null ? "—" : pct(r.supply_share_pct, 1)) + '</td>' +

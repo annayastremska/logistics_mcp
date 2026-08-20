@@ -143,7 +143,9 @@ shortlist containing only the suppliers we already depend on cannot answer the q
 was asked.
 6. `rank_sourcing_countries` with weights you justify out loud, based on what step 4 found. \
 Pass the widened candidates in the same call as the incumbents, so the comparison is one \
-table and not two. Rank once. Transport mode does not change the scores -- reported unit values are already CIF, so \
+table and not two -- and pass the proxy prices you used in step 5 as `unit_prices`, keyed \
+by ISO3. Without them a widened origin is unscored on price and duty and lands at the \
+bottom of the table for having no data rather than for being a poor choice. Rank once. Transport mode does not change the scores -- reported unit values are already CIF, so \
 modelled freight is reference-only and excluded from the total -- so splitting the candidates into \
 a road set and a sea set produces two identical answers and wastes rate-limited calls.
 

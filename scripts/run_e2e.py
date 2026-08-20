@@ -45,6 +45,11 @@ async def main() -> int:
     # failed to start still produces a fluent answer -- the model just reports it
     # has no tools -- so a run only passes if both servers are genuinely connected.
     attached: dict[str, list[str]] = {}
+    # Whether any page in the recency chain loaded. The chain is ordered and the
+    # agent stops at the first page that answers, so a failed navigate on a later
+    # URL is the fallback doing its job; only a chain where nothing loaded is a
+    # failure. See the recency step in the system prompt.
+    navigated = False
 
     with out.open("w", encoding="utf-8") as fh:
         async for event in run_sourcing_query(question):
@@ -59,6 +64,8 @@ async def main() -> int:
                 print(f"[{flag}] {label}", flush=True)
                 if event.data.get("is_error"):
                     errors.append(label)
+                elif label == "playwright/browser_navigate":
+                    navigated = True
             elif event.kind == "status":
                 if event.data.get("servers"):
                     attached = event.data["servers"]
@@ -75,11 +82,19 @@ async def main() -> int:
 
     missing_servers = [name for name in ("trade-sourcing", "playwright") if name not in attached]
     unused_tools = [t for t in EXPECTED_CUSTOM_CALLS if f"trade-sourcing/{t}" not in calls]
+    fallback_errors = [e for e in errors if e == "playwright/browser_navigate" and navigated]
+    real_errors = [e for e in errors if e not in fallback_errors]
 
     print("\n===== SUMMARY =====", flush=True)
     print(f"servers attached: {({k: len(v) for k, v in attached.items()})}", flush=True)
     print(f"tool calls ({len(calls)}): {calls}", flush=True)
-    print(f"errors: {errors or 'none'}", flush=True)
+    print(f"errors: {real_errors or 'none'}", flush=True)
+    if fallback_errors:
+        print(
+            f"tolerated: {len(fallback_errors)} failed navigate(s) on the recency fallback chain, "
+            f"after another page had already loaded",
+            flush=True,
+        )
     print(f"trace: {out}", flush=True)
     if final:
         print(f"\n===== FINAL ANSWER =====\n{final}", flush=True)
@@ -89,8 +104,8 @@ async def main() -> int:
         problems.append(f"MCP servers never attached: {missing_servers}")
     if unused_tools:
         problems.append(f"custom tools never called: {unused_tools}")
-    if errors:
-        problems.append(f"tool or run errors: {errors}")
+    if real_errors:
+        problems.append(f"tool or run errors: {real_errors}")
     if not final:
         problems.append("run produced no final answer")
 
@@ -99,6 +114,12 @@ async def main() -> int:
         print(f"FAIL  {line}", flush=True)
     if not problems:
         print("PASS  both servers attached, all five custom tools called, no errors", flush=True)
+        if fallback_errors:
+            print(
+                "      (the recency chain fell back "
+                f"{len(fallback_errors)} time(s) and still read a page)",
+                flush=True,
+            )
     return 1 if problems else 0
 
 

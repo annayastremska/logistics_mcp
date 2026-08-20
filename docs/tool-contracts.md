@@ -287,6 +287,7 @@ fallback years). Cache and fixture writes as above. No other writes.
 | `year` | integer \| null | no | 2015–2030 | current year − 2 |
 | `transport_mode` | string | no | `sea` \| `road` \| `rail` \| `air` | `road` |
 | `weights` | object \| null | no | `price`, `logistics`, `duty`, `supply`, each 0–1, **summing to 1.0 ± 0.001** | `0.40 / 0.30 / 0.15 / 0.15` |
+| `unit_prices` | object \| null | no | Proxy unit values in USD/kg, keyed by candidate ISO3, each `> 0` | none |
 
 **Output schema**
 
@@ -294,10 +295,24 @@ fallback years). Cache and fixture writes as above. No other writes.
 |---|---|---|
 | `status` | enum | See conventions |
 | `ranking` | array\<RankedCountry\> | `rank`, `iso3`, `name`, `score` (0–100), `factors`, and the raw `landed_cost_per_kg_usd`, `lpi_overall`, `duty_rate_pct`, `supply_share_pct` |
+| `ranking[].price_basis` | enum \| null | `reported` when the unit value was derived from trade this origin actually did with the importer; `caller_supplied` when it came from `unit_prices`; `null` when the cost could not be established at all |
 | `ranking[].factors` | array\<FactorContribution\> | Per criterion: `raw_value`, `normalized` (0–1), `weight`, `contribution`. Contributions sum to `score` |
 | `weights_used` | object \| null | Weights actually applied |
 | `excluded` | array\<{`iso3`, `reason`}\> | Candidates dropped before scoring |
 | `caveats` | array\<string\> | Why the ranking is not a decision |
+
+### Pricing an origin that does not ship here yet
+
+A unit value can only be derived from trade that happened, so a candidate with no reported
+trade to the importer has no price and no duty — and because an unscorable criterion
+contributes nothing, it ranks last for missing data rather than on merit. Measured: an origin
+added precisely because the shortlist needed widening scored **1.33 out of 100 on half the
+weight**.
+
+`unit_prices` is the way out. Pass the same proxy used for `estimate_landed_cost`, and the
+candidate is scored on the full weight. The result never lets the proxy pass for an
+observation: the row carries `price_basis: "caller_supplied"`, and a caveat names every origin
+priced that way.
 
 **Error conditions**
 

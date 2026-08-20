@@ -663,6 +663,20 @@ def rank_sourcing_countries(
         CriterionWeights | None,
         Field(default=None, description="Criterion weights; defaults to price .40 / logistics .30 / duty .15 / supply .15."),
     ] = None,
+    unit_prices: Annotated[
+        dict[str, float] | None,
+        Field(
+            default=None,
+            description=(
+                "Optional proxy unit values in USD per kg, keyed by candidate ISO3. Use this for "
+                "an origin that does not currently ship this product to the importer: no trade "
+                "means no unit value to derive, so without a proxy its price and duty go unscored "
+                "and it ranks last for lacking data rather than for being expensive. Each figure "
+                "is marked caller_supplied in the result and must be attributed to its source "
+                "wherever it is quoted."
+            ),
+        ),
+    ] = None,
 ) -> RankingResult:
     if isinstance(weights, dict):
         try:
@@ -742,18 +756,23 @@ def rank_sourcing_countries(
         pass  # a missing criterion is normalized to None, not fatal
 
     # Cost and duty per candidate, reusing the landed-cost tool's own logic.
+    supplied = {k.upper(): v for k, v in (unit_prices or {}).items() if v and v > 0}
     cost: dict[str, float | None] = {}
     duty: dict[str, float | None] = {}
+    basis: dict[str, str | None] = {}
     for iso in resolved:
+        proxy = supplied.get(iso)
         priced = estimate_landed_cost(
             hs_code=entry.code,
             origin_iso3=iso,
             volume_kg=volume_kg,
             transport_mode=transport_mode,
             year=resolved_year,
+            unit_price_usd_per_kg=proxy,
         )
         cost[iso] = priced.cost_per_kg_usd if priced.status == "ok" else None
         duty[iso] = priced.duty_rate_pct if priced.status == "ok" else None
+        basis[iso] = None if cost[iso] is None else ("caller_supplied" if proxy else "reported")
 
     norm_cost = analysis.min_max_normalize(cost, higher_is_better=False)
     norm_lpi = analysis.min_max_normalize(lpi, higher_is_better=True)
@@ -809,6 +828,7 @@ def rank_sourcing_countries(
                 lpi_overall=lpi.get(iso),
                 duty_rate_pct=duty.get(iso),
                 supply_share_pct=supply_share.get(iso),
+                price_basis=basis.get(iso),
             )
         )
 
@@ -830,6 +850,13 @@ def rank_sourcing_countries(
         caveats.append(f"Logistics Performance Index values are as of {lpi_year}; it is not an annual series.")
     if any(v is None for v in cost.values()):
         caveats.append("Some candidates had no reported trade to price, so their cost criterion is unscored.")
+    proxied = sorted(iso for iso, b in basis.items() if b == "caller_supplied")
+    if proxied:
+        caveats.append(
+            "Priced on a unit value supplied by the caller, not on trade this origin did with the "
+            "importer: " + ", ".join(proxied) + ". That is the only way to cost an origin that does "
+            "not ship here yet, and it makes the figure as good as its source and no better."
+        )
 
     partial = [c for c in scored if c.scored_weight_pct < 100.0]
     if partial:

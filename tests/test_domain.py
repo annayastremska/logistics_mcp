@@ -288,3 +288,52 @@ def test_partially_scored_candidate_declares_how_much_weight_was_scored(monkeypa
     # where the scores are read, not only in the per-factor detail.
     if any(c.scored_weight_pct < 100.0 for c in result.ranking):
         assert any("NOT comparable" in caveat for caveat in result.caveats)
+
+
+def test_a_proxy_price_scores_a_candidate_that_does_not_ship_here_yet(monkeypatch) -> None:
+    """Widening the shortlist must not be punished for the widening itself.
+
+    An origin Ukraine does not currently buy from has no trade to derive a unit
+    value from, so price and duty go unscored and it lands last on missing data
+    rather than on merit -- measured at 1.33 out of 100 on a live run, for an
+    origin the agent had just been told to include. Passing the proxy it already
+    used for ``estimate_landed_cost`` closes the gap, and the row records that
+    the figure was supplied rather than observed.
+    """
+    monkeypatch.setenv("SOURCING_MODE", "replay")
+
+    from mcp_server.server import rank_sourcing_countries
+
+    without = rank_sourcing_countries(
+        hs_code="080610", candidates=["TUR", "MDA", "MAR"], volume_kg=120_000.0, year=2024
+    )
+    with_proxy = rank_sourcing_countries(
+        hs_code="080610",
+        candidates=["TUR", "MDA", "MAR"],
+        volume_kg=120_000.0,
+        year=2024,
+        unit_prices={"MAR": 2.05},
+    )
+    assert without.status == "ok" and with_proxy.status == "ok"
+
+    bare = next(c for c in without.ranking if c.iso3 == "MAR")
+    proxied = next(c for c in with_proxy.ranking if c.iso3 == "MAR")
+
+    # Before: unscored on price, and the score reflects the gap, not the origin.
+    assert "price" in bare.unscored_criteria
+    assert bare.landed_cost_per_kg_usd is None
+    assert bare.price_basis is None
+
+    # After: fully scored, and the basis of the figure travels with it.
+    assert proxied.price_basis == "caller_supplied"
+    assert proxied.landed_cost_per_kg_usd is not None
+    assert "price" not in proxied.unscored_criteria
+    assert proxied.scored_weight_pct > bare.scored_weight_pct
+
+    # An origin that does have reported trade is untouched by the argument.
+    for iso in ("TUR", "MDA"):
+        assert next(c for c in with_proxy.ranking if c.iso3 == iso).price_basis == "reported"
+
+    # A supplied price is never allowed to pass for an observed one.
+    assert any("supplied by the caller" in caveat for caveat in with_proxy.caveats)
+    assert not any("supplied by the caller" in caveat for caveat in without.caveats)
