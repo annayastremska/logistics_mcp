@@ -702,10 +702,22 @@ def rank_sourcing_countries(
     for iso, country in resolved.items():
         factors: list[FactorContribution] = []
         score = 0.0
+        # Track how much of the weight was actually scorable. An unscorable
+        # criterion contributes nothing, which depresses the score exactly like a
+        # bad value would -- so a candidate missing its cost data looks worse than
+        # an expensive one. The score is left alone (renormalising it would invent
+        # a comparison that the data does not support) but the gap travels with it,
+        # so a reader can tell "unknown" from "poor".
+        scored_weight = 0.0
+        unscored: list[str] = []
         for name, raw_map, norm_map, weight in criteria:
             normalized = norm_map.get(iso)
             contribution = round((normalized or 0.0) * weight * 100.0, 2)
             score += contribution
+            if normalized is None:
+                unscored.append(name)
+            else:
+                scored_weight += weight
             factors.append(
                 FactorContribution(
                     criterion=name,  # type: ignore[arg-type]
@@ -721,6 +733,8 @@ def rank_sourcing_countries(
                 iso3=iso,
                 name=country.name,
                 score=round(score, 2),
+                scored_weight_pct=round(scored_weight * 100.0, 1),
+                unscored_criteria=unscored,
                 factors=factors,
                 landed_cost_per_kg_usd=cost.get(iso),
                 lpi_overall=lpi.get(iso),
@@ -744,6 +758,19 @@ def rank_sourcing_countries(
         caveats.append(f"Logistics Performance Index values are as of {lpi_year}; it is not an annual series.")
     if any(v is None for v in cost.values()):
         caveats.append("Some candidates had no reported trade to price, so their cost criterion is unscored.")
+
+    partial = [c for c in scored if c.scored_weight_pct < 100.0]
+    if partial:
+        caveats.append(
+            "Partially scored candidates are NOT comparable with fully scored ones: an unscorable "
+            "criterion contributes nothing, so a missing input looks the same as a bad one. "
+            + "; ".join(
+                f"{c.iso3} scored on {c.scored_weight_pct:.0f} percent of the weight "
+                f"(missing: {', '.join(c.unscored_criteria)})"
+                for c in partial
+            )
+            + "."
+        )
 
     return RankingResult(
         status="ok",

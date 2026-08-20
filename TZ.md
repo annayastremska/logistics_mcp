@@ -146,7 +146,7 @@ agent/                     # Claude Agent SDK: опції, два профілі
 web/                       # FastAPI + index.html + портфель через MCP
   app.py  portfolio.py  index.html
 scripts/                   # smoke_tools.py, inspect_tools.py, run_e2e.py
-tests/                     # 22 юніт-тести доменної логіки
+tests/                     # 23 юніт-тести доменної логіки
 data/reference/            # H6.json, Reporters.json, partnerAreas.json
 fixtures/                  # записані відповіді API
 .env.example               # ANTHROPIC_API_KEY= (або локальний логін Claude Code)
@@ -181,13 +181,15 @@ fixtures/                  # записані відповіді API
       — `080699` → `UNKNOWN_HS_CODE`; `12345`/`abcdef` → `INVALID_ARGUMENT`; ваги ≠ 1 → `INVALID_ARGUMENT`
 - [x] Майбутній рік дає `empty`, а не помилку
       — `get_import_flows(080610, 2030)` → `status=empty`, нуль помилок
+- [x] Портфель повністю рендериться офлайн і збігається з live по всіх шести лініях
+      — записані фікстури потоків на 6 груп × 3 роки; до цього офлайн працював лише виноград
 - [x] Той самий флоу проходить з `SOURCING_MODE=replay` **і дає ті самі числа, що live**
       — `scripts/smoke_tools.py` офлайн: усі 8 перевірок пройдено; мито 10%, $1.4566/кг — збігається
       з живим прогоном до останнього знака
 - [x] Заповнені docs/ (контракти, rationale, чекліст)
 - [x] У репо немає секретів, є `.env.example`
       — grep по застейджених файлах на `sk-ant-`, ключі, куки: чисто
-- [x] 22 юніт-тести доменної логіки проходять
+- [x] 23 юніт-тести доменної логіки проходять
 - [x] Фейл Playwright через `break_playwright` повідомляється, не приховується
       — `net::ERR_NAME_NOT_RESOLVED`, `is_error=True` на результаті тулу, агент назвав причину
 - [ ] Формальний прогін spec-kit (`constitution → specify → plan → tasks`) — артефактів у репо немає

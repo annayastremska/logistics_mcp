@@ -236,3 +236,55 @@ def test_mirror_gap_threshold_is_asymmetric() -> None:
     assert analysis.mirror_gap_is_suspicious(-80.0) is True   # far beyond valuation effects
     assert analysis.mirror_gap_is_suspicious(40.0) is True    # partners report more than arrived
     assert analysis.mirror_gap_is_suspicious(None) is False
+
+
+# --------------------------------------------------------------------------- #
+# Ranking: an unscorable criterion must not read as a bad one
+# --------------------------------------------------------------------------- #
+
+
+def test_partially_scored_candidate_declares_how_much_weight_was_scored(monkeypatch) -> None:
+    """A missing input contributes nothing, exactly like a bad value would.
+
+    Without ``scored_weight_pct`` a candidate whose cost could not be priced
+    scores 15 out of 100 next to a fully priced candidate's 90, and the reader
+    has no way to tell "unknown" from "poor". The score is deliberately left
+    unrenormalised -- inventing a comparison the data cannot support would be
+    worse -- so the gap has to travel alongside it.
+    """
+    # Replay, so the suite stays offline and fast: this is the only test that
+    # reaches the tool layer rather than the pure domain functions, and against
+    # the live APIs it took 97 seconds on its own.
+    monkeypatch.setenv("SOURCING_MODE", "replay")
+
+    from mcp_server.server import rank_sourcing_countries
+
+    result = rank_sourcing_countries(
+        hs_code="080610",
+        candidates=["TUR", "MDA", "IND"],
+        volume_kg=120_000.0,
+        transport_mode="road",
+        year=2024,
+    )
+    assert result.status == "ok"
+
+    for country in result.ranking:
+        scored = {f.criterion for f in country.factors if f.normalized is not None}
+        missing = {f.criterion for f in country.factors if f.normalized is None}
+
+        # The declared gap must match the decomposition it summarises.
+        assert set(country.unscored_criteria) == missing
+        expected_weight = sum(f.weight for f in country.factors if f.criterion in scored)
+        assert country.scored_weight_pct == round(expected_weight * 100.0, 1)
+
+        # A contribution of zero is only allowed to mean "scored zero", never
+        # "not scored" -- the two are distinguished by ``normalized`` being None.
+        for factor in country.factors:
+            if factor.normalized is None:
+                assert factor.raw_value is None
+                assert factor.contribution == 0.0
+
+    # Whenever any candidate is short of the full weight, the result must say so
+    # where the scores are read, not only in the per-factor detail.
+    if any(c.scored_weight_pct < 100.0 for c in result.ranking):
+        assert any("NOT comparable" in caveat for caveat in result.caveats)

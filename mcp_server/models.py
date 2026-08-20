@@ -280,6 +280,19 @@ class RankedCountry(BaseModel):
     iso3: str
     name: str
     score: float = Field(description="Composite score, 0..100.")
+    scored_weight_pct: float = Field(
+        default=100.0,
+        description=(
+            "Share of the total criterion weight that could actually be scored, percent. Below "
+            "100 the score is not comparable with a fully scored candidate: an unscorable "
+            "criterion contributes nothing, so a missing input depresses the score exactly like "
+            "a bad one. Read the score against this number, not on its own."
+        ),
+    )
+    unscored_criteria: list[str] = Field(
+        default_factory=list,
+        description="Criteria with no value for this candidate, named so the gap is not silent.",
+    )
     factors: list[FactorContribution] = Field(
         description="Per-criterion decomposition; contributions sum to score."
     )

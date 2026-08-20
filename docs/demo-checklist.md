@@ -8,7 +8,7 @@ below, in the order it is easiest to demonstrate.
 ```bash
 cd logistics_mcp
 .venv\Scripts\activate            # Windows
-python -m pytest tests -q          # 22 passing, no network
+python -m pytest tests -q          # 23 passing, no network
 ```
 
 Have three terminals ready and both browser tabs closed. Check that `.env` exists and that
