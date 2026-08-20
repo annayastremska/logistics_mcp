@@ -1,5 +1,0 @@
-- generic [active] [ref=e1]:
-  - heading "Access Denied" [level=1] [ref=e2]
-  - text: You don't have permission to access "http://customs.gov.ua/news/zagalne-20/post/za-sim-misiatsiv-2026-roku-tovaroobig-ukrayini-sklav-822-mlrd-2947" on this server.
-  - paragraph [ref=e3]: "Reference #18.840c4017.1787211666.5802a783"
-  - paragraph [ref=e4]: https://errors.edgesuite.net/18.840c4017.1787211666.5802a783

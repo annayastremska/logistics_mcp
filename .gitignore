@@ -26,3 +26,7 @@ Thumbs.db
 .idea/
 .vscode/
 scripts/last_e2e_trace.jsonl
+
+# Playwright MCP session artefacts: console logs and page snapshots
+# written per run. Transient by nature; nothing here is worth keeping.
+.playwright-mcp/
