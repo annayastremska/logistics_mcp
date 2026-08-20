@@ -14,6 +14,7 @@ Two deliberate lockdowns, both visible in ``build_options``:
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -28,6 +29,7 @@ from claude_agent_sdk.types import (
     ThinkingBlock,
     ToolResultBlock,
     ToolUseBlock,
+    UserMessage,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +43,16 @@ CUSTOMS_TURNOVER_URL = os.environ.get(
     "SOURCING_CUSTOMS_URL",
     "https://customs.gov.ua/news/zagalne-20/post/za-sim-misiatsiv-2026-roku-tovaroobig-ukrayini-sklav-822-mlrd-2947",
 )
+# Fallbacks, tried in order. The customs page is the primary source and the one
+# worth reading, but its edge (Akamai) returns HTTP 403 to automated clients even
+# with a browser user agent, while opening fine in a human's browser. Rather than
+# pretend the recency check works, the agent falls through to the National Bank's
+# external-sector page, which serves the same purpose and is actually reachable.
+RECENCY_FALLBACK_URLS = [
+    "https://bank.gov.ua/ua/statistic/sector-external",
+    "https://index.minfin.com.ua/economy/gdp/eximp/",
+]
+
 # Used only by the deliberate-failure demo: a host that cannot resolve.
 BROKEN_URL = "https://customs.gov.ua.invalid/this-page-does-not-exist"
 
@@ -80,10 +92,12 @@ shell, no filesystem and no general web access.
 
 Work in this order, and let each result change what you do next:
 
-1. Read the current-year trade turnover figure from the customs page with the browser tools \
-({customs_url}). Use it only to judge how stale your statistical data is. If the page cannot \
-be reached, say so plainly, mark the recency check as failed, and carry on with the \
-statistical data alone.
+1. Read a current-year trade turnover figure with the browser tools. Try these pages in order \
+and stop at the first that loads:
+{recency_urls}
+   Name which page you actually read. Use the figure only to judge how stale your statistical \
+data is. If every page fails, say so plainly, mark the recency check as failed, and carry on \
+with the statistical data alone.
 2. `validate_sourcing_brief` to resolve the product to an HS code. If it returns status \
 'error', stop and report the problem instead of guessing a code.
 3. `get_import_flows` to find who actually supplies it.
@@ -172,7 +186,11 @@ def build_options(
     mcp_servers: dict[str, Any] = {
         CUSTOM_SERVER: {
             "type": "stdio",
-            "command": os.environ.get("SOURCING_PYTHON", "python"),
+            # sys.executable, not a bare "python": the interpreter on PATH is the
+            # system one, which has none of this project's dependencies. Spawning
+            # with it starts a server process that dies on `import mcp`, and the
+            # agent then simply sees no sourcing tools at all.
+            "command": os.environ.get("SOURCING_PYTHON", sys.executable),
             "args": ["-m", "mcp_server.server"],
             "env": {**os.environ, **server_env},
         }
@@ -197,14 +215,18 @@ def build_options(
         }
         allowed += [_qualified(PLAYWRIGHT_SERVER, tool) for tool in PLAYWRIGHT_TOOLS]
 
-    target_url = BROKEN_URL if break_playwright else CUSTOMS_TURNOVER_URL
+    # The failure demo gets a single unresolvable host and no fallbacks, so the
+    # failure it shows is the browser server's, not a fallback quietly rescuing it.
+    urls = [BROKEN_URL] if break_playwright else [CUSTOMS_TURNOVER_URL, *RECENCY_FALLBACK_URLS]
 
     return ClaudeAgentOptions(
         model=model or tier_model,
         system_prompt=(
             CHAT_SYSTEM_PROMPT
             if profile == "chat"
-            else SYSTEM_PROMPT.format(customs_url=target_url)
+            else SYSTEM_PROMPT.format(
+                recency_urls="\n".join(f"   - {url}" for url in urls)
+            )
         ),
         # No built-in tools at all: the MCP servers are the entire capability surface.
         tools=[],
@@ -309,8 +331,15 @@ async def run_sourcing_query(
                             summary = getattr(block, "thinking", "") or ""
                             if summary.strip():
                                 yield TraceEvent(kind="thinking", text=summary)
-                        elif isinstance(block, ToolResultBlock):
-                            server, tool = pending.get(block.tool_use_id, (None, "unknown"))
+                # Tool results come back on a UserMessage, not the assistant turn
+                # that requested them. Watching only AssistantMessage yields a
+                # trace of calls with no outcomes -- every call looks like it
+                # succeeded, including the ones that did not.
+                elif isinstance(message, UserMessage):
+                    blocks = message.content if isinstance(message.content, list) else []
+                    for block in blocks:
+                        if isinstance(block, ToolResultBlock):
+                            server, tool = pending.pop(block.tool_use_id, (None, "unknown"))
                             yield TraceEvent(
                                 kind="tool_result",
                                 server=server,

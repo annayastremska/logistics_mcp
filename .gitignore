@@ -25,3 +25,4 @@ __pycache__/
 Thumbs.db
 .idea/
 .vscode/
+scripts/last_e2e_trace.jsonl

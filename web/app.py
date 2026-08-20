@@ -24,11 +24,19 @@ from agent.sourcing_agent import (
     build_options,
     run_sourcing_query,
 )
+from web.portfolio import PORTFOLIO, build_portfolio, commodity_detail
 
 load_dotenv()
 
 HERE = Path(__file__).resolve().parent
 app = FastAPI(title="Import Sourcing Advisor", version="1.0.0")
+
+# A portfolio build is a dozen throttled upstream calls, and the landing screen is
+# the first thing every visitor loads. Cached per year, in process: this is a demo
+# app with one worker, so a dict is the whole cache layer it needs. Cleared by
+# restarting the app, which is also how the data mode changes.
+_portfolio_cache: dict[int, dict] = {}
+_portfolio_lock = asyncio.Lock()
 
 
 @app.get("/")
@@ -48,6 +56,42 @@ async def health() -> dict:
             "trade-sourcing": {"transport": "stdio", "declared_tools": CUSTOM_TOOLS},
             "playwright": {"transport": "stdio", "declared_tools": PLAYWRIGHT_TOOLS},
         },
+    }
+
+
+@app.get("/api/portfolio")
+async def portfolio(
+    year: int = Query(2024, ge=2015, le=2030, description="Reference year for every line."),
+    refresh: bool = Query(False, description="Bypass the cache and re-query the MCP server."),
+) -> dict:
+    """Every tracked product group with its concentration risk.
+
+    This is what the landing screen renders, so it must return without a model in
+    the loop: the numbers are computed by the MCP server, not reasoned about.
+    """
+    async with _portfolio_lock:  # one build at a time, so a reload cannot double it
+        if refresh or year not in _portfolio_cache:
+            _portfolio_cache[year] = await build_portfolio(year)
+        return _portfolio_cache[year]
+
+
+@app.get("/api/commodity/{hs_code}")
+async def commodity(
+    hs_code: str,
+    year: int = Query(2024, ge=2015, le=2030),
+) -> dict:
+    """The origin breakdown for one product group, for the detail view."""
+    return await commodity_detail(hs_code, year)
+
+
+@app.get("/api/tracked")
+async def tracked() -> dict:
+    """The product groups on the landing screen, for filter controls."""
+    return {
+        "commodities": [
+            {"hs_code": c.hs_code, "label": c.label, "group": c.group} for c in PORTFOLIO
+        ],
+        "groups": sorted({c.group for c in PORTFOLIO}),
     }
 
 
@@ -73,6 +117,36 @@ async def run(
             ):
                 yield _sse(event.to_dict())
         except asyncio.CancelledError:  # browser navigated away
+            raise
+        except Exception as exc:  # noqa: BLE001 - surface, never swallow
+            yield _sse({"kind": "error", "text": f"{type(exc).__name__}: {exc}", "data": {}})
+        yield "event: end\ndata: {}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.get("/api/chat")
+async def chat(
+    question: str = Query(..., min_length=3, description="A follow-up question."),
+    context: str = Query("", description="What is on screen, so the answer need not be recomputed."),
+) -> StreamingResponse:
+    """Answer a follow-up on the small model, with no browser and three read-only tools."""
+
+    async def event_stream():
+        yield _sse({"kind": "status", "text": "asking the chat tier", "data": {}})
+        try:
+            async for event in run_sourcing_query(
+                question,
+                profile="chat",
+                include_playwright=False,
+                context=context or None,
+            ):
+                yield _sse(event.to_dict())
+        except asyncio.CancelledError:
             raise
         except Exception as exc:  # noqa: BLE001 - surface, never swallow
             yield _sse({"kind": "error", "text": f"{type(exc).__name__}: {exc}", "data": {}})
