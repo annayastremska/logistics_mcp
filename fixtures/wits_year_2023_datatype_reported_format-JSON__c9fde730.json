@@ -1,11 +1,11 @@
 {
  "url": "https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN/reporter/804/partner/000/product/080610/year/2023/datatype/reported?format=JSON",
- "retrieved_at": "2026-08-19T17:50:29+00:00",
+ "retrieved_at": "2026-08-20T17:51:18+00:00",
  "note": "Genuine upstream response, recorded verbatim. Do not hand-edit.",
  "payload": {
   "header": {
    "id": "DF_WITS_Tariff_TRAINS",
-   "prepared": "2026-08-19T13:50:29",
+   "prepared": "2026-08-20T13:51:18",
    "test": false,
    "sender": {
     "id": "WBG_WITS",

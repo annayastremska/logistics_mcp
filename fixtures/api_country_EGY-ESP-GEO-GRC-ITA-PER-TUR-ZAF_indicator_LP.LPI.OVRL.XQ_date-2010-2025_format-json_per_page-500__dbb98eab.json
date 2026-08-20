@@ -1,0 +1,2065 @@
+{
+ "url": "https://api.worldbank.org/v2/country/EGY;ESP;GEO;GRC;ITA;PER;TUR;ZAF/indicator/LP.LPI.OVRL.XQ?date=2010%3A2025&format=json&per_page=500",
+ "retrieved_at": "2026-08-20T15:22:54+00:00",
+ "note": "Genuine upstream response, recorded verbatim. Do not hand-edit.",
+ "payload": [
+  {
+   "page": 1,
+   "pages": 1,
+   "per_page": 500,
+   "total": 128,
+   "sourceid": "2",
+   "lastupdated": "2026-07-13"
+  },
+  [
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2022",
+    "value": 3.1,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2018",
+    "value": 2.82,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2016",
+    "value": 3.184964,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2014",
+    "value": 2.965911,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2012",
+    "value": 2.98,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "EG",
+     "value": "Egypt, Arab Rep."
+    },
+    "countryiso3code": "EGY",
+    "date": "2010",
+    "value": 2.61,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2022",
+    "value": 3.9,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2018",
+    "value": 3.83,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2016",
+    "value": 3.727412,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2014",
+    "value": 3.718636,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2012",
+    "value": 3.7,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ES",
+     "value": "Spain"
+    },
+    "countryiso3code": "ESP",
+    "date": "2010",
+    "value": 3.63,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2022",
+    "value": 2.7,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2018",
+    "value": 2.44,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2016",
+    "value": 2.353013,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2014",
+    "value": 2.507491,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2012",
+    "value": 2.77,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GE",
+     "value": "Georgia"
+    },
+    "countryiso3code": "GEO",
+    "date": "2010",
+    "value": 2.61,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2022",
+    "value": 3.7,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2018",
+    "value": 3.2,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2016",
+    "value": 3.239516,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2014",
+    "value": 3.201602,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2012",
+    "value": 2.83,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "GR",
+     "value": "Greece"
+    },
+    "countryiso3code": "GRC",
+    "date": "2010",
+    "value": 2.96,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2022",
+    "value": 3.7,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2018",
+    "value": 3.74,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2016",
+    "value": 3.755414,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2014",
+    "value": 3.691076,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2012",
+    "value": 3.67,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "IT",
+     "value": "Italy"
+    },
+    "countryiso3code": "ITA",
+    "date": "2010",
+    "value": 3.64,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2022",
+    "value": 3,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2018",
+    "value": 2.69,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2016",
+    "value": 2.893389,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2014",
+    "value": 2.840685,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2012",
+    "value": 2.94,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "PE",
+     "value": "Peru"
+    },
+    "countryiso3code": "PER",
+    "date": "2010",
+    "value": 2.8,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2022",
+    "value": 3.4,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2018",
+    "value": 3.15,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2016",
+    "value": 3.423693,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2014",
+    "value": 3.500225,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2012",
+    "value": 3.51,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "TR",
+     "value": "Turkiye"
+    },
+    "countryiso3code": "TUR",
+    "date": "2010",
+    "value": 3.22,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2025",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2024",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2023",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2022",
+    "value": 3.7,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2021",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2020",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2019",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2018",
+    "value": 3.38,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2017",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2016",
+    "value": 3.775321,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2015",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2014",
+    "value": 3.431244,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2013",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2012",
+    "value": 3.67,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2011",
+    "value": null,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   },
+   {
+    "indicator": {
+     "id": "LP.LPI.OVRL.XQ",
+     "value": "Logistics performance index: Overall (1=low to 5=high)"
+    },
+    "country": {
+     "id": "ZA",
+     "value": "South Africa"
+    },
+    "countryiso3code": "ZAF",
+    "date": "2010",
+    "value": 3.46,
+    "unit": "",
+    "obs_status": "",
+    "decimal": 2
+   }
+  ]
+ ]
+}
