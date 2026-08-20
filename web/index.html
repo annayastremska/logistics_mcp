@@ -263,10 +263,9 @@ details .bd { padding: 4px 16px 16px; }
 <body>
 
 <header><div class="wrap">
-  <span class="mark">Origin<small>Import sourcing risk, Ukraine</small></span>
+  <span class="mark">Origin<small>Ukraine · import concentration</small></span>
   <span class="grow"></span>
   <span class="ref"><span class="eb">Period</span><div class="v" id="period">&#8212;</div></span>
-  <button class="q" id="sysBtn">Sources</button>
 </div></header>
 
 <div class="fields"><div class="wrap" id="fields"></div></div>
@@ -365,7 +364,7 @@ function fields() {
     '</span><div class="v">' + v + (s ? "<s>" + s + "</s>" : "") + "</div></div>";
 
   $("fields").innerHTML =
-    f("Lines", rows.length, "tracked") +
+    f("Lines", rows.length) +
     f("Declared imports", usd(total)) +
     f("Held by one origin", usd(risk), total ? Math.round(risk/total*100) + "% of value" : "", true) +
     (top && top[1].length > 1
@@ -411,7 +410,7 @@ function entry(r, wide) {
       '<dl class="tally">' + tally + '</dl>' +
     '</div>' +
     '<div class="cond"><span class="w">' + (h ? h.w : "Spread") + '</span>' +
-      (rest > 0 ? '<span class="more">+' + rest + ' more on the sheet</span>' : "") + '</div>' +
+      (rest > 0 ? '<span class="more">+' + rest + '</span>' : "") + '</div>' +
     (wide ? '<div class="alt" id="alt-' + esc(r.hs_code) + '">' +
             '<span class="eb">Already arriving from</span>' +
             '<div class="note" style="margin-top:6px">loading&#8230;</div></div>' : "") +
@@ -423,7 +422,7 @@ function renderList() {
   $("list").innerHTML = rows.length
     ? rows.map((r,i) => entry(r, i === 0)).join("")
     : '<div class="entry s-clear" style="cursor:default"><div class="body"><span class="note">No line matches.</span></div></div>';
-  $("cnt").textContent = rows.length + " of " + data.rows.length + " shown";
+  $("cnt").textContent = rows.length + " of " + data.rows.length;
   $("segAll").setAttribute("aria-pressed", String(!riskOnly));
   $("segRisk").setAttribute("aria-pressed", String(riskOnly));
   $("list").querySelectorAll(".entry[data-hs]").forEach(el => {
@@ -449,8 +448,8 @@ async function fillAlt(hs) {
           '<td class="r" style="width:58px">' + pct(a.share_of_total_pct, 1) + '</td>' +
           '<td class="r" style="width:62px">' + usd(a.value_usd) + '</td>' +
           '<td class="r" style="width:74px">' + (tonnes(a.net_weight_kg) || "—") + '</td></tr>').join("") +
-        '</tbody></table><div class="after">Shipping to Ukraine now, so capacity is demonstrated rather than hypothetical.</div>'
-      : '<div class="note" style="margin-top:6px">No second origin of any size reports on this line.</div>');
+        '</tbody></table>'
+      : '<div class="note" style="margin-top:6px">No second origin of any size.</div>');
   } catch (e) {
     host.innerHTML = cap + '<div class="note" style="margin-top:6px">unavailable</div>';
   }
@@ -502,7 +501,7 @@ async function openLine(hs) {
     '<details><summary>How these figures were made</summary><div class="bd">' +
       (risk.interpretation ? '<p style="margin:0 0 10px">' + esc(risk.interpretation) + '</p>' : "") +
       ((flows.notes||[]).length ? '<div class="flag">' + (flows.notes||[]).map(esc).join("<br>") + '</div>' : "") +
-      '<p class="note" style="margin:10px 0 0">Unit value is declared value over declared weight, not a quoted price.</p>' +
+      '<p class="note" style="margin:10px 0 0">Unit value is declared value over declared weight, not a quote.</p>' +
     '</div></details></div>' +
 
   '<div class="sheet"><div class="cap"><span class="t">Find better options</span></div><div class="bd">' +
@@ -512,8 +511,8 @@ async function openLine(hs) {
       '<label class="note"><input type="checkbox" id="optPw" checked> browser server</label>' +
       '<span class="grow"></span>' +
       '<button id="breakPw">Break browser server</button></div>' +
-    '<p class="note" id="runNote" style="margin:11px 0 0">Ranks alternative origins on landed cost, ' +
-    'logistics, duty and demonstrated supply. Several minutes.</p>' +
+    '<p class="note" id="runNote" style="margin:11px 0 0">Landed cost, logistics, duty, ' +
+    'demonstrated supply. Several minutes.</p>' +
     '<div class="out" id="out" style="margin-top:13px"></div></div>' +
     '<details id="logWrap" class="hide"><summary>Steps</summary><div class="bd log" id="log"></div></details></div>';
 
@@ -614,11 +613,6 @@ $("refresh").addEventListener("click", () => load(true));
 $("back").addEventListener("click", () => view("list"));
 $("askBtn").addEventListener("click", send);
 $("ask").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
-$("sysBtn").addEventListener("click", () => {
-  view("list"); $("sysWrap").open = !$("sysWrap").open;
-  if ($("sysWrap").open) $("sysWrap").scrollIntoView({ block: "center" });
-});
-
 sources(); load();
 </script>
 </body>
