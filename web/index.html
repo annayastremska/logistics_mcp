@@ -3,269 +3,326 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sourcing Risk</title>
+<title>Origin — import sourcing risk</title>
 <style>
-  /* ===================================================================
-     One job: show a buyer which import lines depend on a single country,
-     what that dependency is worth, and where else the goods already come
-     from. Everything on screen answers one of those three; anything that
-     answered none of them was removed.
+/* =====================================================================
+   DESIGN PLAN (built to it, not decorated onto it)
 
-     Cards, but not the template kind. What was cut, and why:
-       hero headline with one coloured word -> a strip of measured facts
-       six identical tiles of equal weight -> the worst line leads, at size
-       drop shadows / blur / gradients     -> hairlines, flat surfaces
-       hover lift                          -> border and tint only
-       filled status pills                 -> a rule plus a word
-       Inter                               -> the platform UI face
+   Subject      Ukrainian food importer screening supply concentration.
+                Its world is the customs manifest: HS codes, bills of
+                lading, weight tickets, and the origin stencilled on the
+                side of a crate.
 
-     Contrast was measured, not judged: every text token clears 4.5:1 on
-     both surfaces in both modes; interactive borders clear 3:1.
-     =================================================================== */
-  :root {
-    color-scheme: light;
-    --bg: #ffffff; --sunk: #f7f7f5; --hover: #f2f2ef;
-    --ink: #16150f; --ink-2: #5c5a52; --ink-3: #8f8d84;
-    --line: #e6e4dd; --control: #8f8d84;
-    --sel: #1a4f8a;
-    --crit: #b3261e; --high: #a2560f; --mod: #7a6a12; --ok: #1d6b2b;
-    --track: #e3e1d9;
-    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --bg: #17171a; --sunk: #1e1e21; --hover: #26262a;
-      --ink: #f2f1ec; --ink-2: #a8a69e; --ink-3: #7c7a73;
-      --line: #2b2b2f; --control: #7c7a73; --sel: #7fb0ea;
-      --crit: #f08a82; --high: #e0a457; --mod: #cfc05a; --ok: #79c489;
-      --track: #303034;
-    }
-  }
-  :root[data-theme="dark"] {
+   Signature    The origin stencil. The lead supplier and its share are
+                set the way an origin is actually marked on produce
+                crates: DIN, caps, tracked out, inside a stencil frame,
+                with the code and tonnage as a manifest line beneath.
+                One per entry, and it is the thing you remember.
+
+   Type         Bahnschrift (DIN 1451) for figures, stencils and eyebrows
+                  -- the typeface of European freight and signage, so the
+                  page speaks the vernacular of the goods it describes.
+                Corbel for prose. Consolas for codes: a code should look
+                  like a code, not like a word.
+
+   Colour       "Carbon copy" -- the cool grey-blue of a duplicate form,
+                ink navy, and a stamp red spent only on single-source.
+                Deliberately not cream-and-terracotta, not near-black
+                with an acid accent.
+
+   Default check: cream/serif/terracotta -> no. Near-black/acid -> no.
+   Broadsheet hairlines -> adjacent, since a manifest also rules its
+   columns, so the stencil is made dominant and there are no newspaper
+   columns of text anywhere.
+
+   Contrast measured, not judged. Light: ink 16.2:1, ink-2 7.1, ink-3
+   3.41, stamp 7.2, hold 5.8, watch 5.8, clear 6.3 on the sheet; every
+   interactive border 3.4. Dark steps re-measured against the dark sheet.
+   ===================================================================== */
+
+:root {
+  color-scheme: light;
+  --sheet:   #fbfcfc;   /* the form itself */
+  --form:    #eef0f1;   /* duplicate-copy ground */
+  --form-2:  #e4e8ea;
+  --ink:     #11202b;
+  --ink-2:   #46596a;
+  --ink-3:   #7b8b98;
+  --rule:    #d5dade;
+  --control: #7b8b98;   /* 3.41:1 */
+  --stamp:   #a5231d;   /* single source */
+  --hold:    #8a5a10;   /* concentrated */
+  --watch:   #6f6412;   /* moderate, volatile */
+  --clear:   #1c6b45;   /* spread */
+  --din: "Bahnschrift", "Bahnschrift SemiCondensed", "DIN Alternate",
+         "Franklin Gothic Medium", "Arial Narrow", system-ui, sans-serif;
+  --body: Corbel, Candara, "Segoe UI", system-ui, sans-serif;
+  --code: Consolas, "Cascadia Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #17171a; --sunk: #1e1e21; --hover: #26262a;
-    --ink: #f2f1ec; --ink-2: #a8a69e; --ink-3: #7c7a73;
-    --line: #2b2b2f; --control: #7c7a73; --sel: #7fb0ea;
-    --crit: #f08a82; --high: #e0a457; --mod: #cfc05a; --ok: #79c489;
-    --track: #303034;
+    --sheet: #141a1f; --form: #1b2329; --form-2: #222b32;
+    --ink: #eef2f4; --ink-2: #a3b2bd; --ink-3: #7b8b98;
+    --rule: #28323a; --control: #7b8b98;
+    --stamp: #f08f88; --hold: #e0a75c; --watch: #cfc264; --clear: #79c9a0;
   }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sheet: #141a1f; --form: #1b2329; --form-2: #222b32;
+  --ink: #eef2f4; --ink-2: #a3b2bd; --ink-3: #7b8b98;
+  --rule: #28323a; --control: #7b8b98;
+  --stamp: #f08f88; --hold: #e0a75c; --watch: #cfc264; --clear: #79c9a0;
+}
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    display: flex; flex-direction: column;
-    font: 13px/1.45 -apple-system, "Segoe UI Variable Text", "Segoe UI",
-          ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
-    font-variant-numeric: tabular-nums;
-  }
-  h1,h2,h3 { margin: 0; font-weight: 600; letter-spacing: -0.008em; }
-  :focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--form); color: var(--ink);
+  display: flex; flex-direction: column;
+  font: 14px/1.5 var(--body);
+  font-variant-numeric: tabular-nums;
+}
+h1,h2,h3 { margin: 0; font-weight: 600; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-  /* one measured column; every element aligns to its text edge */
-  .wrap { max-width: 1180px; margin: 0 auto; width: 100%; padding: 0 20px; }
+/* eyebrow: DIN caps, tracked. Used for every field label on the page. */
+.eb {
+  font-family: var(--din); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .16em; color: var(--ink-3);
+}
+.code { font-family: var(--code); font-size: 11px; color: var(--ink-3); }
 
-  header { border-bottom: 1px solid var(--line); }
-  header .wrap { height: 46px; display: flex; align-items: center; gap: 12px; }
-  .name { font-weight: 600; }
-  .name i { font-style: normal; color: var(--ink-3); font-weight: 400; margin-left: 8px; }
-  .grow { flex: 1; }
+.wrap { max-width: 1120px; margin: 0 auto; width: 100%; padding: 0 24px; }
 
-  button {
-    appearance: none; font: inherit; cursor: pointer; height: 27px; padding: 0 11px;
-    border: 1px solid var(--control); border-radius: 4px; background: var(--bg); color: var(--ink);
-  }
-  button:hover { background: var(--hover); }
-  button.q { border-color: transparent; background: none; color: var(--ink-2); }
-  button.q:hover { background: var(--hover); color: var(--ink); }
-  button.go { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 500; }
-  :root[data-theme="dark"] button.go { color: #14141a; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.go { color: #14141a; } }
-  button:disabled { opacity: .45; cursor: default; }
+/* ---------------- masthead: a document header, not a hero ---------------- */
+header { background: var(--sheet); border-bottom: 2px solid var(--ink); }
+header .wrap { display: flex; align-items: flex-end; gap: 18px; padding: 14px 24px 10px; }
+.mark { font-family: var(--din); font-size: 19px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.mark small { display: block; font-family: var(--body); font-size: 11px; font-weight: 400;
+              letter-spacing: 0; text-transform: none; color: var(--ink-2); margin-top: 1px; }
+.grow { flex: 1; }
+.ref { text-align: right; }
+.ref .v { font-family: var(--din); font-size: 13px; letter-spacing: .05em; }
 
-  /* ---------- portfolio state, as facts ---------- */
-  .strip { border-bottom: 1px solid var(--line); background: var(--sunk); }
-  .strip .wrap { display: flex; flex-wrap: wrap; }
-  .fact { padding: 10px 22px 10px 0; margin-right: 22px; border-right: 1px solid var(--line); }
-  .fact:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
-  .fact .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 600; }
-  .fact .v { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; margin-top: 1px; }
-  .fact .v s { text-decoration: none; font-size: 11.5px; font-weight: 400; color: var(--ink-2); margin-left: 5px; letter-spacing: 0; }
-  .fact.key .v { color: var(--crit); }
+button {
+  appearance: none; font: inherit; font-size: 13px; cursor: pointer;
+  height: 28px; padding: 0 12px; border: 1px solid var(--control);
+  border-radius: 2px; background: var(--sheet); color: var(--ink);
+}
+button:hover { background: var(--form-2); }
+button.q { border-color: transparent; background: none; color: var(--ink-2); }
+button.q:hover { color: var(--ink); background: var(--form-2); }
+button.go {
+  background: var(--ink); border-color: var(--ink); color: var(--sheet);
+  font-family: var(--din); letter-spacing: .1em; text-transform: uppercase; font-size: 11px; font-weight: 600;
+}
+button:disabled { opacity: .45; cursor: default; }
 
-  .tools { display: flex; align-items: center; gap: 10px; padding: 13px 0 14px; }
-  .seg { display: inline-flex; border: 1px solid var(--control); border-radius: 4px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; height: 25px; color: var(--ink-2); }
-  .seg button + button { border-left: 1px solid var(--line); }
-  .seg button[aria-pressed="true"] { background: var(--sunk); color: var(--ink); font-weight: 550; }
-  .cnt { font-size: 12px; color: var(--ink-3); }
+/* ---------------- header fields: the manifest's own summary ---------------- */
+.fields { background: var(--sheet); border-bottom: 1px solid var(--rule); }
+.fields .wrap { display: flex; flex-wrap: wrap; padding: 0 24px; }
+.fld { padding: 11px 26px 12px 0; margin-right: 26px; border-right: 1px solid var(--rule); }
+.fld:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+.fld .v { font-family: var(--din); font-size: 22px; font-weight: 600; letter-spacing: .01em; line-height: 1.1; margin-top: 3px; }
+.fld .v s { text-decoration: none; font-family: var(--body); font-size: 12px; font-weight: 400;
+            letter-spacing: 0; color: var(--ink-2); margin-left: 6px; }
+.fld.hot .v { color: var(--stamp); }
 
-  /* ---------- cards, with hierarchy ---------- */
-  .grid {
-    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px;
-    /* Dense, so the lead card spanning two columns cannot leave a hole at the
-       end of the grid -- an empty cell shows the grid background and reads as
-       a grey slab. */
-    grid-auto-flow: row dense;
-    background: var(--line); border: 1px solid var(--line); border-radius: 5px; overflow: hidden;
-  }
-  @media (max-width: 880px) { .grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-  @media (max-width: 580px) { .grid { grid-template-columns: minmax(0,1fr); } }
+.tools { display: flex; align-items: center; gap: 12px; padding: 16px 0 14px; }
+.seg { display: inline-flex; border: 1px solid var(--control); border-radius: 2px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; height: 26px; color: var(--ink-2);
+              font-family: var(--din); letter-spacing: .1em; text-transform: uppercase; font-size: 10.5px; font-weight: 600; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
 
-  .card {
-    appearance: none; font: inherit; text-align: left; cursor: pointer;
-    background: var(--bg); border: 0; border-radius: 0; height: auto;
-    padding: 14px 16px 15px; position: relative;
-    /* A button centres its own contents, and display:block does not undo it --
-       a short card in a tall row floated in the middle of its cell. */
-    display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
-  }
-  .card:hover { background: var(--hover); }
-  .card::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: currentColor; }
-  /* Unequal risk should not get equal weight. The worst line takes two
-     columns and answers the next question -- where else? -- without a click. */
-  /* Two columns and two rows: with six lines in three columns that tiles
-     exactly, so hierarchy costs no empty cells. */
-  .card.lead { grid-column: span 2; grid-row: span 2; }
-  @media (max-width: 880px) { .card.lead { grid-column: span 2; grid-row: span 1; } }
-  @media (max-width: 580px) { .card.lead { grid-column: span 1; grid-row: span 1; } }
+/* ---------------- entries ---------------- */
+.list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 820px) { .list { grid-template-columns: 1fr; } }
 
-  .c-crit { color: var(--crit); } .c-high { color: var(--high); }
-  .c-mod { color: var(--mod); }   .c-ok { color: var(--ok); }
+/* A div, not a button: a button does not take its height from nested flex or
+   grid children in Chromium, and every entry collapsed to one line. Role and
+   tabindex restore the semantics; keydown restores the keyboard. */
+.entry {
+  text-align: left; cursor: pointer; font: inherit;
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0; display: flex; flex-direction: column;
+  border-top: 3px solid currentColor;
+}
+.entry:hover { background: var(--form-2); }
+.entry.wide { grid-column: span 2; }
+@media (max-width: 820px) { .entry.wide { grid-column: span 1; } }
+.s-stamp { color: var(--stamp); } .s-hold { color: var(--hold); }
+.s-watch { color: var(--watch); } .s-clear { color: var(--clear); }
 
-  .top { display: flex; align-items: baseline; gap: 8px; }
-  .nm { font-size: 14px; font-weight: 600; color: var(--ink); }
-  .hs { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
-  .gp { margin-left: auto; font-size: 11px; color: var(--ink-3); }
+.entry .head {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 11px 16px 10px; border-bottom: 1px solid var(--rule);
+}
+.entry .nm {
+  font-family: var(--din); font-size: 15px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--ink);
+}
+.entry .head .code { margin-left: auto; }
 
-  .big { display: flex; align-items: baseline; gap: 6px; margin-top: 13px; }
-  .big em { font-style: normal; font-size: 26px; font-weight: 600; letter-spacing: -0.03em; color: var(--ink); line-height: 1; }
-  .card.lead .big em { font-size: 34px; }
-  .big span { font-size: 12px; color: var(--ink-2); }
-  .who { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
-  .who b { color: var(--ink); font-weight: 600; }
+.body { display: flex; gap: 18px; padding: 14px 16px 15px; align-items: flex-start; }
 
-  .track { height: 3px; background: var(--track); margin-top: 12px; }
-  .track i { display: block; height: 100%; background: currentColor; }
+/* THE SIGNATURE — an origin stencil, as marked on a crate */
+.stencil {
+  flex: none; width: 186px; padding: 11px 13px 12px;
+  border: 1.5px solid var(--ink); border-radius: 1px;
+  background: var(--sheet);
+}
+.entry.wide .stencil { width: 232px; }
+.stencil .org {
+  font-family: var(--din); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .2em; font-size: 15px; color: var(--ink); line-height: 1.15;
+  word-break: break-word;
+}
+.entry.wide .stencil .org { font-size: 18px; }
+.stencil .pc {
+  font-family: var(--din); font-weight: 700; font-size: 38px; line-height: 1;
+  letter-spacing: -0.01em; margin-top: 9px; color: var(--ink);
+}
+.entry.wide .stencil .pc { font-size: 52px; }
+.stencil .mf {
+  font-family: var(--code); font-size: 10px; color: var(--ink-2) !important;
+  margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--control);
+  letter-spacing: .02em;
+}
+/* The share, filled in the line's own tone against a neutral remainder --
+   not the other way round. */
+.stencil .rule { height: 3px; background: var(--rule); margin-top: 10px; }
+.stencil .rule i { display: block; height: 100%; background: currentColor; }
 
-  .st { display: flex; align-items: baseline; gap: 7px; font-size: 12px; margin-top: 12px; }
-  .st b { font-weight: 550; color: var(--ink); }
-  .st s { text-decoration: none; color: var(--ink-3); }
+/* tally: the figures, as a form's field list */
+.tally { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; align-items: baseline; }
+.tally dt { white-space: nowrap; }
+.tally dd { margin: 0; font-family: var(--din); font-size: 15px; font-weight: 600;
+             letter-spacing: .01em; color: var(--ink); }
+.tally dd em { font-style: normal; font-family: var(--body); font-size: 11.5px; font-weight: 400; color: var(--ink-2); margin-left: 5px; letter-spacing: 0; }
 
-  .kv { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 12px 0 0; padding-top: 11px; border-top: 1px solid var(--line); }
-  .kv dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; }
-  .kv dd { margin: 2px 0 0; font-size: 13px; font-weight: 550; color: var(--ink); }
-  .kv dd small { display: block; font-size: 11px; font-weight: 400; color: var(--ink-3); margin-top: 1px; }
+.cond { padding: 0 16px 14px; display: flex; align-items: center; gap: 9px; }
+.cond .w { font-family: var(--din); font-size: 11.5px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
+.cond .more { font-size: 11.5px; color: var(--ink-3); }
+.cond::before { content: ""; width: 14px; height: 3px; background: currentColor; flex: none; }
 
-  .alts { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); }
-  .card.lead .alts { margin-top: auto; }
-  .alts .h { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; margin-bottom: 7px; }
-  .alts table { width: 100%; border-collapse: collapse; }
-  .alts td { padding: 2px 0; font-size: 12.5px; color: var(--ink-2); }
-  .alts td.r { text-align: right; color: var(--ink); }
+/* alternatives, only on the lead entry */
+.alt { margin: 0 16px 15px; border-top: 1px solid var(--rule); padding-top: 11px; }
+.alt table { width: 100%; border-collapse: collapse; }
+.alt td { padding: 3px 0; font-size: 13px; color: var(--ink-2); }
+.alt td.r { text-align: right; font-family: var(--din); font-weight: 600; color: var(--ink); }
+.alt .after { font-size: 11.5px; color: var(--ink-3); margin-top: 7px; }
 
-  /* ---------- one line ---------- */
-  .crumbs { display: flex; align-items: center; gap: 9px; padding: 11px 0; font-size: 12px; color: var(--ink-3); }
-  .block { border: 1px solid var(--line); border-radius: 5px; margin-bottom: 12px; }
-  .block .hd { padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--sunk); font-size: 12px; font-weight: 600; }
-  .block .bd { padding: 14px; }
-  table.data { width: 100%; border-collapse: collapse; }
-  table.data th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; padding: 8px 14px; border-bottom: 1px solid var(--line); }
-  table.data td { padding: 0 14px; height: 34px; border-bottom: 1px solid var(--line); }
-  table.data tr:last-child td { border-bottom: 0; }
-  .r { text-align: right; }
-  .sub { font-size: 11.5px; color: var(--ink-3); }
+/* ---------------- line sheet ---------------- */
+.crumbs { display: flex; align-items: center; gap: 10px; padding: 14px 0 12px; }
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 2px; margin-bottom: 14px; }
+.sheet > .cap { padding: 11px 16px; border-bottom: 2px solid var(--ink); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sheet > .cap .t { font-family: var(--din); font-size: 13px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
+.sheet > .bd { padding: 15px 16px; }
+table.man { width: 100%; border-collapse: collapse; }
+table.man th { text-align: left; padding: 8px 16px; border-bottom: 1px solid var(--rule); }
+table.man td { padding: 0 16px; height: 33px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+table.man tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--form) 55%, transparent); }
+table.man tr:last-child td { border-bottom: 0; }
+table.man td.r, table.man th.r { text-align: right; }
+table.man td.n { font-family: var(--din); font-weight: 600; font-size: 14px; }
+.lead-tag { font-family: var(--din); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--stamp); }
 
-  details { border-top: 1px solid var(--line); }
-  details summary { list-style: none; cursor: pointer; padding: 9px 14px; font-size: 12px; color: var(--ink-2); display: flex; gap: 7px; align-items: center; }
-  details summary::-webkit-details-marker { display: none; }
-  details summary::before { content: "+"; font-family: var(--mono); color: var(--ink-3); }
-  details[open] summary::before { content: "\2212"; }
-  details summary:hover { color: var(--ink); background: var(--hover); }
-  details .bd { padding: 4px 14px 14px; }
+details { border-top: 1px solid var(--rule); }
+details summary { list-style: none; cursor: pointer; padding: 10px 16px; display: flex; gap: 8px; align-items: center; color: var(--ink-2); font-size: 13px; }
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: "+"; font-family: var(--code); color: var(--ink-3); }
+details[open] summary::before { content: "\2212"; }
+details summary:hover { color: var(--ink); background: var(--form-2); }
+details .bd { padding: 4px 16px 16px; }
 
-  .note { font-size: 11.5px; color: var(--ink-3); }
-  .warn { border-left: 2px solid var(--mod); padding: 8px 11px; font-size: 11.5px; color: var(--ink-2); background: var(--sunk); }
-  .log { font-family: var(--mono); font-size: 11.5px; }
-  .log div { padding: 2px 0; color: var(--ink-2); }
-  .log .bad { color: var(--crit); }
-  .out { white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
+.note { font-size: 12px; color: var(--ink-3); }
+.flag { border-left: 3px solid var(--watch); padding: 9px 12px; font-size: 12px; color: var(--ink-2); background: var(--form); }
+.log { font-family: var(--code); font-size: 11.5px; }
+.log div { padding: 2px 0; color: var(--ink-2); }
+.log .bad { color: var(--stamp); }
+.out { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
 
-  .ask { border-top: 1px solid var(--line); padding: 9px 0; margin-top: auto; }
-  .ask .wrap { display: flex; gap: 8px; align-items: center; }
-  .ask input { flex: 1; font: inherit; height: 29px; padding: 0 10px; border: 1px solid var(--control); border-radius: 4px; background: var(--bg); color: var(--ink); }
-  .qa .q { font-size: 12px; color: var(--ink-3); margin-top: 12px; }
-  .qa .a { font-size: 13px; white-space: pre-wrap; margin-top: 3px; }
+.ask { background: var(--sheet); border-top: 1px solid var(--rule); padding: 11px 0; margin-top: auto; }
+.ask .wrap { display: flex; gap: 9px; align-items: center; }
+.ask input { flex: 1; font: inherit; font-size: 14px; height: 30px; padding: 0 11px;
+             border: 1px solid var(--control); border-radius: 2px; background: var(--sheet); color: var(--ink); }
+.qa .q { font-size: 12.5px; color: var(--ink-3); margin-top: 13px; }
+.qa .a { white-space: pre-wrap; margin-top: 3px; }
 
-  #main { flex: 1 1 auto; }
-  .hide { display: none !important; }
-  .sk { background: var(--sunk); height: 176px; }
+#main { flex: 1 1 auto; padding-bottom: 26px; }
+.hide { display: none !important; }
+.sk { background: var(--sheet); border: 1px solid var(--rule); height: 168px; }
+@media (prefers-reduced-motion: no-preference) {
+  .entry { transition: background .12s linear; }
+}
 </style>
 </head>
 <body>
 
 <header><div class="wrap">
-  <span class="name">Sourcing Risk <i id="period"></i></span>
+  <span class="mark">Origin<small>Import sourcing risk, Ukraine</small></span>
   <span class="grow"></span>
+  <span class="ref"><span class="eb">Period</span><div class="v" id="period">&#8212;</div></span>
   <button class="q" id="sysBtn">Sources</button>
 </div></header>
 
-<div class="strip"><div class="wrap" id="strip"></div></div>
+<div class="fields"><div class="wrap" id="fields"></div></div>
 
-<div id="main">
-  <section id="vList" class="wrap">
+<div id="main"><div class="wrap">
+  <section id="vList">
     <div class="tools">
       <div class="seg">
-        <button id="segAll" aria-pressed="true">All</button>
-        <button id="segRisk" aria-pressed="false">Needs attention</button>
+        <button id="segAll" aria-pressed="true">All lines</button>
+        <button id="segRisk" aria-pressed="false">Single source</button>
       </div>
-      <span class="cnt" id="cnt"></span>
+      <span class="note" id="cnt"></span>
       <span class="grow"></span>
       <button class="q" id="refresh">Refresh</button>
     </div>
-    <div class="grid" id="grid"></div>
-    <div class="block" style="margin-top:14px">
+    <div class="list" id="list"></div>
+    <div class="sheet" style="margin-top:14px">
       <details id="sysWrap"><summary>Data sources and connections</summary>
         <div class="bd" id="sysBody">checking&#8230;</div></details>
     </div>
   </section>
 
-  <section id="vLine" class="wrap hide">
-    <div class="crumbs"><button class="q" id="back">&#8592; Lines</button><span id="crumb"></span></div>
+  <section id="vLine" class="hide">
+    <div class="crumbs"><button class="q" id="back">&#8592; All lines</button>
+      <span class="eb" id="crumb"></span></div>
     <div id="lineBody"></div>
   </section>
-</div>
+</div></div>
 
-<div class="wrap qa" id="qa"></div>
 <div class="ask"><div class="wrap">
   <input id="ask" placeholder="Ask about these lines" autocomplete="off">
   <button class="go" id="askBtn">Ask</button>
 </div></div>
+<div class="wrap qa" id="qa"></div>
 
 <script>
 "use strict";
 
 /* Server enums are not buyer language. Each maps to a word that can be acted
-   on, a severity, and whether it belongs on the card face -- the rest surface
-   on the line view. Four badges on a tile is how the last version became
-   unreadable. */
+   on, a severity, and whether it belongs on the entry face; the rest surface
+   on the line sheet. */
 const COND = {
-  SINGLE_SOURCE:          { w: "Single source", c: "c-crit", rank: 4, face: true,
+  SINGLE_SOURCE:          { w: "Single source", c: "s-stamp", rank: 4, face: true,
                             why: "One country supplies over 70% of this line." },
-  HIGH_CONCENTRATION:     { w: "Concentrated",  c: "c-high", rank: 3, face: true,
+  HIGH_CONCENTRATION:     { w: "Concentrated",  c: "s-hold",  rank: 3, face: true,
                             why: "Supply sits with very few countries." },
-  MODERATE_CONCENTRATION: { w: "Moderate",      c: "c-mod",  rank: 2, face: true,
+  MODERATE_CONCENTRATION: { w: "Moderate",      c: "s-watch", rank: 2, face: true,
                             why: "Supply is moderately concentrated." },
-  VOLATILE_SUPPLY:        { w: "Volumes swing", c: "c-mod",  rank: 2, face: false,
+  VOLATILE_SUPPLY:        { w: "Volumes swing", c: "s-watch", rank: 2, face: false,
                             why: "Volumes move sharply year to year." },
-  MIRROR_DISCREPANCY:     { w: "Reporting gap", c: "c-mod",  rank: 1, face: false,
+  MIRROR_DISCREPANCY:     { w: "Reporting gap", c: "s-watch", rank: 1, face: false,
                             why: "Partner export reports disagree with Ukraine's import figures." },
-  THIN_DATA:              { w: "Thin data",     c: "c-mod",  rank: 1, face: false,
+  THIN_DATA:              { w: "Thin data",     c: "s-watch", rank: 1, face: false,
                             why: "Too few reporting origins to be confident." },
 };
-
-const ATTENTION = 4;     // single-source. "Any flag" matched all six rows.
+const ATTENTION = 4;
 let data = null, riskOnly = false, live = null;
 
 const $ = (id) => document.getElementById(id);
@@ -276,13 +333,14 @@ const usd = (v) => v == null ? "—"
   : v >= 1e3 ? "$" + (v/1e3).toFixed(0) + "k" : "$" + v.toFixed(0);
 const pct = (v, d = 0) => v == null ? "—" : v.toFixed(d) + "%";
 const n = (v, d = 0) => v == null ? "—" : v.toLocaleString("en-US", { maximumFractionDigits: d });
+const tonnes = (kg) => kg == null ? null : n(kg / 1000) + " t";
 
-const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MON = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 const period = (l) => {
   if (!l) return "";
-  const one = p => MON[+p.slice(4)-1] + " " + p.slice(2,4);
+  const one = p => MON[+p.slice(4)-1] + " " + p.slice(0,4);
   const m = String(l).match(/^(\d{6})-(\d{6})$/);
-  return m ? one(m[1]) + "–" + one(m[2]) : String(l);
+  return m ? one(m[1]) + " – " + one(m[2]) : String(l);
 };
 
 /* Money the lead supplier controls. Ranking on share alone puts a $19m line
@@ -293,8 +351,8 @@ const conds = (r) => (r.flags || []).map(f => COND[f]).filter(Boolean).sort((a,b
 const face = (r) => conds(r).find(c => c.face) || null;
 const shortName = (r) => r.label.replace(/,\s*(fresh|shelled|in shell)$/i, "");
 
-/* ---------------- portfolio state ---------------- */
-function strip() {
+/* ---------------- manifest header ---------------- */
+function fields() {
   const rows = data.rows.filter(r => r.top_partner_share_pct != null);
   const total = rows.reduce((s,r) => s + (r.total_value_usd||0), 0);
   const risk  = rows.reduce((s,r) => s + (atRisk(r)||0), 0);
@@ -303,94 +361,112 @@ function strip() {
   const top = Object.entries(byLead).sort((a,b) => b[1].length - a[1].length)[0];
   const topRisk = top ? top[1].reduce((s,r) => s + (atRisk(r)||0), 0) : 0;
 
-  const f = (k, v, s, key) => '<div class="fact' + (key ? " key" : "") + '"><div class="k">' + k +
-    '</div><div class="v">' + v + (s ? "<s>" + s + "</s>" : "") + "</div></div>";
+  const f = (k, v, s, hot) => '<div class="fld' + (hot ? " hot" : "") + '"><span class="eb">' + k +
+    '</span><div class="v">' + v + (s ? "<s>" + s + "</s>" : "") + "</div></div>";
 
-  $("strip").innerHTML =
-    f("Imports", usd(total), period(data.period_label)) +
-    f("Held by one origin", usd(risk), total ? Math.round(risk/total*100) + "%" : "", true) +
+  $("fields").innerHTML =
+    f("Lines", rows.length, "tracked") +
+    f("Declared imports", usd(total)) +
+    f("Held by one origin", usd(risk), total ? Math.round(risk/total*100) + "% of value" : "", true) +
     (top && top[1].length > 1
-      ? f("Largest single origin", esc(top[0]), top[1].length + " lines · " + usd(topRisk))
+      ? f("Concentrated on", esc(top[0]).toUpperCase(), top[1].length + " lines · " + usd(topRisk))
       : "") +
-    f("Needs attention", rows.filter(r => (r.severity||0) >= ATTENTION).length, "of " + rows.length);
+    f("Single source", rows.filter(r => (r.severity||0) >= ATTENTION).length, "of " + rows.length);
   $("period").textContent = period(data.period_label);
 }
 
-/* ---------------- cards ---------------- */
+/* ---------------- entries ---------------- */
 const visible = () => data.rows
   .filter(r => !riskOnly || (r.severity||0) >= ATTENTION)
   .sort((a,b) => (b.severity - a.severity) || ((atRisk(b)||0) - (atRisk(a)||0)));
 
-function card(r, isLead) {
-  const h = face(r), cls = h ? h.c : "c-ok";
+function entry(r, wide) {
+  const h = face(r), cls = h ? h.c : "s-clear";
   const rest = conds(r).length - (h ? 1 : 0);
   const share = r.top_partner_share_pct;
-  return '<button class="card ' + cls + (isLead ? " lead" : "") + '" data-hs="' + esc(r.hs_code) + '">' +
-    '<div class="top"><span class="nm">' + esc(shortName(r)) + '</span>' +
-      '<span class="hs">' + esc(r.hs_code) + '</span>' +
-      '<span class="gp">' + esc(r.group) + (r.status !== "ok" ? " · incomplete" : "") + '</span></div>' +
-    '<div class="big"><em>' + pct(share) + '</em><span>from one origin</span></div>' +
-    '<div class="who"><b>' + esc(r.top_partner_name || r.top_partner_iso3 || "—") + '</b> leads</div>' +
-    '<div class="track"><i style="width:' + Math.min(100, share||0) + '%"></i></div>' +
-    '<div class="st"><b>' + (h ? h.w : "Spread") + '</b>' + (rest > 0 ? '<s>+' + rest + '</s>' : "") + '</div>' +
-    '<dl class="kv">' +
-      '<div><dt>At risk</dt><dd>' + usd(atRisk(r)) + '</dd></div>' +
-      '<div><dt>Real alternatives</dt><dd>' + n(r.effective_partner_count,1) +
-        '<small>' + n(r.partner_count) + ' report, this many matter</small></dd></div>' +
-      (isLead ? '<div><dt>Imports</dt><dd>' + usd(r.total_value_usd) + '</dd></div>' +
-                '<div><dt>Volume swing</dt><dd>' + pct(r.yoy_volatility_pct,0) +
-                '<small>year to year</small></dd></div>' : "") +
-    '</dl>' +
-    (isLead ? '<div class="alts" id="alts-' + esc(r.hs_code) + '">' +
-              '<div class="h">Where else it already comes from</div>' +
-              '<div class="note">loading…</div></div>' : "") +
-    '</button>';
+  const org = (r.top_partner_name || r.top_partner_iso3 || "—").toUpperCase();
+
+  const tally = [
+    ["At risk", usd(atRisk(r)), ""],
+    ["Real alternatives", n(r.effective_partner_count, 1), "of " + n(r.partner_count) + " reporting"],
+    ["Declared imports", usd(r.total_value_usd), ""],
+    ["Volume swing", pct(r.yoy_volatility_pct, 0), "year on year"],
+  ].map(x => '<dt class="eb">' + x[0] + '</dt><dd>' + x[1] +
+             (x[2] ? '<em>' + x[2] + '</em>' : "") + '</dd>').join("");
+
+  return '<div class="entry ' + cls + (wide ? " wide" : "") + '" role="button" tabindex="0"' +
+    ' aria-label="' + esc(shortName(r)) + ', ' + pct(share) + ' from ' + esc(org) + '"' +
+    ' data-hs="' + esc(r.hs_code) + '">' +
+    '<div class="head"><span class="nm">' + esc(shortName(r)) + '</span>' +
+      '<span class="eb">' + esc(r.group) + (r.status !== "ok" ? " · incomplete" : "") + '</span>' +
+      '<span class="code">HS ' + esc(r.hs_code) + '</span></div>' +
+    '<div class="body">' +
+      /* the signature: origin marked as it would be on the crate */
+      '<div class="stencil"><div class="org">' + esc(org) + '</div>' +
+        '<div class="pc">' + pct(share) + '</div>' +
+        '<div class="rule"><i style="width:' + Math.min(100, share||0) + '%"></i></div>' +
+        '<div class="mf">' + esc(r.hs_code) + ' · ' + (r.top_partner_iso3 || "") +
+          ' · ' + usd(atRisk(r)) + '</div>' +
+      '</div>' +
+      '<dl class="tally">' + tally + '</dl>' +
+    '</div>' +
+    '<div class="cond"><span class="w">' + (h ? h.w : "Spread") + '</span>' +
+      (rest > 0 ? '<span class="more">+' + rest + ' more on the sheet</span>' : "") + '</div>' +
+    (wide ? '<div class="alt" id="alt-' + esc(r.hs_code) + '">' +
+            '<span class="eb">Already arriving from</span>' +
+            '<div class="note" style="margin-top:6px">loading&#8230;</div></div>' : "") +
+    '</div>';
 }
 
-function renderCards() {
+function renderList() {
   const rows = visible();
-  $("grid").innerHTML = rows.length
-    ? rows.map((r,i) => card(r, i === 0)).join("")
-    : '<div class="card" style="cursor:default"><span class="note">No line matches.</span></div>';
-  $("cnt").textContent = rows.length + " of " + data.rows.length;
+  $("list").innerHTML = rows.length
+    ? rows.map((r,i) => entry(r, i === 0)).join("")
+    : '<div class="entry s-clear" style="cursor:default"><div class="body"><span class="note">No line matches.</span></div></div>';
+  $("cnt").textContent = rows.length + " of " + data.rows.length + " shown";
   $("segAll").setAttribute("aria-pressed", String(!riskOnly));
   $("segRisk").setAttribute("aria-pressed", String(riskOnly));
-  $("grid").querySelectorAll(".card[data-hs]").forEach(el =>
-    el.addEventListener("click", () => openLine(el.dataset.hs)));
-  if (rows[0]) fillAlts(rows[0].hs_code);
+  $("list").querySelectorAll(".entry[data-hs]").forEach(el => {
+    const open = () => openLine(el.dataset.hs);
+    el.addEventListener("click", open);
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+    });
+  });
+  if (rows[0]) fillAlt(rows[0].hs_code);
 }
 
-/* The lead card earns its width by answering "where else?" up front. */
-async function fillAlts(hs) {
-  const host = $("alts-" + hs);
+/* The lead entry earns its width by answering "where else?" up front. */
+async function fillAlt(hs) {
+  const host = $("alt-" + hs);
   if (!host) return;
-  const title = '<div class="h">Where else it already comes from</div>';
+  const cap = '<span class="eb">Already arriving from</span>';
   try {
     const d = await (await fetch("/api/commodity/" + hs + "?year=2024")).json();
-    const alts = (d.flows && d.flows.rows ? d.flows.rows : []).slice(1, 5);
-    host.innerHTML = title + (alts.length
+    const alts = ((d.flows && d.flows.rows) || []).slice(1, 5);
+    host.innerHTML = cap + (alts.length
       ? '<table><tbody>' + alts.map(a => '<tr><td>' + esc(a.partner_name) + '</td>' +
-          '<td class="r" style="width:56px">' + pct(a.share_of_total_pct,1) + '</td>' +
-          '<td class="r" style="width:58px">' + usd(a.value_usd) + '</td></tr>').join("") +
-        '</tbody></table><div class="note" style="margin-top:6px">' +
-        'Already shipping to Ukraine, so capacity is demonstrated, not hypothetical.</div>'
-      : '<div class="note">No meaningful second origin reports on this line.</div>');
+          '<td class="r" style="width:58px">' + pct(a.share_of_total_pct, 1) + '</td>' +
+          '<td class="r" style="width:62px">' + usd(a.value_usd) + '</td>' +
+          '<td class="r" style="width:74px">' + (tonnes(a.net_weight_kg) || "—") + '</td></tr>').join("") +
+        '</tbody></table><div class="after">Shipping to Ukraine now, so capacity is demonstrated rather than hypothetical.</div>'
+      : '<div class="note" style="margin-top:6px">No second origin of any size reports on this line.</div>');
   } catch (e) {
-    host.innerHTML = title + '<div class="note">unavailable</div>';
+    host.innerHTML = cap + '<div class="note" style="margin-top:6px">unavailable</div>';
   }
 }
 
 async function load(refresh) {
-  $("grid").innerHTML = Array.from({length: 6}, () => '<div class="sk"></div>').join("");
+  $("list").innerHTML = Array.from({length: 4}, () => '<div class="sk"></div>').join("");
   try {
     data = await (await fetch("/api/portfolio?year=2024" + (refresh ? "&refresh=true" : ""))).json();
-    strip(); renderCards();
+    fields(); renderList();
   } catch (e) {
-    $("grid").innerHTML = '<div class="card" style="cursor:default"><span class="note">Could not load: ' + esc(e) + '</span></div>';
+    $("list").innerHTML = '<div class="entry s-stamp" style="cursor:default"><div class="body"><span class="note">Could not load: ' + esc(e) + '</span></div></div>';
   }
 }
 
-/* ---------------- one line ---------------- */
+/* ---------------- line sheet ---------------- */
 function view(v) {
   $("vList").classList.toggle("hide", v !== "list");
   $("vLine").classList.toggle("hide", v !== "line");
@@ -400,44 +476,45 @@ function view(v) {
 async function openLine(hs) {
   const row = data.rows.find(r => r.hs_code === hs);
   view("line");
-  $("crumb").textContent = row ? row.label : hs;
-  $("lineBody").innerHTML = '<div class="note" style="padding:14px 0">Loading…</div>';
+  $("crumb").textContent = row ? shortName(row).toUpperCase() : hs;
+  $("lineBody").innerHTML = '<div class="note" style="padding:14px 0">Loading&#8230;</div>';
   const d = await (await fetch("/api/commodity/" + hs + "?year=2024")).json();
   const flows = d.flows || {}, risk = d.risk || {};
   const rows = flows.rows || [];
   const all = conds(row || {});
 
   $("lineBody").innerHTML =
-  '<div class="block"><div class="hd">Where it comes from ' +
-    '<span class="note" style="font-weight:400">' +
-    esc(period((flows.provenance || {}).as_of || data.period_label)) + " · HS " + esc(d.hs_code) +
-    " · " + rows.length + " origins reporting" +
-    (all.length ? " · " + all.map(c => esc(c.w)).join(", ") : "") + '</span></div>' +
-    '<table class="data"><thead><tr><th>Origin</th><th class="r">Share</th><th class="r">Value</th>' +
-    '<th class="r">Weight</th><th class="r">Unit value</th></tr></thead><tbody>' +
-    rows.map((r,i) => '<tr><td>' + esc(r.partner_name) + ' <span class="hs">' + esc(r.partner_iso3) + '</span>' +
-      (i === 0 ? ' <span class="sub">lead</span>' : "") + '</td>' +
-      '<td class="r">' + pct(r.share_of_total_pct,1) + '</td>' +
-      '<td class="r">' + usd(r.value_usd) + '</td>' +
-      '<td class="r">' + (r.net_weight_kg == null ? "—" : n(r.net_weight_kg/1000) + " t") + '</td>' +
+  '<div class="sheet"><div class="cap"><span class="t">Origins declared</span>' +
+    '<span class="code">HS ' + esc(d.hs_code) + '</span>' +
+    '<span class="grow"></span>' +
+    '<span class="note">' + esc(period((flows.provenance || {}).as_of || data.period_label)) +
+    ' · ' + rows.length + ' reporting' +
+    (all.length ? ' · ' + all.map(c => esc(c.w)).join(", ") : "") + '</span></div>' +
+    '<table class="man"><thead><tr><th class="eb">Origin</th><th class="r eb">Share</th>' +
+    '<th class="r eb">Value</th><th class="r eb">Weight</th><th class="r eb">Unit value</th></tr></thead><tbody>' +
+    rows.map((r,i) => '<tr><td>' + esc(r.partner_name) + ' <span class="code">' + esc(r.partner_iso3) + '</span>' +
+      (i === 0 ? ' <span class="lead-tag">lead</span>' : "") + '</td>' +
+      '<td class="r n">' + pct(r.share_of_total_pct,1) + '</td>' +
+      '<td class="r n">' + usd(r.value_usd) + '</td>' +
+      '<td class="r">' + (tonnes(r.net_weight_kg) || "—") + '</td>' +
       '<td class="r">' + (r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2)) + '</td></tr>').join("") +
     '</tbody></table>' +
-    '<details><summary>How these numbers were made</summary><div class="bd">' +
-      (risk.interpretation ? '<p style="margin:0 0 9px">' + esc(risk.interpretation) + '</p>' : "") +
-      ((flows.notes||[]).length ? '<div class="warn">' + (flows.notes||[]).map(esc).join("<br>") + '</div>' : "") +
-      '<p class="note" style="margin:9px 0 0">Unit value is value over weight, not a quoted price.</p>' +
+    '<details><summary>How these figures were made</summary><div class="bd">' +
+      (risk.interpretation ? '<p style="margin:0 0 10px">' + esc(risk.interpretation) + '</p>' : "") +
+      ((flows.notes||[]).length ? '<div class="flag">' + (flows.notes||[]).map(esc).join("<br>") + '</div>' : "") +
+      '<p class="note" style="margin:10px 0 0">Unit value is declared value over declared weight, not a quoted price.</p>' +
     '</div></details></div>' +
 
-  '<div class="block"><div class="hd">Find better options</div><div class="bd">' +
-    '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">' +
+  '<div class="sheet"><div class="cap"><span class="t">Find better options</span></div><div class="bd">' +
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
       '<button class="go" id="run">Run</button>' +
       '<label class="note"><input type="checkbox" id="optReplay"> offline</label>' +
       '<label class="note"><input type="checkbox" id="optPw" checked> browser server</label>' +
       '<span class="grow"></span>' +
       '<button id="breakPw">Break browser server</button></div>' +
-    '<p class="note" id="runNote" style="margin:10px 0 0">Ranks alternative origins on landed cost, ' +
+    '<p class="note" id="runNote" style="margin:11px 0 0">Ranks alternative origins on landed cost, ' +
     'logistics, duty and demonstrated supply. Several minutes.</p>' +
-    '<div class="out" id="out" style="margin-top:12px"></div></div>' +
+    '<div class="out" id="out" style="margin-top:13px"></div></div>' +
     '<details id="logWrap" class="hide"><summary>Steps</summary><div class="bd log" id="log"></div></details></div>';
 
   $("run").addEventListener("click", () => run(d));
@@ -523,7 +600,7 @@ async function sources() {
   try {
     const h = await (await fetch("/api/health")).json();
     $("sysBody").innerHTML = Object.entries(h.servers).map(kv =>
-      '<div style="margin-bottom:8px"><span class="log" style="color:var(--ink)">' + esc(kv[0]) + '</span>' +
+      '<div style="margin-bottom:9px"><span class="code" style="color:var(--ink)">' + esc(kv[0]) + '</span>' +
       '<span class="note"> ' + esc(kv[1].transport) + " · " + kv[1].declared_tools.length + ' tools</span>' +
       '<div class="note">' + kv[1].declared_tools.map(esc).join(", ") + '</div></div>').join("") +
       '<div class="note">mode ' + esc(h.data_mode) + " · model " + esc(h.model) +
@@ -531,8 +608,8 @@ async function sources() {
   } catch (e) { $("sysBody").textContent = String(e); }
 }
 
-$("segAll").addEventListener("click", () => { riskOnly = false; renderCards(); });
-$("segRisk").addEventListener("click", () => { riskOnly = true; renderCards(); });
+$("segAll").addEventListener("click", () => { riskOnly = false; renderList(); });
+$("segRisk").addEventListener("click", () => { riskOnly = true; renderList(); });
 $("refresh").addEventListener("click", () => load(true));
 $("back").addEventListener("click", () => view("list"));
 $("askBtn").addEventListener("click", send);
