@@ -564,19 +564,22 @@ def estimate_landed_cost(
             f"{country.name}; it is a statistical unit value, not a quoted price."
         )
 
-    duty_rate = 0.0
+    # None means "not established", which is not the same as zero. A failed or
+    # absent lookup used to arrive as 0.0, and the ranking scored that as the
+    # best possible duty -- so not knowing flattered the candidate.
+    duty_known: float | None = None
     duty_year_note = ""
     hs6 = entry.code if len(entry.code) == 6 else None
     if hs6 is None:
         assumptions.append(
-            "Duty looked up at 6-digit level is unavailable for a 4-digit heading; 0 percent assumed. "
+            "Duty cannot be looked up for a 4-digit heading, so it is reported as unknown. "
             "Pass a 6-digit code for a real rate."
         )
     else:
         try:
             tariff = wits.fetch_mfn_rate_with_fallback(hs6, resolved_year)
             if tariff.rate is not None:
-                duty_rate = tariff.rate.rate_pct
+                duty_known = tariff.rate.rate_pct
                 duty_year_note = f" (WITS observation for {tariff.rate.year})"
                 if tariff.rate.year != resolved_year:
                     assumptions.append(
@@ -585,13 +588,13 @@ def estimate_landed_cost(
                     )
             else:
                 assumptions.append(
-                    f"WITS holds no MFN rate for HS {hs6}; 0 percent assumed, which understates cost "
-                    f"if a duty in fact applies."
+                    f"WITS holds no MFN rate on record for HS {hs6}, so duty is reported as "
+                    f"unknown rather than as zero."
                 )
         except UpstreamError as exc:
             assumptions.append(
-                f"Tariff lookup failed ({exc.message}); 0 percent duty assumed. Treat the total as a "
-                f"lower bound."
+                f"Tariff lookup failed ({exc.message}), so duty is reported as unknown. Treat the "
+                f"total as a lower bound."
             )
 
     result = costing.build_landed_cost(
@@ -599,9 +602,15 @@ def estimate_landed_cost(
         unit_price_usd_per_kg=price,
         distance_km=distance,
         mode=transport_mode,  # type: ignore[arg-type]
-        duty_rate_pct=duty_rate,
+        duty_rate_pct=duty_known if duty_known is not None else 0.0,
         unit_price_is_cif=unit_price_usd_per_kg is None,
     )
+    if duty_known is None:
+        assumptions.append(
+            "Duty could not be established, so the total is computed with no duty and is a lower "
+            "bound. The duty rate is reported as unknown rather than as zero, which would have "
+            "read as a duty-free origin."
+        )
 
     return LandedCostResult(
         status="ok",
@@ -617,11 +626,11 @@ def estimate_landed_cost(
         ],
         total_landed_cost_usd=result.total_usd,
         cost_per_kg_usd=result.cost_per_kg_usd,
-        duty_rate_pct=duty_rate,
+        duty_rate_pct=duty_known,
         duty_basis="MFN",
         fta_preference_possible=reference.fta_preference_possible(country.iso3),
         distance_km=distance,
-        confidence="medium" if duty_rate or price else "low",
+        confidence="medium" if duty_known is not None and price else "low",
         assumptions=[*assumptions, *result.assumptions, f"Duty basis: MFN{duty_year_note}."],
         provenance=Provenance(
             source="model",

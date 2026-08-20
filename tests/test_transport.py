@@ -179,11 +179,47 @@ def test_tariff_fallback_raises_when_no_year_has_a_recording(
     assert "2024" in str(raised.value)
 
 
-def test_a_non_fixture_error_still_propagates(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Only a missing recording is skippable. A real transport failure is not.
+def test_a_transient_failure_on_one_year_does_not_abort_the_chain(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """This one cost a live run its duty figures.
 
-    Without this, the skip added above would swallow rate limiting and outages
-    and present the next year's rate as though nothing had gone wrong.
+    WITS answers 404 for the current year, so every lookup walks back through
+    older years. The chain used to re-raise anything that was not a missing
+    fixture, so a single timeout on the first year ended it -- while the older
+    year sat in the HTTP cache, one call away. Four of eight origins in one
+    ranking went down the "duty unknown" path for no reason, and because the
+    rate does not depend on the origin, the same table carried two different
+    duty assumptions.
+    """
+    calls: list[int] = []
+
+    def flaky(hs6: str, year: int) -> wits.TariffResponse:
+        calls.append(year)
+        if year == 2024:
+            raise UpstreamError("TIMEOUT", "read timed out")
+        return wits.TariffResponse(
+            rate=wits.TariffRate(reporter=804, hs6=hs6, year=year, rate_pct=10.0),
+            fetch=http.FetchResult({}, SourceMode.LIVE, "", ""),
+        )
+
+    monkeypatch.setattr(wits, "fetch_mfn_rate", flaky)
+
+    response = wits.fetch_mfn_rate_with_fallback("080610", 2024)
+    assert response.rate is not None
+    assert response.rate.rate_pct == 10.0
+    assert response.rate.year == 2023
+    assert calls[:2] == [2024, 2023], "the failed year must be followed by the next one"
+
+
+def test_a_chain_that_fails_everywhere_raises_and_names_every_year(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Skipping a bad year must not turn into swallowing an outage.
+
+    When no year answered at all, the caller has to hear about it -- and the
+    error must say a transport failure happened rather than blaming the fixture
+    set, because the two have different remedies.
     """
 
     def rate_limited(hs6: str, year: int) -> wits.TariffResponse:
@@ -193,4 +229,41 @@ def test_a_non_fixture_error_still_propagates(monkeypatch: pytest.MonkeyPatch) -
 
     with pytest.raises(UpstreamError) as raised:
         wits.fetch_mfn_rate_with_fallback("080610", 2024)
-    assert raised.value.code == "RATE_LIMITED"
+    assert raised.value.code == "UPSTREAM_UNAVAILABLE"
+    message = str(raised.value)
+    for year in ("2024", "2023", "2022", "2021"):
+        assert year in message, "every year attempted must be accounted for"
+    assert "RATE_LIMITED" in message
+
+
+def test_an_unestablished_duty_is_reported_as_unknown_not_as_zero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failed lookup used to arrive as 0.0 and score as the best possible duty.
+
+    So not knowing the rate *flattered* the candidate -- the exact confusion
+    between "empty" and "good" that the status convention exists to prevent. The
+    total is still computed with no duty, and now says it is a lower bound.
+    """
+    monkeypatch.setenv("SOURCING_MODE", "replay")
+
+    from mcp_server.server import estimate_landed_cost
+
+    def unavailable(hs6: str, year: int, **kwargs: object) -> wits.TariffResponse:
+        raise UpstreamError("UPSTREAM_UNAVAILABLE", "WITS unreachable")
+
+    monkeypatch.setattr(
+        "mcp_server.server.wits.fetch_mfn_rate_with_fallback", unavailable
+    )
+
+    result = estimate_landed_cost(
+        hs_code="080610", origin_iso3="TUR", volume_kg=120_000.0, year=2024
+    )
+    assert result.status == "ok", "a missing duty must not discard a usable cost"
+    assert result.duty_rate_pct is None, "unknown must not arrive as the number zero"
+    assert result.confidence == "low"
+    # The specific sentence the result must carry, not merely the word "unknown"
+    # somewhere: an earlier version of this assertion passed on a different
+    # branch's wording and let the new one be deleted without a failure.
+    assert any("read as a duty-free origin" in a for a in result.assumptions)
+    assert any("lower bound" in a for a in result.assumptions)

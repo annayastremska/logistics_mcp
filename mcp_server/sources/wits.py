@@ -112,32 +112,32 @@ def fetch_mfn_rate_with_fallback(
     """
     years: list[int] = [preferred_year, *[y for y in fallback_years if y != preferred_year]]
     last: TariffResponse | None = None
-    missing_fixtures: list[str] = []
+    failures: list[str] = []
 
     for year in years:
         try:
             response = fetch_mfn_rate(hs6, year)
         except UpstreamError as exc:
-            if exc.code != "FIXTURE_MISSING":
-                raise
-            # A year with no fixture is a year the recording run got a 404 for --
-            # WITS holds no observation for it, so nothing was ever written. That
-            # is the same "try the next year" case as a live 404, and it must not
-            # abort the chain, or replay reports 0 percent duty where live
-            # reports the real rate.
-            missing_fixtures.append(str(year))
+            # No year is allowed to abort the chain. A missing fixture is a year
+            # the recording run got a 404 for, and a timeout is a year the source
+            # would not answer right now -- in both cases the next year may hold
+            # the rate, and it is often already in the HTTP cache. Raising here
+            # instead cost a real run its duty figures: a transient timeout on
+            # the current year sent four of eight origins down the "0 percent
+            # assumed" path while the cached older year sat unread.
+            failures.append(f"{year}: {exc.code}")
             continue
         last = response
         if response.rate is not None:
             return response
 
     if last is None:
-        # Every year in the chain was missing, so this is a genuinely incomplete
-        # fixture set rather than a gap in the source. Say so instead of passing
-        # back a silent "no rate".
+        # Nothing in the chain answered at all, so this is not a gap in the
+        # source's coverage -- it is a failure to reach it, or an incomplete
+        # fixture set. Say which, per year, instead of a silent "no rate".
         raise UpstreamError(
-            "FIXTURE_MISSING",
-            f"No WITS fixture for HS {hs6} in any of years {', '.join(missing_fixtures)}. "
-            "Re-record with SOURCING_MODE=record.",
+            "UPSTREAM_UNAVAILABLE" if any("FIXTURE_MISSING" not in f for f in failures) else "FIXTURE_MISSING",
+            f"No WITS observation for HS {hs6} could be read in any of years "
+            f"{', '.join(failures)}. If these are fixture gaps, re-record with SOURCING_MODE=record.",
         )
     return last
