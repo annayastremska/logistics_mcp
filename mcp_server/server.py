@@ -853,9 +853,10 @@ def rank_sourcing_countries(
     proxied = sorted(iso for iso, b in basis.items() if b == "caller_supplied")
     if proxied:
         caveats.append(
-            "Priced on a unit value supplied by the caller, not on trade this origin did with the "
-            "importer: " + ", ".join(proxied) + ". That is the only way to cost an origin that does "
-            "not ship here yet, and it makes the figure as good as its source and no better."
+            "Priced on a unit value supplied by the caller rather than derived from reported "
+            "trade: " + ", ".join(proxied) + ". That is the only way to cost an origin that does "
+            "not ship here yet, and it also overrides a reported value where one exists -- either "
+            "way the figure is as good as its source and no better."
         )
 
     partial = [c for c in scored if c.scored_weight_pct < 100.0]

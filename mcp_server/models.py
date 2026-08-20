@@ -304,9 +304,10 @@ class RankedCountry(BaseModel):
         default=None,
         description=(
             "Where the unit value came from. 'reported' is derived from trade this origin "
-            "actually did with the importer; 'caller_supplied' is a proxy the caller passed "
-            "in, which is the only way to price an origin that does not ship here yet. Never "
-            "quote a caller_supplied cost as an observation."
+            "actually did with the importer; 'caller_supplied' is a figure the caller passed in, "
+            "which is the only way to price an origin that does not ship here yet and also "
+            "overrides a reported value where one exists. Never quote a caller_supplied cost as "
+            "an observation."
         ),
     )
 

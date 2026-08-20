@@ -310,9 +310,10 @@ added precisely because the shortlist needed widening scored **1.33 out of 100 o
 weight**.
 
 `unit_prices` is the way out. Pass the same proxy used for `estimate_landed_cost`, and the
-candidate is scored on the full weight. The result never lets the proxy pass for an
-observation: the row carries `price_basis: "caller_supplied"`, and a caveat names every origin
-priced that way.
+candidate is scored on the full weight. A figure passed for an origin that *does* report trade
+overrides the derived unit value — legitimate when the reported one is thin, and marked the
+same way. The result never lets a supplied figure pass for an observation: the row carries
+`price_basis: "caller_supplied"`, and a caveat names every origin priced that way.
 
 **Error conditions**
 

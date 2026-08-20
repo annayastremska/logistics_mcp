@@ -830,7 +830,7 @@ function rankTable(payload, volumeKg) {
         '<span class="sbar"><i style="width:' + Math.round((r.score || 0) / best * 100) + '%"></i></span></span></td>' +
       '<td class="r n">' + (r.landed_cost_per_kg_usd == null ? "—" : "$" + r.landed_cost_per_kg_usd.toFixed(2)) +
         (r.price_basis === "caller_supplied"
-          ? '<span class="proxy" title="No trade with this origin to derive a unit value from, so the price is a proxy the caller supplied.">proxy</span>'
+          ? '<span class="proxy" title="Priced on a unit value supplied by the caller, not derived from reported trade.">proxy</span>'
           : "") + '</td>' +
       '<td class="r">' + (r.duty_rate_pct == null ? "—" : pct(r.duty_rate_pct, 0)) + '</td>' +
       '<td class="r">' + (r.lpi_overall == null ? "—" : r.lpi_overall.toFixed(1)) + '</td>' +
