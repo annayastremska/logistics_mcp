@@ -149,10 +149,11 @@ exposed.
 ## Verifying the install
 
 ```bash
-python -m pytest tests -q        # 38 unit tests, no network
+python -m pytest tests -q        # 47 unit tests, no network, ~2s
 python scripts/smoke_tools.py    # calls every tool end to end against the live APIs
 REPLAY=1 python scripts/smoke_tools.py   # the same run, offline, from fixtures
 python scripts/run_e2e.py        # the whole agent flow, both MCP servers, live
+python scripts/run_failure_demo.py       # the same flow with the browser server broken
 ```
 
 `run_e2e.py` is the check the demo rests on. It fails the run unless **both** servers
@@ -160,7 +161,14 @@ attached and **all five** custom tools were actually called — a run where the 
 failed to start still produces a fluent answer, because the model simply reports it has no
 tools. Every event is written to `scripts/last_e2e_trace.jsonl` so the run can be inspected
 afterwards rather than taken on trust. A full run is roughly 10 minutes, 20 turns and about
-$0.55.
+$0.55. A failed navigate on a *fallback* recency URL is tolerated once another page in the chain
+has loaded — the chain is ordered and the agent stops at the first page that answers — but a
+chain where nothing loaded, and every error from the custom server, still fail the run.
+
+`run_failure_demo.py` is the other half: it points the browser at an unresolvable host with no
+fallbacks and passes only if the navigate reports as an error, nothing else errors, and a
+recommendation still comes out with the failed check named in it. The requirement is not that
+nothing fails — it is that a failure is distinguishable from an empty answer.
 
 ---
 

@@ -141,9 +141,10 @@ basis produced it.
 | `validate_sourcing_brief` | Resolved the request to HS 070200 against the 6,939-entry HS2022 nomenclature. Offline — `openWorldHint: false`. |
 | `get_import_flows` | 16 origins, Türkiye 64.6 %, about 126m USD on the window. Duplicate rows are reported dropped, never silently collapsed. |
 | `assess_supply_concentration_risk` | HHI 4,469 — equivalent to **2.2** equally sized origins, on a 126m USD line. `HIGH_CONCENTRATION`. Volatility comes from the annual series and the result says so. |
-| **the decision** | This flag is what changes the next step: the agent widens its candidate list beyond the incumbents and reweights, because on a concentrated product the goal is diversification. Point at the weights it chose and its stated reason. |
+| **the decision** | This flag is what changes the next step: the agent widens its candidate list beyond the incumbents and reweights, because on a concentrated product the goal is diversification. Point at the weights it chose and its stated reason — and at the run record row **"Concentration changed the candidate set"**, which names the origins that are not current suppliers. That row read *"ranking used incumbents only — no"* until the prompt made widening a requirement rather than a suggestion. |
 | `estimate_landed_cost` | Itemised: goods, freight, duty **on the CIF value**, brokerage. Each line labelled measured or estimated. |
-| `rank_sourcing_countries` | The score decomposition. Contributions sum to the score. |
+| **the obstacle worth showing** | A widened origin has no trade with Ukraine, so there is no unit value to derive and the call returns `empty` — with the remedy in its own response: pass `unit_price_usd_per_kg`. Without it the origin is unscored on price and duty and lands last for missing data rather than on merit; measured at **1.33 out of 100 on half the weight** for Morocco. The agent passes the proxy, the ranking takes the same figures as `unit_prices`, and Morocco scores **26.08 on the full weight**. |
+| `rank_sourcing_countries` | The score decomposition. Contributions sum to the score. Any row priced on a proxy is marked `proxy` on the figure itself and named in a caveat — a supplied number is never allowed to read as an observed one. |
 
 > Requirement 8: explain one important contract and design decision.
 

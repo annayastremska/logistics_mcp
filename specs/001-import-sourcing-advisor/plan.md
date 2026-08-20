@@ -44,7 +44,7 @@ recorded source responses that makes offline operation possible. Reference nomen
 country tables are vendored as data files because the upstream preview endpoint returns codes
 without labels.
 
-**Testing**: `pytest` — 38 tests over the domain arithmetic, the transport boundary and the agent wiring, offline, 1.7 s.
+**Testing**: `pytest` — 47 tests over the domain arithmetic, the transport boundary, the read path's row assembly and the agent wiring, offline, 1.7 s.
 Above that, three purpose-built checks: a tool-level smoke run (live and offline), a browser-
 rendered check of the interface, and an end-to-end agent run that fails unless both providers
 attached and all five capabilities were actually invoked.
@@ -79,7 +79,7 @@ Checked against [constitution v1.0.0](../../.specify/memory/constitution.md).
 | **II. Measured and modelled never confused** | **PASS** | Every cost component carries a measured/estimated marker. Unit values carry their disclaimer inline. Confidence is capped below "high" whenever a modelled component is present. |
 | **III. Absent is not zero, empty is not an error** | **PASS after remediation** | Three-state status on every result; a future year returns empty, not error. Two violations were found by this check and fixed — see Complexity Tracking rows 1 and 2. |
 | **IV. Capability boundary is the whole surface** | **PASS** | Empty built-in tool set, explicit allow-list, no inherited local settings or plugins. All five tools declare input *and* output schemas. The deterministic read path goes through a client session, not around it. |
-| **V. Verified, not asserted** (non-negotiable) | **PASS** | Every claim in the artefacts is backed by a run recorded in this session: full agent run, failure-path run, offline run, browser render, 38 tests. The end-to-end check asserts on substance, not on completion — and the four regression tests added for previously untested fixes were each mutation-checked by reverting the fix to confirm the test fails. |
+| **V. Verified, not asserted** (non-negotiable) | **PASS** | Every claim in the artefacts is backed by a run recorded in this session: full agent run, failure-path run, offline run, browser render, 47 tests. The end-to-end check asserts on substance, not on completion — and every regression test added for a previously untested fix was mutation-checked by reverting the behaviour to confirm the test fails. |
 
 | Additional constraint | Verdict | Evidence |
 |---|---|---|
@@ -135,7 +135,7 @@ scripts/                     # Verification, not application code.
 ├── smoke_tools.py           # Every capability, live or offline
 └── run_e2e.py               # Full agent run; fails unless both providers and all five tools
 
-tests/                       # 38 offline tests: domain arithmetic, transport boundary, agent wiring
+tests/                       # 47 offline tests: domain arithmetic, transport boundary, row assembly, agent wiring
 data/reference/              # Vendored nomenclature and country tables
 fixtures/                    # 61 verbatim recorded source responses
 docs/                        # Requirements digest, verified sources, contracts, rationale, demo
