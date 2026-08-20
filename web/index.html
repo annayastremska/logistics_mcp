@@ -117,11 +117,12 @@ header .wrap { display: flex; align-items: center; gap: 16px; padding: 11px 24px
    Three promises, each with a verb, so it scans instead of reading as a wall. */
 .purpose { background: var(--sheet); border-bottom: 1px solid var(--rule); }
 .purpose .wrap { padding: 16px 24px 18px; }
-/* No heading here. A slogan in DIN caps at 700 outweighed the product names
-   below it, and it told the reader nothing. */
-.purpose p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 92ch; }
+/* A lede, not a heading. Someone who has never seen this page should know what
+   it is from one line; the second clause says what they get. No DIN caps here --
+   a slogan set heavier than the product names below it reads backwards. */
+.purpose p { margin: 0; font-size: 18px; line-height: 1.45; max-width: 56ch; }
 .purpose p b { color: var(--ink); font-weight: 600; }
-.purpose em { font-style: normal; color: var(--stamp); font-weight: 600; }
+.purpose p span { color: var(--ink-2); }
 .grow { flex: 1; }
 .ref { text-align: right; }
 .ref .v { font-family: var(--din); font-size: 13px; letter-spacing: .05em; }
@@ -420,8 +421,8 @@ details .bd { padding: 4px 16px 16px; }
 <div class="fields"><div class="wrap" id="fields"></div></div>
 
 <div class="purpose"><div class="wrap">
-  <p>One row per imported product. <b>The big number is how much of it comes from a single
-  country.</b></p>
+  <p><b>Every product here leans on one country.</b>
+  <span>How hard, what it costs, and who else could ship it.</span></p>
 </div></div>
 
 <div id="main"><div class="wrap">
