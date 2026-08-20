@@ -73,6 +73,7 @@ class PortfolioRow:
     group: str
     status: str
     year: int | None = None
+    period_label: str | None = None
     total_value_usd: float | None = None
     partner_count: int | None = None
     top_partner_name: str | None = None
@@ -125,14 +126,25 @@ def _payload(result: Any) -> dict[str, Any]:
     return {"status": "error", "errors": [{"message": "empty tool response"}]}
 
 
-async def _one_row(session: ClientSession, item: Commodity, year: int) -> PortfolioRow:
+# The reporting frontier is resolved by the server, not here. Which month the
+# source has published to is a property of the source, so discovering it belongs
+# behind the capability boundary; the read path only asks for "the latest".
+LATEST = "latest"
+
+
+async def _one_row(
+    session: ClientSession, item: Commodity, year: int, window_end: str | None
+) -> PortfolioRow:
     """Build one portfolio row from two tool calls."""
     row = PortfolioRow(hs_code=item.hs_code, label=item.label, group=item.group, status="ok", year=year)
 
-    flows = _payload(
-        await session.call_tool("get_import_flows", {"hs_code": item.hs_code, "year": year, "top_n": 20})
-    )
+    flows_args: dict[str, Any] = {"hs_code": item.hs_code, "year": year, "top_n": 20}
+    if window_end:
+        flows_args["trailing_12m_to"] = window_end
+
+    flows = _payload(await session.call_tool("get_import_flows", flows_args))
     row.status = flows.get("status", "error")
+    row.period_label = ((flows.get("provenance") or {}).get("as_of")) or str(year)
     if row.status == "ok":
         row.total_value_usd = flows.get("total_value_usd")
         row.partner_count = flows.get("partner_count")
@@ -145,13 +157,13 @@ async def _one_row(session: ClientSession, item: Commodity, year: int) -> Portfo
 
     # Three years, not one: the tool needs at least three observations before it
     # can report year-on-year volatility, and volatility is half of what makes a
-    # concentrated line actually risky.
-    risk = _payload(
-        await session.call_tool(
-            "assess_supply_concentration_risk",
-            {"hs_code": item.hs_code, "years": [year - 2, year - 1, year]},
-        )
-    )
+    # concentrated line actually risky. The window, when asked for, moves the
+    # concentration figures onto monthly data while volatility stays annual --
+    # the tool reports which basis produced which number.
+    risk_args: dict[str, Any] = {"hs_code": item.hs_code, "years": [year - 2, year - 1, year]}
+    if window_end:
+        risk_args["trailing_12m_to"] = window_end
+    risk = _payload(await session.call_tool("assess_supply_concentration_risk", risk_args))
     if risk.get("status") == "ok":
         row.hhi = risk.get("hhi")
         row.top_partner_name = risk.get("top_partner_name")
@@ -173,7 +185,9 @@ async def _one_row(session: ClientSession, item: Commodity, year: int) -> Portfo
     return row
 
 
-async def build_portfolio(year: int, *, items: list[Commodity] | None = None) -> dict[str, Any]:
+async def build_portfolio(
+    year: int, *, items: list[Commodity] | None = None, window: bool = True
+) -> dict[str, Any]:
     """Query every tracked product group over one MCP session.
 
     Rows are built sequentially rather than gathered: the upstream trade API is
@@ -186,9 +200,10 @@ async def build_portfolio(year: int, *, items: list[Commodity] | None = None) ->
         async with ClientSession(read, write) as session:
             await session.initialize()
             declared = [t.name for t in (await session.list_tools()).tools]
+            window_end = LATEST if window else None
             for item in items:
                 try:
-                    rows.append(await _one_row(session, item, year))
+                    rows.append(await _one_row(session, item, year, window_end))
                 except Exception as exc:  # noqa: BLE001 - one bad line must not empty the screen
                     rows.append(
                         PortfolioRow(
@@ -202,8 +217,13 @@ async def build_portfolio(year: int, *, items: list[Commodity] | None = None) ->
                     )
 
     rows.sort(key=lambda r: (-r.severity, -(r.total_value_usd or 0)))
+    labels = {r.period_label for r in rows if r.period_label}
     return {
         "year": year,
+        # What the figures actually cover, as reported by the tools rather than as
+        # requested here -- a window can fall back to the annual basis per line.
+        "period_label": labels.pop() if len(labels) == 1 else (", ".join(sorted(labels)) or str(year)),
+        "basis": "trailing_12m" if window else "annual",
         "data_mode": os.environ.get("SOURCING_MODE", "live"),
         "server_tools": declared,
         "rows": [r.to_dict() for r in rows],
@@ -224,13 +244,18 @@ async def commodity_detail(hs_code: str, year: int) -> dict[str, Any]:
             await session.initialize()
             flows = _payload(
                 await session.call_tool(
-                    "get_import_flows", {"hs_code": hs_code, "year": year, "top_n": 20}
+                    "get_import_flows",
+                    {"hs_code": hs_code, "year": year, "top_n": 20, "trailing_12m_to": LATEST},
                 )
             )
             risk = _payload(
                 await session.call_tool(
                     "assess_supply_concentration_risk",
-                    {"hs_code": hs_code, "years": [year - 2, year - 1, year]},
+                    {
+                        "hs_code": hs_code,
+                        "years": [year - 2, year - 1, year],
+                        "trailing_12m_to": LATEST,
+                    },
                 )
             )
 
@@ -241,6 +266,7 @@ if __name__ == "__main__":
     year = int(sys.argv[1]) if len(sys.argv) > 1 else 2024
     result = asyncio.run(build_portfolio(year))
     print(f"server tools: {result['server_tools']}")
+    print(f"basis: {result['basis']} covering {result['period_label']}")
     for r in result["rows"]:
         print(
             f"{r['hs_code']}  {r['label']:<20} {r['status']:<8} "

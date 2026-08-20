@@ -90,6 +90,36 @@ def _default_year() -> int:
     return _dt.date.today().year - _REPORTING_LAG_YEARS
 
 
+# Resolved once per process. Which month the source has published to is a
+# property of the source, not of a request, and the probe costs one call per
+# month walked back -- worth paying once, not once per product line.
+_FRONTIER_CACHE: dict[str, str | None] = {}
+
+
+def _resolve_window_end(requested: str) -> tuple[str | None, str | None]:
+    """Turn a requested window end into a concrete YYYYMM.
+
+    ``"latest"`` asks the source where its monthly reporting actually stops.
+    Hardcoding that month would quietly go stale, which is the exact problem
+    monthly data is here to solve.
+
+    Returns:
+        ``(period, error_message)`` -- exactly one is set.
+    """
+    cleaned = requested.strip().lower()
+    if cleaned != "latest":
+        if not (len(cleaned) == 6 and cleaned.isdigit() and 1 <= int(cleaned[4:]) <= 12):
+            return None, f"trailing_12m_to must be YYYYMM or 'latest'; got {requested!r}."
+        return cleaned, None
+
+    if "frontier" not in _FRONTIER_CACHE:
+        _FRONTIER_CACHE["frontier"] = comtrade.latest_reported_month()
+    frontier = _FRONTIER_CACHE["frontier"]
+    if frontier is None:
+        return None, "Could not determine the latest published month from the source."
+    return frontier, None
+
+
 # --------------------------------------------------------------------------- #
 # 1. validate_sourcing_brief
 # --------------------------------------------------------------------------- #
@@ -271,6 +301,19 @@ def get_import_flows(
             ),
         ),
     ] = None,
+    trailing_12m_to: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "YYYYMM, or 'latest' to use whatever month the source has published to. When set, "
+                "returns the twelve monthly periods ending there instead of the "
+                "annual figure for 'year'. Monthly reporting runs up to a year ahead of the annual "
+                "series, so this is the more current view; use it when currency matters and the "
+                "annual figure when a settled calendar year is needed. Imports only."
+            ),
+        ),
+    ] = None,
 ) -> ImportFlowsResult:
     if flow_direction not in ("import", "mirror_export"):
         return ImportFlowsResult(
@@ -292,8 +335,33 @@ def get_import_flows(
         )
 
     notes: list[str] = []
+    period_label = str(year)
     try:
-        if flow_direction == "import":
+        if trailing_12m_to and flow_direction == "import":
+            window_end, window_error = _resolve_window_end(trailing_12m_to)
+            if window_error:
+                return ImportFlowsResult(
+                    status="error",
+                    errors=[_err(ErrorCode.INVALID_ARGUMENT, window_error, "trailing_12m_to")],
+                )
+            response, covered, empty = comtrade.fetch_trailing_window(
+                hs_code=entry.code, end_period=window_end or ""
+            )
+            period_label = f"{covered[0]}-{covered[-1]}" if covered else trailing_12m_to
+            notes.append(
+                f"Rolling twelve-month window {period_label}, summed from monthly reports. "
+                "Monthly data is more current than the annual series but a month can still be "
+                "revised after publication."
+            )
+            if empty:
+                # A month the source publishes nothing for is not a zero month.
+                # Saying which ones are missing is the difference between a
+                # partial window and a window that looks complete.
+                notes.append(
+                    f"{len(empty)} month(s) in the window have no published data and were "
+                    f"excluded rather than counted as zero: {', '.join(empty)}."
+                )
+        elif flow_direction == "import":
             response = comtrade.fetch_flows(hs_code=entry.code, year=year, flow="M")
         else:
             counterpart = reference.resolve_country(partner_iso3 or "")
@@ -327,7 +395,7 @@ def get_import_flows(
         source="UN Comtrade",
         mode="fixture" if response.fetch.mode == "replay" else "live",
         retrieved_at=response.fetch.retrieved_at or None,
-        as_of=str(year),
+        as_of=period_label,
         measurement="measured",
     )
 
@@ -337,8 +405,9 @@ def get_import_flows(
             provenance=provenance,
             rows_dropped_as_duplicates=response.duplicates_dropped,
             notes=[
-                f"UN Comtrade reported no {flow_direction} records for HS {entry.code} in {year}. "
-                f"Ukraine's latest complete annual year is usually {_default_year()}."
+                f"UN Comtrade reported no {flow_direction} records for HS {entry.code} in "
+                f"{period_label}. Ukraine's latest complete annual year is usually "
+                f"{_default_year()}."
             ],
         )
 
@@ -816,6 +885,19 @@ def assess_supply_concentration_risk(
         Field(default=analysis.SINGLE_SOURCE_SHARE_PCT, ge=10.0, le=100.0,
               description="Share above which a single origin counts as a dependency."),
     ] = analysis.SINGLE_SOURCE_SHARE_PCT,
+    trailing_12m_to: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "YYYYMM, or 'latest'. When set, concentration, the leading origin's share and the mirror check "
+                "are computed from the twelve monthly periods ending there rather than from the "
+                "latest year in 'years'. Monthly reporting runs up to a year ahead of the annual "
+                "series, so a share can differ materially from the latest annual figure. "
+                "Volatility still comes from the annual series in 'years', and the result says so."
+            ),
+        ),
+    ] = None,
 ) -> ConcentrationRiskResult:
     entry = reference.lookup_hs(hs_code.strip())
     if entry is None:
@@ -853,10 +935,51 @@ def assess_supply_concentration_risk(
         if latest_year is None or year >= latest_year:
             latest_year, latest_records = year, flows.records
 
+    # The mirror check must stay on the annual basis whatever concentration uses:
+    # partner export reports are annual, and comparing a rolling twelve-month
+    # import figure against a calendar-year export figure would produce a gap
+    # that is an artefact of the mismatched periods.
+    annual_records = list(latest_records)
+
+    # The annual loop is kept for the volatility series -- three annual points are
+    # cheap and structural -- but when a window is requested, concentration itself
+    # is measured on the window, because that is the figure the user acts on.
+    basis_label = str(latest_year) if latest_year else None
+    window_note = ""
+    if trailing_12m_to:
+        window_end, window_error = _resolve_window_end(trailing_12m_to)
+        if window_error:
+            return ConcentrationRiskResult(
+                status="error",
+                hs_code=entry.code,
+                errors=[_err(ErrorCode.INVALID_ARGUMENT, window_error, "trailing_12m_to")],
+            )
+        try:
+            window, covered, empty = comtrade.fetch_trailing_window(
+                hs_code=entry.code, end_period=window_end or ""
+            )
+        except UpstreamError as exc:
+            return ConcentrationRiskResult(
+                status="error", hs_code=entry.code, errors=[_upstream_error(exc)]
+            )
+        if window.records:
+            latest_records = window.records
+            basis_label = f"{covered[0]}-{covered[-1]}" if covered else trailing_12m_to
+            if window.fetch.mode == "replay":
+                data_mode = "fixture"
+            window_note = (
+                f" Concentration is measured over the rolling twelve months {basis_label}; "
+                f"volatility comes from the annual series "
+                f"{', '.join(str(o.year) for o in observations)}, which is the only basis long "
+                f"enough to measure it."
+            )
+            if empty:
+                window_note += f" {len(empty)} month(s) in the window are unpublished and excluded."
+
     provenance = Provenance(
         source="UN Comtrade",
         mode="fixture" if data_mode == "fixture" else "live",
-        as_of=str(latest_year) if latest_year else None,
+        as_of=basis_label,
         measurement="measured",
     )
 
@@ -890,8 +1013,8 @@ def assess_supply_concentration_risk(
 
     gap: float | None = None
     mirror_note = ""
-    if latest_year is not None:
-        top_partners = latest_records[:MIRROR_TOP_PARTNERS]
+    if latest_year is not None and annual_records:
+        top_partners = annual_records[:MIRROR_TOP_PARTNERS]
         mirror = comtrade.fetch_reported_exports_to_ukraine(
             hs_code=entry.code,
             year=latest_year,
@@ -904,7 +1027,8 @@ def assess_supply_concentration_risk(
             their_total = sum(mirror.reported_by_partner_usd[r.partner_code] for r in comparable)
             gap = analysis.mirror_gap_pct(own_total, their_total)
             mirror_note = (
-                f"Mirror check covers the {len(comparable)} largest origins that report to Comtrade"
+                f"Mirror check covers the {len(comparable)} largest origins that report to Comtrade, "
+                f"on the {latest_year} annual basis so both sides cover the same period"
                 + (f"; {len(mirror.partners_silent)} did not report and were excluded" if mirror.partners_silent else "")
                 + "."
             )
@@ -919,7 +1043,7 @@ def assess_supply_concentration_risk(
     pieces: list[str] = []
     if stats:
         pieces.append(
-            f"{stats.partner_count} origins reported in {latest_year}; HHI {stats.hhi:.0f} "
+            f"{stats.partner_count} origins reported in {basis_label}; HHI {stats.hhi:.0f} "
             f"(equivalent to {stats.effective_partner_count:.1f} equally sized origins). "
             f"{reference.partner_name(top_record.partner_code)} holds {stats.top_share_pct:.1f} percent."
         )
@@ -937,6 +1061,8 @@ def assess_supply_concentration_risk(
         )
     if mirror_note:
         pieces.append(mirror_note)
+    if window_note:
+        pieces.append(window_note.strip())
     if not flags:
         pieces.append("No risk threshold was crossed.")
 

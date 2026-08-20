@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from .http import FetchResult, build_url, fetch_json
+from .http import FetchResult, UpstreamError, build_url, fetch_json
 from .reference import UKRAINE_REPORTER_CODE, is_aggregate_partner
 
 PREVIEW_BASE = "https://comtradeapi.un.org/public/v1/preview/C"
@@ -107,11 +107,67 @@ def fetch_flows(
     Raises:
         UpstreamError: propagated from the transport layer.
     """
+    return _fetch_period(
+        frequency="A",
+        period=year,
+        hs_code=hs_code,
+        flow=flow,
+        reporter_code=reporter_code,
+        partner_code=partner_code,
+    )
+
+
+def fetch_monthly_flows(
+    *,
+    hs_code: str,
+    period: str,
+    flow: FlowCode = "M",
+    reporter_code: int = UKRAINE_REPORTER_CODE,
+    partner_code: int | None = None,
+) -> FlowsResponse:
+    """Fetch one month of flows.
+
+    Monthly reporting runs well ahead of the annual series -- as of August 2026
+    Ukraine's latest complete annual year is 2024, while monthly data reaches
+    September 2025. For seasonal produce the monthly series is also the more
+    honest one: an annual aggregate cannot distinguish a counter-season supplier
+    from an in-season one at all.
+
+    Args:
+        period: ``YYYYMM``.
+    """
+    if not (len(period) == 6 and period.isdigit() and 1 <= int(period[4:]) <= 12):
+        raise UpstreamError("INVALID_ARGUMENT", f"Monthly period must be YYYYMM; got {period!r}.")
+    return _fetch_period(
+        frequency="M",
+        period=period,
+        hs_code=hs_code,
+        flow=flow,
+        reporter_code=reporter_code,
+        partner_code=partner_code,
+    )
+
+
+def _fetch_period(
+    *,
+    frequency: str,
+    period: int | str,
+    hs_code: str,
+    flow: FlowCode,
+    reporter_code: int,
+    partner_code: int | None,
+) -> FlowsResponse:
+    """Fetch and normalise one period at either frequency.
+
+    Annual and monthly differ only in the path segment and the period format, so
+    they share every downstream step -- deduplication included. Splitting them
+    would mean two places to keep that logic correct.
+    """
     url = build_url(
-        f"{PREVIEW_BASE}/A/HS",
+        f"{PREVIEW_BASE}/{frequency}/HS",
         {
             "reporterCode": reporter_code,
-            "period": year,
+            "period": period,
             "cmdCode": hs_code,
             "flowCode": flow,
             "partnerCode": partner_code,
@@ -139,7 +195,7 @@ def fetch_flows(
             TradeRecord(
                 partner_code=code,
                 hs_code=str(row.get("cmdCode") or hs_code),
-                period=str(row.get("period") or year),
+                period=str(row.get("period") or period),
                 net_weight_kg=_to_float(row.get("netWgt")) or None,
                 value_usd=value,
                 quantity=_to_float(row.get("qty")),
@@ -156,6 +212,131 @@ def fetch_flows(
         truncated=raw_count >= RECORD_CAP,
         fetch=fetch,
     )
+
+
+def months_ending(period: str, count: int = 12) -> list[str]:
+    """The ``count`` monthly periods ending at ``period`` inclusive, oldest first."""
+    year, month = int(period[:4]), int(period[4:])
+    out: list[str] = []
+    for back in range(count - 1, -1, -1):
+        total = year * 12 + (month - 1) - back
+        out.append(f"{total // 12:04d}{total % 12 + 1:02d}")
+    return out
+
+
+def fetch_trailing_window(
+    *,
+    hs_code: str,
+    end_period: str,
+    months: int = 12,
+    flow: FlowCode = "M",
+    reporter_code: int = UKRAINE_REPORTER_CODE,
+) -> tuple[FlowsResponse, list[str], list[str]]:
+    """Sum a rolling window of monthly flows into one response.
+
+    Twelve months rather than a calendar year, because the point is currency: a
+    window ending at the reporting frontier is up to a year fresher than the
+    latest complete annual figure, and it still covers a full seasonal cycle so
+    shares are not distorted by which months happen to be included.
+
+    A month with no records is skipped and named. That is not the same as a
+    failed month: the source genuinely publishes nothing for some periods, and
+    treating the gap as a zero would understate every partner in the window.
+
+    Returns:
+        The summed response, the periods that contributed, and the periods that
+        were empty -- both lists travel onward so the caller can disclose them.
+    """
+    periods = months_ending(end_period, months)
+    totals: dict[int, dict[str, Any]] = {}
+    world = 0.0
+    raw_rows = duplicates = 0
+    truncated = False
+    covered: list[str] = []
+    empty: list[str] = []
+    last_fetch: FetchResult | None = None
+
+    for period in periods:
+        response = fetch_monthly_flows(
+            hs_code=hs_code, period=period, flow=flow, reporter_code=reporter_code
+        )
+        last_fetch = response.fetch
+        raw_rows += response.raw_row_count
+        duplicates += response.duplicates_dropped
+        truncated = truncated or response.truncated
+        if not response.records:
+            empty.append(period)
+            continue
+        covered.append(period)
+        world += response.world_total_value_usd or 0.0
+        for record in response.records:
+            bucket = totals.setdefault(
+                record.partner_code,
+                {"value": 0.0, "weight": 0.0, "weight_seen": False, "hs": record.hs_code},
+            )
+            bucket["value"] += record.value_usd
+            if record.net_weight_kg is not None:
+                bucket["weight"] += record.net_weight_kg
+                bucket["weight_seen"] = True
+
+    if last_fetch is None:  # pragma: no cover - months >= 1 always fetches
+        raise UpstreamError("INVALID_ARGUMENT", "A trailing window needs at least one month.")
+
+    label = f"{covered[0]}-{covered[-1]}" if covered else end_period
+    records = [
+        TradeRecord(
+            partner_code=code,
+            hs_code=bucket["hs"],
+            period=label,
+            # Weight is summed only where it was reported. A partner reporting
+            # weight in some months and not others would otherwise get a unit
+            # value computed from a full-window value over a partial weight.
+            net_weight_kg=bucket["weight"] if bucket["weight_seen"] else None,
+            value_usd=bucket["value"],
+            quantity=None,
+            quantity_unit_code=None,
+        )
+        for code, bucket in totals.items()
+    ]
+    records.sort(key=lambda r: r.value_usd, reverse=True)
+
+    return (
+        FlowsResponse(
+            records=records,
+            world_total_value_usd=world or None,
+            raw_row_count=raw_rows,
+            duplicates_dropped=duplicates,
+            truncated=truncated,
+            fetch=last_fetch,
+        ),
+        covered,
+        empty,
+    )
+
+
+def latest_reported_month(
+    *, probe_hs_code: str = "0806", start: str | None = None, look_back: int = 30
+) -> str | None:
+    """Find the most recent month Ukraine has actually reported.
+
+    Walks backwards from ``start`` and stops at the first month with records.
+    Hardcoding the frontier would silently rot -- the whole reason this exists is
+    that the frontier moves, and moving it is the point of using monthly data.
+    """
+    from datetime import date
+
+    if start is None:
+        today = date.today()
+        start = f"{today.year:04d}{today.month:02d}"
+
+    for period in reversed(months_ending(start, look_back)):
+        try:
+            response = fetch_monthly_flows(hs_code=probe_hs_code, period=period)
+        except Exception:  # noqa: BLE001 - a probe failure must not break a caller
+            return None
+        if response.records:
+            return period
+    return None
 
 
 def latest_reported_year(*, probe_hs_code: str = "0806", earliest: int = 2018) -> int | None:
