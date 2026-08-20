@@ -155,6 +155,7 @@
   .note { font-size: 12px; color: var(--ink-faint); margin: 8px 0 0; }
   .caveat { background: var(--warn-soft); color: var(--warn); border-radius: 7px; padding: 9px 11px; font-size: 12.5px; }
   .empty { color: var(--ink-faint); font-size: 13px; padding: 10px 0; }
+  .check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
   .spinner {
     display: inline-block; width: 11px; height: 11px; border-radius: 50%;
     border: 2px solid var(--line); border-top-color: var(--accent);
@@ -515,30 +516,45 @@ function renderDetail(d, row) {
 
     <div style="display:flex;gap:9px;margin-top:14px;align-items:center;flex-wrap:wrap">
       <button id="runAgentBtn">Run full sourcing analysis</button>
-      <span class="note" style="margin:0">
-        Costs and ranks alternatives on the capable model. Roughly 10 minutes and a dozen throttled calls.
-      </span>
-    </div>`;
+      <label class="check"><input type="checkbox" id="optReplay"> offline (replay fixtures)</label>
+      <label class="check"><input type="checkbox" id="optPw" checked> attach Playwright MCP</label>
+      <span class="grow"></span>
+      <button class="ghost" id="breakPwBtn"
+        title="Points the browser at an unresolvable host, so a real failure of the existing MCP server surfaces">
+        Demo: break Playwright</button>
+    </div>
+    <p class="note">
+      Runs on the capable model: roughly 10 minutes and a dozen throttled calls. The failure demo
+      changes the input, not the code — the browser is sent to a host that cannot resolve.
+    </p>`;
 
-  $("runAgentBtn").addEventListener("click", () => runAgent(d, row));
+  $("runAgentBtn").addEventListener("click", () => runAgent(d));
+  $("breakPwBtn").addEventListener("click", () => runAgent(d, { breakPlaywright: true }));
 }
 
 // ---------------------------------------------------------------------------
 // agent run (SSE)
 // ---------------------------------------------------------------------------
-function runAgent(d) {
+function runAgent(d, opts = {}) {
   const hs = d.hs_code, label = d.label;
   const q = `Where should Ukraine source ${label} (HS ${hs}) from? Assume a 120 tonne shipment. ` +
     `Reference year ${d.year}. If the current supply is concentrated, look beyond the incumbent leaders.`;
 
+  const params = new URLSearchParams({ question: q });
+  if ($("optReplay")?.checked) params.set("replay", "true");
+  if ($("optPw") && !$("optPw").checked) params.set("playwright", "false");
+  if (opts.breakPlaywright) params.set("break_playwright", "true");
+
   $("runCard").classList.remove("hidden");
-  $("runMeta").textContent = `· ${label} · HS ${hs}`;
+  $("runMeta").textContent = `· ${label} · HS ${hs}` +
+    (opts.breakPlaywright ? " · failure demo" : "") +
+    ($("optReplay")?.checked ? " · offline" : "");
   $("runAnswer").textContent = "";
   $("trace").innerHTML = "";
   $("runStatus").innerHTML = `<span class="spinner"></span> starting the agent…`;
   $("runCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-  stream(`/api/run?question=${encodeURIComponent(q)}`, {
+  stream(`/api/run?${params.toString()}`, {
     onStatus: (e) => {
       if (e.data?.servers) {
         const names = Object.keys(e.data.servers).join(" + ");

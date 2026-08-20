@@ -58,8 +58,20 @@ npx -y @playwright/mcp@latest
 python -m web.app
 ```
 
-Open <http://127.0.0.1:8000>. The badge top right shows data mode, model and which credential
-source is in use.
+Open <http://127.0.0.1:8000>. The badge top right shows data mode, and the *MCP connections*
+panel on the right shows both servers, their transport, their tool counts, the analysis model
+and which credential source is in use.
+
+The landing screen is the **portfolio**: six tracked import lines, worst-first, with lead
+supplier share, effective number of sources, volatility and risk flags. Lead with what it says
+rather than with the architecture:
+
+> *Three of these six lines lead back to the same supplier. That is a shared point of failure,
+> and you cannot see it by looking at any one line.*
+
+Then say where the numbers came from: *this screen is computed by the custom MCP server over a
+plain stdio session — no model in the loop. The agent is what you press afterwards, on one line,
+deliberately.*
 
 Architecture in one breath: *three processes. The agent has no built-in tools at all — no shell,
 no filesystem — so its whole capability surface is these two MCP servers.*
@@ -70,18 +82,29 @@ no filesystem — so its whole capability surface is these two MCP servers.*
 
 > Requirements 2, 3, 4, 5.
 
-Press **Run analysis** with the default question.
+Click the worst line (**Tomatoes, fresh**), then press **Run full sourcing analysis**.
 
 - **Requirement 2 — both connections discovered.** The *MCP connections* panel fills in from the
   live session: `trade-sourcing` with 5 tools, `playwright` with 3. Say that this is read from
   the session's init message, not from our own config file.
 - **Requirement 3 — a tool from the existing server is called successfully.** The first trace
   entry is `playwright → browser_navigate`. Expand its payload to show the URL, then the result.
-- **Requirement 4 — its result affects a later step.** The agent reads the current-year turnover
-  figure and uses it to judge how stale its statistical data is. The recommendation ends with an
-  explicit staleness statement that names that figure. Say: *Comtrade's latest complete year is
-  2024; this page is the only current-year signal that exists, because customs publishes it as
-  HTML and nowhere else.*
+- **Requirement 4 — its result affects a later step.** The agent reads a current-year turnover
+  signal and uses it to judge how stale its statistical data is. The recommendation ends with an
+  explicit staleness statement.
+
+  **Say this before they notice it.** The customs page is tried first and returns **HTTP 403** —
+  its Akamai edge blocks automated clients, though it opens normally in a human browser. The
+  agent falls through to the National Bank's external-sector page and **names which page it
+  actually read**. Frame it as the honest outcome, because it is the interesting one:
+
+  > *The first source refuses us. The agent says so, uses the fallback, and tells you which page
+  > the number came from. It does not report a figure it could not read — and it marks the
+  > recency check partial, because the NBU page confirms the publication vintage but not a
+  > turnover figure.*
+
+  That is a stronger answer than a clean pass: it is the existing server's result genuinely
+  changing what the agent does next, twice over.
 - **Requirement 5 — explain the contract.** `browser_navigate`: one required string argument
   `url`; returns page state and an accessibility snapshot as text, not structured data; fails on
   unreachable host, timeout, HTTP error, blocked navigation, or browser launch failure. Side
@@ -222,7 +245,9 @@ the system.
 | Symptom | Do this |
 |---|---|
 | Agent fails to authenticate | `claude` → `/login`, or set `ANTHROPIC_API_KEY` in `.env`. The badge shows which source is in use. |
-| Comtrade returns `RATE_LIMITED` | Tick **Offline** and continue; explain the 1 req/s limit and the retry with backoff. |
+| Comtrade returns `RATE_LIMITED` | Tick **offline (replay fixtures)** in the line detail and re-run; explain the 1 req/s limit and the retry with backoff. |
 | WITS times out | Expected; it is slow. The tool records the assumption and continues with the duty as a lower bound. |
 | `npx` not found | Node is not on the PATH. Fall back to explaining the Playwright contract from the docs, and demonstrate the failure path instead. |
 | Nothing renders in the UI | Fall back to `python scripts/smoke_tools.py` — the same tools, in the terminal. |
+| The portfolio is slow on first load | Expected: six lines is a dozen throttled Comtrade calls on a cold cache, about 40 s. It is cached per year afterwards, and `Refresh from server` forces a re-query. |
+| A portfolio row shows `partial` | Flows resolved but the risk call did not. Say so — the row is deliberately marked rather than shown with a blank HHI, because a missing number must not read as a low one. |
