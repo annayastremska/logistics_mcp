@@ -116,16 +116,12 @@ header .wrap { display: flex; align-items: center; gap: 16px; padding: 11px 24px
 /* What the reader gets, stated after the figures rather than before them.
    Three promises, each with a verb, so it scans instead of reading as a wall. */
 .purpose { background: var(--sheet); border-bottom: 1px solid var(--rule); }
-.purpose .wrap { padding: 20px 24px; }
-.purpose h1 {
-  font-family: var(--din); font-size: 22px; font-weight: 700;
-  letter-spacing: .03em; text-transform: uppercase; line-height: 1.2;
-}
-.gains { display: flex; gap: 0; margin-top: 14px; flex-wrap: wrap; }
-.gain { flex: 1 1 210px; min-width: 0; padding-right: 26px; margin-right: 26px;
-        border-right: 1px solid var(--rule); }
-.gain:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
-.gain p { margin: 5px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.purpose .wrap { padding: 16px 24px 18px; }
+/* No heading here. A slogan in DIN caps at 700 outweighed the product names
+   below it, and it told the reader nothing. */
+.purpose p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 92ch; }
+.purpose p b { color: var(--ink); font-weight: 600; }
+.purpose em { font-style: normal; color: var(--stamp); font-weight: 600; }
 .grow { flex: 1; }
 .ref { text-align: right; }
 .ref .v { font-family: var(--din); font-size: 13px; letter-spacing: .05em; }
@@ -296,7 +292,11 @@ details .bd { padding: 4px 16px 16px; }
   background: var(--ink); color: var(--sheet);
   font-family: var(--din); font-size: 12px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase;
-  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--ink) 55%, transparent);
+  /* A ring of page ground, so it reads as floating above the content instead
+     of colliding with whatever card happens to be under it. Reserving a lane
+     with body padding was tried and rejected: the breakpoints measure the
+     viewport, not the reduced content width, so the grid overflowed at 840. */
+  box-shadow: 0 0 0 5px var(--form), 0 2px 0 5px color-mix(in srgb, var(--ink) 40%, transparent);
   display: inline-flex; align-items: center; gap: 9px;
 }
 .launch:hover { background: var(--ink); filter: brightness(1.15); }
@@ -361,38 +361,43 @@ details .bd { padding: 4px 16px 16px; }
 .sk { background: var(--sheet); border: 1px solid var(--rule); height: 168px; }
 
 /* =====================================================================
-   Narrow screens. Last in the sheet on purpose: these override base rules
-   of equal specificity, so they only win from here.
+   Narrow screens. Last in the sheet on purpose: these override base rules of
+   equal specificity, so they only win from here. One threshold, one job.
    ===================================================================== */
-@media (max-width: 880px) {
+
+/* 900 -- one column. The lead entry keeps a side-by-side body at this width,
+   but its third column (the alternatives) drops beneath, or the entry needs
+   more width than its own column has. */
+@media (max-width: 900px) {
+  .list { grid-template-columns: minmax(0, 1fr); }
   .entry.wide { grid-column: span 1; grid-row: span 1; }
-  .entry.wide .big em, .entry.wide .tally dd { font-size: 30px; }
+  .entry.wide .stencil { width: 200px; padding: 13px 15px 14px; }
   .entry.wide .stencil .pc { font-size: 46px; }
   .entry.wide .stencil .org { font-size: 14px; }
-}
-@media (max-width: 820px) {
-  /* The stencil is fixed-width; beside two flex columns that never wrapped it
-     pushed the entry past the viewport. Stack instead. */
+  .entry.wide .tally dd { font-size: 30px; }
   .body { flex-wrap: wrap; }
-  .stencil, .entry.wide .stencil { width: 100%; }
-  .tally, .entry.wide .tally { flex: 1 1 100%; }
   .entry.wide .body > .alt {
     flex: 1 1 100%; border-left: 0; border-top: 1px solid var(--rule);
     padding: 12px 0 0; margin: 4px 0 0;
   }
-  .gain { flex-basis: 100%; border-right: 0; margin-right: 0; padding-right: 0; }
-  .gain + .gain { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
 }
+
+/* 600 -- the stencil can no longer sit beside the figures. */
+@media (max-width: 600px) {
+  .stencil, .entry.wide .stencil { width: 100%; }
+  .tally, .entry.wide .tally { flex: 1 1 100%; }
+  .fields .wrap { flex-direction: column; }
+  .fld { border-right: 0; margin-right: 0; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .fld:last-child { border-bottom: 0; }
+}
+
+/* 560 -- gutters and the floating control tighten. */
 @media (max-width: 560px) {
   .wrap { padding: 0 16px; }
   header .wrap { padding: 9px 16px; }
-  .purpose .wrap { padding: 16px; }
-  .fld { padding-right: 16px; margin-right: 16px; }
+  .purpose .wrap { padding: 14px 16px 16px; }
   .launch { right: 14px; bottom: 14px; }
   .ask { right: 14px; bottom: 68px; width: calc(100vw - 28px); }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .entry { transition: background .12s linear; }
 }
 </style>
 </head>
@@ -408,15 +413,10 @@ details .bd { padding: 4px 16px 16px; }
 <div class="fields"><div class="wrap" id="fields"></div></div>
 
 <div class="purpose"><div class="wrap">
-  <h1>From dependency to shortlist</h1>
-  <div class="gains">
-    <div class="gain"><span class="eb">What breaks</span>
-      <p>Groups that run short if one origin stops.</p></div>
-    <div class="gain"><span class="eb">What it costs</span>
-      <p>Exposure in money, not percent.</p></div>
-    <div class="gain"><span class="eb">Where to go</span>
-      <p>Origins already shipping in volume.</p></div>
-  </div>
+  <p>Each product below shows how much of it comes from one country, what that share is worth
+  if that country stops, and which other origins already ship it to Ukraine today.
+  <b>Start with the ones marked <em>single source</em></b> &#8212; those have no second supplier
+  of any size.</p>
 </div></div>
 
 <div id="main"><div class="wrap">
