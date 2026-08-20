@@ -1,0 +1,14 @@
+# Custom MCP server
+mcp==2.0.0
+pydantic>=2.12,<3
+
+# Agent
+claude-agent-sdk>=0.2.140
+
+# Web application
+fastapi>=0.141
+uvicorn[standard]>=0.34
+python-dotenv>=1.0
+
+# Tests
+pytest>=8.0

@@ -1,0 +1,27 @@
+# Secrets and local configuration
+.env
+.env.local
+*.local.json
+
+# Runtime cache of live API responses (fixtures under fixtures/ are committed)
+.cache/
+
+# Agent tooling configuration. Kept out of the repo because agent folders can
+# hold credentials or machine-specific state; the spec-kit templates under
+# .specify/ are committed instead.
+.claude/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Import Sourcing Advisor</title>
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --panel: #ffffff;
+    --ink: #1c1b19;
+    --ink-soft: #5f5b55;
+    --ink-faint: #8b8681;
+    --line: #e4e0d9;
+    --accent: #1f5f4f;
+    --accent-soft: #eaf1ee;
+    --warn: #8a5a12;
+    --warn-soft: #fbf2e2;
+    --bad: #8c2f22;
+    --bad-soft: #fbeceb;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a; --panel: #1e2124; --ink: #ecebe8; --ink-soft: #b3aea7;
+      --ink-faint: #857f78; --line: #30343a; --accent: #6fd0b4; --accent-soft: #1d2c28;
+      --warn: #e0b063; --warn-soft: #2c2418; --bad: #ec8377; --bad-soft: #2e1d1b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    border-bottom: 1px solid var(--line); padding: 18px 24px;
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  h1 { font-size: 19px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-faint); font-size: 13px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 22px 24px 60px; }
+  .grid { display: grid; grid-template-columns: minmax(0,1fr) 400px; gap: 22px; align-items: start; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: minmax(0,1fr); } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px; margin-bottom: 18px;
+  }
+  .card h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-faint); margin: 0 0 14px; font-weight: 600;
+  }
+  label { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 5px; }
+  textarea, input[type=text] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--bg); color: var(--ink); font: inherit; resize: vertical;
+  }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-soft); }
+  button {
+    padding: 10px 18px; border-radius: 7px; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); font-weight: 500; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; background: var(--accent-soft); color: var(--accent);
+    font-family: var(--mono);
+  }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .answer { white-space: pre-wrap; }
+  .answer:empty::after { content: "No run yet."; color: var(--ink-faint); }
+  #trace { max-height: 640px; overflow-y: auto; }
+  .step { border-left: 2px solid var(--line); padding: 0 0 14px 13px; margin-left: 3px; position: relative; }
+  .step::before {
+    content: ""; position: absolute; left: -5px; top: 5px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--line);
+  }
+  .step.call::before { background: var(--accent); }
+  .step.err::before { background: var(--bad); }
+  .step-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
+  .tool { font-family: var(--mono); font-weight: 600; }
+  .srv { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); text-transform: uppercase; }
+  .step pre {
+    margin: 6px 0 0; font-family: var(--mono); font-size: 11px; line-height: 1.45;
+    color: var(--ink-soft); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px; overflow-x: auto; max-height: 220px;
+  }
+  details summary { cursor: pointer; font-size: 12px; color: var(--ink-faint); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); font-weight: 600; }
+  td.num { text-align: right; font-family: var(--mono); }
+  .note { font-size: 12px; color: var(--ink-faint); margin-top: 10px; }
+  .caveat { background: var(--warn-soft); color: var(--warn); border-radius: 7px; padding: 10px 12px; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Import Sourcing Advisor</h1>
+  <span class="sub">Macro-level sourcing screening for Ukraine, on open trade data</span>
+  <span style="flex:1"></span>
+  <span id="modeBadge" class="pill">loading…</span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Question</h2>
+    <label for="q">What should the agent work out?</label>
+    <textarea id="q" rows="3">Where should we source fresh grapes (HS 080610) from? We need about 120 tonnes. Consider Türkiye, India and Moldova, and tell me if we are too dependent on one country.</textarea>
+    <div class="row">
+      <button id="runBtn">Run analysis</button>
+      <span class="check"><input type="checkbox" id="replay"> <label for="replay" style="margin:0">Offline (replay fixtures)</label></span>
+      <span class="check"><input type="checkbox" id="pw" checked> <label for="pw" style="margin:0">Attach Playwright MCP</label></span>
+      <span style="flex:1"></span>
+      <button id="failBtn" class="ghost" title="Points the browser at an unresolvable host to show how a failure of the existing MCP server surfaces">Demo: break Playwright</button>
+    </div>
+    <p class="note" id="hint">A full run makes a dozen throttled API calls and typically takes 40–90 seconds.</p>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Recommendation</h2>
+        <div class="answer" id="answer"></div>
+      </div>
+      <div class="card" id="rankCard" hidden>
+        <h2>Ranked origins</h2>
+        <div id="rankBody"></div>
+      </div>
+      <div class="card" id="riskCard" hidden>
+        <h2>Supply risk</h2>
+        <div id="riskBody"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>MCP connections</h2>
+        <div id="conns"><span class="sub">Discovered when a run starts.</span></div>
+      </div>
+      <div class="card">
+        <h2>Trace</h2>
+        <div id="trace"><span class="sub">Every MCP call this run makes, in order.</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const el = (id) => document.getElementById(id);
+let source = null;
+
+fetch('/api/health').then(r => r.json()).then(h => {
+  const badge = el('modeBadge');
+  badge.textContent = `${h.data_mode} · ${h.model} · ${h.credential}`;
+  badge.className = 'pill' + (h.data_mode === 'replay' ? ' warn' : '');
+}).catch(() => { el('modeBadge').textContent = 'health check failed'; el('modeBadge').className = 'pill bad'; });
+
+function reset() {
+  el('answer').textContent = '';
+  el('trace').innerHTML = '';
+  el('conns').innerHTML = '<span class="sub">discovering…</span>';
+  for (const id of ['rankCard', 'riskCard']) el(id).hidden = true;
+}
+
+function addStep(cls, headHtml, body) {
+  const step = document.createElement('div');
+  step.className = 'step ' + cls;
+  const head = document.createElement('div');
+  head.className = 'step-head';
+  head.innerHTML = headHtml;
+  step.appendChild(head);
+  if (body) {
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = 'payload';
+    const pre = document.createElement('pre');
+    pre.textContent = typeof body === 'string' ? body : JSON.stringify(body, null, 1);
+    details.append(summary, pre);
+    step.appendChild(details);
+  }
+  el('trace').appendChild(step);
+  el('trace').scrollTop = el('trace').scrollHeight;
+}
+
+function renderConnections(servers) {
+  el('conns').innerHTML = Object.entries(servers).map(([name, tools]) =>
+    `<div style="margin-bottom:10px">
+       <div><span class="pill">${name}</span> <span class="sub">${tools.length} tools</span></div>
+       <div class="sub" style="font-family:var(--mono);font-size:11px;margin-top:4px">${tools.join(', ')}</div>
+     </div>`).join('') || '<span class="sub">none</span>';
+}
+
+function renderRanking(result) {
+  if (!result || !Array.isArray(result.ranking) || !result.ranking.length) return;
+  const rows = result.ranking.map(c => {
+    const factors = (c.factors || []).map(f =>
+      `${f.criterion} ${f.contribution.toFixed(1)}`).join(' · ');
+    return `<tr>
+      <td>#${c.rank}</td>
+      <td><strong>${c.iso3}</strong> <span class="sub">${c.name || ''}</span><div class="sub" style="font-size:11px">${factors}</div></td>
+      <td class="num">${c.score.toFixed(1)}</td>
+      <td class="num">${c.landed_cost_per_kg_usd ?? '—'}</td>
+      <td class="num">${c.lpi_overall ?? '—'}</td>
+      <td class="num">${c.duty_rate_pct ?? '—'}</td>
+      <td class="num">${c.supply_share_pct ?? '—'}</td>
+    </tr>`;
+  }).join('');
+  el('rankBody').innerHTML =
+    `<table><thead><tr><th></th><th>Origin / score decomposition</th><th>Score</th>
+      <th>USD/kg*</th><th>LPI</th><th>Duty %</th><th>Share %</th></tr></thead><tbody>${rows}</tbody></table>
+     <p class="note">* Landed cost includes a <strong>modelled</strong> freight component, not a quoted rate.</p>
+     ${(result.caveats || []).map(c => `<p class="caveat">${c}</p>`).join('')}`;
+  el('rankCard').hidden = false;
+}
+
+function renderRisk(result) {
+  if (!result || result.hhi == null) return;
+  const flags = (result.flags || []).map(f => {
+    const cls = f.includes('HIGH') || f.includes('SINGLE') ? 'bad' : f === 'THIN_DATA' ? '' : 'warn';
+    return `<span class="pill ${cls}">${f}</span>`;
+  }).join(' ') || '<span class="sub">no threshold crossed</span>';
+  el('riskBody').innerHTML = `
+    <div style="margin-bottom:10px">${flags}</div>
+    <table><tbody>
+      <tr><th>HHI</th><td class="num">${result.hhi}</td></tr>
+      <tr><th>Effective origins</th><td class="num">${result.effective_partner_count ?? '—'}</td></tr>
+      <tr><th>Top origin</th><td class="num">${result.top_partner_iso3 ?? '—'} · ${result.top_partner_share_pct ?? '—'}%</td></tr>
+      <tr><th>YoY volatility</th><td class="num">${result.yoy_volatility_pct ?? '—'}%</td></tr>
+      <tr><th>Mirror gap</th><td class="num">${result.mirror_gap_pct ?? '—'}%</td></tr>
+    </tbody></table>
+    <p class="note">${result.interpretation || ''}</p>`;
+  el('riskCard').hidden = false;
+}
+
+function tryStructured(content) {
+  // Tool results arrive as MCP content blocks; the structured payload is JSON text.
+  const texts = Array.isArray(content) ? content : [content];
+  for (const item of texts) {
+    const raw = typeof item === 'string' ? item : item && item.text;
+    if (!raw) continue;
+    try { return JSON.parse(raw); } catch { /* not JSON, ignore */ }
+  }
+  return null;
+}
+
+function start(opts) {
+  reset();
+  el('runBtn').disabled = true; el('failBtn').disabled = true;
+  const params = new URLSearchParams({
+    question: el('q').value,
+    replay: el('replay').checked,
+    playwright: el('pw').checked,
+    break_playwright: !!opts.breakPlaywright,
+  });
+  source = new EventSource('/api/run?' + params);
+
+  source.onmessage = (event) => {
+    const e = JSON.parse(event.data);
+    if (e.kind === 'status') {
+      if (e.data && e.data.servers) renderConnections(e.data.servers);
+      addStep('', `<span class="srv">status</span> ${e.text || ''}`, Object.keys(e.data || {}).length ? e.data : null);
+    } else if (e.kind === 'tool_call') {
+      addStep('call', `<span class="srv">${e.server || 'local'}</span> <span class="tool">${e.tool}</span>`, e.data.arguments);
+    } else if (e.kind === 'tool_result') {
+      const bad = e.data.is_error;
+      const structured = tryStructured(e.data.content);
+      const status = structured && structured.status ? structured.status : (bad ? 'error' : 'ok');
+      const cls = bad || status === 'error' ? 'err' : '';
+      const pillCls = status === 'ok' ? '' : status === 'empty' ? 'warn' : 'bad';
+      addStep(cls, `<span class="srv">${e.server || 'local'}</span> <span class="tool">${e.tool}</span> <span class="pill ${pillCls}">${status}</span>`, e.data.content);
+      if (structured) { renderRanking(structured); renderRisk(structured); }
+    } else if (e.kind === 'text') {
+      el('answer').textContent += e.text + '\n';
+    } else if (e.kind === 'thinking') {
+      addStep('', `<span class="srv">thinking</span>`, e.text);
+    } else if (e.kind === 'error') {
+      addStep('err', `<span class="srv">error</span> ${e.text}`);
+    } else if (e.kind === 'done') {
+      const d = e.data || {};
+      addStep('', `<span class="srv">done</span> ${d.turns ?? '?'} turns · ${d.duration_ms ?? '?'} ms${d.cost_usd ? ' · $' + Number(d.cost_usd).toFixed(4) : ''}`);
+      if (e.text && !el('answer').textContent.trim()) el('answer').textContent = e.text;
+    }
+  };
+
+  const finish = () => {
+    if (source) { source.close(); source = null; }
+    el('runBtn').disabled = false; el('failBtn').disabled = false;
+  };
+  source.addEventListener('end', finish);
+  source.onerror = finish;
+}
+
+el('runBtn').addEventListener('click', () => start({}));
+el('failBtn').addEventListener('click', () => start({ breakPlaywright: true }));
+</script>
+</body>
+</html>
