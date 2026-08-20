@@ -71,7 +71,11 @@ PLAYWRIGHT_TOOLS = ["browser_navigate", "browser_snapshot", "browser_close"]
 # questions about an already-computed result, and one-shot lookups, are short and
 # well-scoped: a small model answers them faster and far cheaper.
 MODEL_TIERS = {
-    "analysis": (os.environ.get("SOURCING_ANALYSIS_MODEL", "claude-opus-5"), "high", 24),
+    # Sonnet, measured against Opus on the same end-to-end run: both PASS, 23
+    # turns against 20, 595s against 620, $0.398 against $0.547 -- and Sonnet
+    # walked the whole recency fallback chain to a usable turnover figure where
+    # Opus stopped at the second source with a partial result.
+    "analysis": (os.environ.get("SOURCING_ANALYSIS_MODEL", "claude-sonnet-5"), "high", 24),
     "chat": (os.environ.get("SOURCING_CHAT_MODEL", "claude-haiku-4-5"), "low", 6),
 }
 

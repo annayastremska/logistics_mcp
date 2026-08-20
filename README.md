@@ -87,7 +87,7 @@ affect the agent and the data transport mode.
 | Variable | Default | Meaning |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | unset | Model credential for the agent. If unset, the Claude Agent SDK falls back to the local Claude Code login (`claude` → `/login`). Only one of the two is needed. |
-| `SOURCING_ANALYSIS_MODEL` | `claude-opus-5` | Model for a full sourcing run: a long multi-step loop where a wrong turn wastes rate-limited calls |
+| `SOURCING_ANALYSIS_MODEL` | `claude-sonnet-5` | Model for a full sourcing run. Measured against Opus on the same run: both pass, 595s vs 620, $0.398 vs $0.547, and Sonnet walked the whole recency fallback chain to a usable figure where Opus stopped partway |
 | `SOURCING_CHAT_MODEL` | `claude-haiku-4-5` | Model for follow-up questions about an already-computed result: no browser, three read-only tools |
 | `SOURCING_MODE` | `live` | `live` calls the open APIs, `record` also writes fixtures, `replay` serves from fixtures with no network access |
 | `SOURCING_CACHE_TTL` | `86400` | Seconds to keep the local response cache (`.cache/`, git-ignored) |

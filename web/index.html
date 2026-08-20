@@ -210,6 +210,13 @@ button:disabled { opacity: .45; cursor: default; }
 .stencil .pc {
   font-family: var(--din); font-weight: 700; font-size: 46px; line-height: .95;
   letter-spacing: -0.02em; margin-top: 8px; color: var(--sheet);
+  display: flex; align-items: baseline; gap: 8px;
+}
+/* Every other figure on the card is labelled; this was the only one that
+   was not, and it is the largest. */
+.stencil .pc s {
+  text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: color-mix(in srgb, var(--sheet) 80%, transparent);
 }
 .entry.wide .stencil .pc { font-size: 64px; }
 .stencil .mf {
@@ -413,10 +420,8 @@ details .bd { padding: 4px 16px 16px; }
 <div class="fields"><div class="wrap" id="fields"></div></div>
 
 <div class="purpose"><div class="wrap">
-  <p>Each product below shows how much of it comes from one country, what that share is worth
-  if that country stops, and which other origins already ship it to Ukraine today.
-  <b>Start with the ones marked <em>single source</em></b> &#8212; those have no second supplier
-  of any size.</p>
+  <p>One row per imported product. <b>The big number is how much of it comes from a single
+  country.</b></p>
 </div></div>
 
 <div id="main"><div class="wrap">
@@ -566,7 +571,7 @@ function entry(r, wide) {
     '<div class="body">' +
       /* the signature: origin marked as it would be on the crate */
       '<div class="stencil"><div class="org">' + esc(org) + '</div>' +
-        '<div class="pc">' + pct(share) + '</div>' +
+        '<div class="pc">' + pct(share) + '<s>of imports</s></div>' +
         '<div class="rule"><i style="width:' + Math.min(100, share||0) + '%"></i></div>' +
         '<div class="mf">' + esc(r.hs_code) + ' · ' + (r.top_partner_iso3 || "") +
           ' · ' + usd(atRisk(r)) + '</div>' +
@@ -696,7 +701,7 @@ async function openLine(hs) {
       '<p class="note" style="margin:10px 0 0">Unit value is declared value over declared weight, not a quote.</p>' +
     '</div></details></div>' +
 
-  '<div class="sheet"><div class="cap"><span class="t">Find better options</span></div><div class="bd">' +
+  '<div class="sheet"><div class="cap"><span class="t">Ranked alternatives</span></div><div class="bd">' +
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
       '<button class="go" id="run">Run</button>' +
       '<label class="note"><input type="checkbox" id="optReplay"> offline</label>' +
