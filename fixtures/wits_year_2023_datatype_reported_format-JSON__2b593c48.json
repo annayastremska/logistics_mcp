@@ -1,0 +1,266 @@
+{
+ "url": "https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN/reporter/804/partner/000/product/080390/year/2023/datatype/reported?format=JSON",
+ "retrieved_at": "2026-08-20T08:17:58+00:00",
+ "note": "Genuine upstream response, recorded verbatim. Do not hand-edit.",
+ "payload": {
+  "header": {
+   "id": "DF_WITS_Tariff_TRAINS",
+   "prepared": "2026-08-20T04:17:58",
+   "test": false,
+   "sender": {
+    "id": "WBG_WITS",
+    "name": "World Bank Group - WITS"
+   }
+  },
+  "dataSets": [
+   {
+    "action": "Information",
+    "attributes": [
+     0
+    ],
+    "series": {
+     "0:0:0:0:0": {
+      "attributes": [],
+      "annotations": [],
+      "observations": {
+       "0": [
+        0,
+        0,
+        null,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "structure": {
+   "name": "WITS - UNCTAD TRAINS Tariff Data",
+   "description": "Data flow to access WITS - UNCTAD TRAINS Preferential and most-favored-nation (MFN) tariff rates",
+   "dimensions": {
+    "dataset": [],
+    "series": [
+     {
+      "id": "FREQ",
+      "name": "Freq",
+      "keyPosition": 0,
+      "role": null,
+      "values": [
+       {
+        "id": "A",
+        "name": "Annual"
+       }
+      ]
+     },
+     {
+      "id": "REPORTER",
+      "name": "Reporter_ISO_N",
+      "keyPosition": 1,
+      "role": null,
+      "values": [
+       {
+        "id": "804",
+        "name": "Ukraine"
+       }
+      ]
+     },
+     {
+      "id": "PARTNER",
+      "name": "Partner",
+      "keyPosition": 2,
+      "role": null,
+      "values": [
+       {
+        "id": "000",
+        "name": "World"
+       }
+      ]
+     },
+     {
+      "id": "PRODUCTCODE",
+      "name": "ProductCode",
+      "keyPosition": 3,
+      "role": null,
+      "values": [
+       {
+        "id": "080390",
+        "name": "(2012-) - Other"
+       }
+      ]
+     },
+     {
+      "id": "DATATYPE",
+      "name": "DataType",
+      "keyPosition": 4,
+      "role": null,
+      "values": [
+       {
+        "id": "Reported",
+        "name": "Reported Tariff (Not estimated)"
+       }
+      ]
+     }
+    ],
+    "observation": [
+     {
+      "id": "TIME_PERIOD",
+      "name": "Year",
+      "keyPosition": 3,
+      "role": "time",
+      "values": [
+       {
+        "start": "2023-01-01T00:00:00",
+        "end": "2023-12-31T00:00:00",
+        "id": "2023",
+        "name": "2023"
+       }
+      ]
+     }
+    ]
+   },
+   "attributes": {
+    "dataset": [
+     {
+      "id": "DATASOURCE",
+      "name": "DataSource",
+      "role": null,
+      "values": [
+       {
+        "id": "TRN",
+        "name": "UNCTAD TRAINS"
+       }
+      ]
+     }
+    ],
+    "series": [],
+    "observation": [
+     {
+      "id": "NOMENCODE",
+      "name": "NomenCode",
+      "role": null,
+      "values": [
+       {
+        "id": "H5",
+        "name": "H5"
+       }
+      ]
+     },
+     {
+      "id": "EXCLUDEDFROM",
+      "name": "ExcludedFrom",
+      "role": null,
+      "values": []
+     },
+     {
+      "id": "TARIFFTYPE",
+      "name": "TariffType",
+      "role": null,
+      "values": [
+       {
+        "id": "MFN",
+        "name": "Most Favoured Nation Tariff"
+       }
+      ]
+     },
+     {
+      "id": "SUM_OF_RATES",
+      "name": "Sum_Of_Rates",
+      "role": null,
+      "values": [
+       {
+        "id": "0",
+        "name": "0"
+       }
+      ]
+     },
+     {
+      "id": "MIN_RATE",
+      "name": "Min_Rate",
+      "role": null,
+      "values": [
+       {
+        "id": "0",
+        "name": "0"
+       }
+      ]
+     },
+     {
+      "id": "MAX_RATE",
+      "name": "Max_Rate",
+      "role": null,
+      "values": [
+       {
+        "id": "0",
+        "name": "0"
+       }
+      ]
+     },
+     {
+      "id": "TOTALNOOFLINES",
+      "name": "TotalNoOfLines",
+      "role": null,
+      "values": [
+       {
+        "id": "2",
+        "name": "2"
+       }
+      ]
+     },
+     {
+      "id": "NBR_PREF_LINES",
+      "name": "Nbr_Pref_Lines",
+      "role": null,
+      "values": [
+       {
+        "id": "0",
+        "name": "0"
+       }
+      ]
+     },
+     {
+      "id": "NBR_MFN_LINES",
+      "name": "Nbr_MFN_Lines",
+      "role": null,
+      "values": [
+       {
+        "id": "2",
+        "name": "2"
+       }
+      ]
+     },
+     {
+      "id": "NBR_NA_LINES",
+      "name": "Nbr_NA_Lines",
+      "role": null,
+      "values": [
+       {
+        "id": "0",
+        "name": "0"
+       }
+      ]
+     },
+     {
+      "id": "OBS_VALUE_MEASURE",
+      "name": "OBS_VALUE_MEASURE",
+      "role": null,
+      "values": [
+       {
+        "id": "SimpleAverage",
+        "name": "SimpleAverage"
+       }
+      ]
+     }
+    ]
+   },
+   "annotations": []
+  }
+ }
+}

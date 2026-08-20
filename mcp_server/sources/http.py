@@ -212,6 +212,12 @@ def fetch_json(url: str, *, timeout: float = 45.0) -> FetchResult:
     cache_path = CACHE_DIR / _fixture_name(url)
     if cache_path.exists() and time.time() - cache_path.stat().st_mtime < CACHE_TTL_SECONDS:
         cached = _read_envelope(cache_path)
+        if mode == SourceMode.RECORD and not fixture_path.exists():
+            # A cache hit must still produce a fixture. Returning here without
+            # writing one is how a recording run on a warm cache yields an
+            # incomplete fixture set, and replay then quietly disagrees with
+            # live -- a missing tariff fixture reads as 0 percent duty.
+            _write_envelope(fixture_path, url, cached.payload, cached.retrieved_at)
         return FetchResult(cached.payload, SourceMode.LIVE, cached.retrieved_at, url)
 
     payload = _live_get(url, timeout)

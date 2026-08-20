@@ -112,10 +112,32 @@ def fetch_mfn_rate_with_fallback(
     """
     years: list[int] = [preferred_year, *[y for y in fallback_years if y != preferred_year]]
     last: TariffResponse | None = None
+    missing_fixtures: list[str] = []
+
     for year in years:
-        response = fetch_mfn_rate(hs6, year)
+        try:
+            response = fetch_mfn_rate(hs6, year)
+        except UpstreamError as exc:
+            if exc.code != "FIXTURE_MISSING":
+                raise
+            # A year with no fixture is a year the recording run got a 404 for --
+            # WITS holds no observation for it, so nothing was ever written. That
+            # is the same "try the next year" case as a live 404, and it must not
+            # abort the chain, or replay reports 0 percent duty where live
+            # reports the real rate.
+            missing_fixtures.append(str(year))
+            continue
         last = response
         if response.rate is not None:
             return response
-    assert last is not None
+
+    if last is None:
+        # Every year in the chain was missing, so this is a genuinely incomplete
+        # fixture set rather than a gap in the source. Say so instead of passing
+        # back a silent "no rate".
+        raise UpstreamError(
+            "FIXTURE_MISSING",
+            f"No WITS fixture for HS {hs6} in any of years {', '.join(missing_fixtures)}. "
+            "Re-record with SOURCING_MODE=record.",
+        )
     return last
