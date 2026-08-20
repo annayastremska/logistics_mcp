@@ -337,3 +337,38 @@ def test_a_proxy_price_scores_a_candidate_that_does_not_ship_here_yet(monkeypatc
     # A supplied price is never allowed to pass for an observed one.
     assert any("supplied by the caller" in caveat for caveat in with_proxy.caveats)
     assert not any("supplied by the caller" in caveat for caveat in without.caveats)
+
+
+def test_a_supplied_price_that_displaces_a_reported_one_says_so(monkeypatch) -> None:
+    """Filling a gap and overriding an observation are not the same act.
+
+    A live run supplied a proxy for Greece, which does report trade with Ukraine
+    -- thin, but real -- while the caveat claimed the origin had done no trade
+    with the importer. True of Morocco in the same run, false of Greece. Whether
+    an origin reports anything is already known from the flows fetched for supply
+    share, so telling the two apart costs no extra request.
+    """
+    monkeypatch.setenv("SOURCING_MODE", "replay")
+
+    from mcp_server.server import rank_sourcing_countries
+
+    result = rank_sourcing_countries(
+        hs_code="080610",
+        candidates=["TUR", "MDA", "MAR"],
+        volume_kg=120_000.0,
+        year=2024,
+        # TUR is the largest existing origin; MAR does not ship here at all.
+        unit_prices={"TUR": 2.50, "MAR": 2.05},
+    )
+    assert result.status == "ok"
+
+    by_iso = {c.iso3: c for c in result.ranking}
+    assert by_iso["TUR"].price_basis == "caller_override", "a reported value was displaced"
+    assert by_iso["MAR"].price_basis == "caller_supplied", "there was nothing to displace"
+    assert by_iso["MDA"].price_basis == "reported"
+
+    # Each case gets its own sentence, and neither claims the other's reason.
+    gap = next(c for c in result.caveats if "no trade with this importer exists" in c)
+    displaced = next(c for c in result.caveats if "in place of a reported one" in c)
+    assert "MAR" in gap and "TUR" not in gap
+    assert "TUR" in displaced and "MAR" not in displaced

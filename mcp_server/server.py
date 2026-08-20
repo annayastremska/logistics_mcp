@@ -781,7 +781,15 @@ def rank_sourcing_countries(
         )
         cost[iso] = priced.cost_per_kg_usd if priced.status == "ok" else None
         duty[iso] = priced.duty_rate_pct if priced.status == "ok" else None
-        basis[iso] = None if cost[iso] is None else ("caller_supplied" if proxy else "reported")
+        if cost[iso] is None:
+            basis[iso] = None
+        elif not proxy:
+            basis[iso] = "reported"
+        else:
+            # Whether this origin reports any trade is already known from the
+            # flows fetched for supply share, so telling a gap-filling proxy from
+            # one that displaced a measured value costs no extra request.
+            basis[iso] = "caller_override" if (supply_share.get(iso) or 0) > 0 else "caller_supplied"
 
     norm_cost = analysis.min_max_normalize(cost, higher_is_better=False)
     norm_lpi = analysis.min_max_normalize(lpi, higher_is_better=True)
@@ -859,13 +867,20 @@ def rank_sourcing_countries(
         caveats.append(f"Logistics Performance Index values are as of {lpi_year}; it is not an annual series.")
     if any(v is None for v in cost.values()):
         caveats.append("Some candidates had no reported trade to price, so their cost criterion is unscored.")
-    proxied = sorted(iso for iso, b in basis.items() if b == "caller_supplied")
-    if proxied:
+    filled = sorted(iso for iso, b in basis.items() if b == "caller_supplied")
+    overrode = sorted(iso for iso, b in basis.items() if b == "caller_override")
+    if filled:
         caveats.append(
-            "Priced on a unit value supplied by the caller rather than derived from reported "
-            "trade: " + ", ".join(proxied) + ". That is the only way to cost an origin that does "
-            "not ship here yet, and it also overrides a reported value where one exists -- either "
-            "way the figure is as good as its source and no better."
+            "Priced on a unit value supplied by the caller because no trade with this importer "
+            "exists to derive one from: " + ", ".join(filled) + ". The figure is as good as its "
+            "source and no better."
+        )
+    if overrode:
+        caveats.append(
+            "Priced on a unit value supplied by the caller in place of a reported one: "
+            + ", ".join(overrode) + ". A measured unit value was available and was displaced -- "
+            "reasonable when the reported figure rests on very little trade, but it is no longer "
+            "an observation."
         )
 
     partial = [c for c in scored if c.scored_weight_pct < 100.0]

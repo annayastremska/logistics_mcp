@@ -192,6 +192,18 @@ calculation above it runs unchanged. No code path returns a prepared answer.
 Each fixture is an envelope recording the exact URL, the retrieval timestamp and the verbatim
 response body.
 
+**What offline covers.** The portfolio, every product's ranking as the landing screen shows it,
+and the agent flow. Verified by running one product's ranking live and in replay and comparing
+every field: identical to the last decimal. That check is worth keeping — it is how the duty bug
+below was found, and before the ranking fixtures were recorded it is how the collapsed offline
+scores were found too.
+
+**What it does not.** Only one reference window is recorded (Oct 2024 – Sep 2025), so a request
+for any other trailing window fails offline rather than falling back. Two products carry a
+candidate that cannot be priced in either mode — USA and NLD for almonds, AZE for kiwifruit
+report no weight, so no unit value exists to derive. Those rows are marked *incomplete* on screen
+and named in a caveat; they are a gap in the source, not in the recording.
+
 ---
 
 ## Data sources

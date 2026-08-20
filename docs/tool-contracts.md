@@ -295,7 +295,7 @@ fallback years). Cache and fixture writes as above. No other writes.
 |---|---|---|
 | `status` | enum | See conventions |
 | `ranking` | array\<RankedCountry\> | `rank`, `iso3`, `name`, `score` (0–100), `factors`, and the raw `landed_cost_per_kg_usd`, `lpi_overall`, `duty_rate_pct`, `supply_share_pct` |
-| `ranking[].price_basis` | enum \| null | `reported` when the unit value was derived from trade this origin actually did with the importer; `caller_supplied` when it came from `unit_prices`; `null` when the cost could not be established at all |
+| `ranking[].price_basis` | enum \| null | `reported` — derived from trade this origin actually did with the importer; `caller_supplied` — came from `unit_prices` for an origin with no reported trade; `caller_override` — came from `unit_prices` for an origin that does report trade, so a measured value was displaced; `null` — the cost could not be established at all |
 | `ranking[].factors` | array\<FactorContribution\> | Per criterion: `raw_value`, `normalized` (0–1), `weight`, `contribution`. Contributions sum to `score` |
 | `weights_used` | object \| null | Weights actually applied |
 | `excluded` | array\<{`iso3`, `reason`}\> | Candidates dropped before scoring |

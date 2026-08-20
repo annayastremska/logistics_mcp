@@ -300,14 +300,15 @@ class RankedCountry(BaseModel):
     lpi_overall: float | None = None
     duty_rate_pct: float | None = None
     supply_share_pct: float | None = None
-    price_basis: Literal["reported", "caller_supplied"] | None = Field(
+    price_basis: Literal["reported", "caller_supplied", "caller_override"] | None = Field(
         default=None,
         description=(
             "Where the unit value came from. 'reported' is derived from trade this origin "
-            "actually did with the importer; 'caller_supplied' is a figure the caller passed in, "
-            "which is the only way to price an origin that does not ship here yet and also "
-            "overrides a reported value where one exists. Never quote a caller_supplied cost as "
-            "an observation."
+            "actually did with the importer. 'caller_supplied' is a figure the caller passed in "
+            "for an origin with no reported trade -- the only way to cost it at all. "
+            "'caller_override' is a figure the caller passed in for an origin that does report "
+            "trade, so a measured unit value was available and was displaced; legitimate when the "
+            "reported one is too thin to trust, but never quote either as an observation."
         ),
     )
 
