@@ -377,17 +377,15 @@ function fields() {
   const byLead = {};
   rows.forEach(r => (byLead[r.top_partner_name || r.top_partner_iso3] ??= []).push(r));
   const top = Object.entries(byLead).sort((a,b) => b[1].length - a[1].length)[0];
-  const topRisk = top ? top[1].reduce((s,r) => s + (atRisk(r)||0), 0) : 0;
 
   const f = (k, v, s, hot) => '<div class="fld' + (hot ? " hot" : "") + '"><span class="eb">' + k +
     '</span><div class="v">' + v + (s ? "<s>" + s + "</s>" : "") + "</div></div>";
 
   $("fields").innerHTML =
-    f("Lines", rows.length) +
     f("Declared imports", usd(total)) +
     f("Held by one origin", usd(risk), total ? Math.round(risk/total*100) + "% of value" : "", true) +
     (top && top[1].length > 1
-      ? f("Concentrated on", esc(top[0]).toUpperCase(), top[1].length + " lines · " + usd(topRisk))
+      ? f("Concentrated on", esc(top[0]).toUpperCase())
       : "") +
     f("Single source", rows.filter(r => (r.severity||0) >= ATTENTION).length, "of " + rows.length);
   $("period").textContent = period(data.period_label);
