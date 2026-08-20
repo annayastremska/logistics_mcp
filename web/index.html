@@ -79,10 +79,10 @@
   :focus-visible { outline: 2px solid var(--sel); outline-offset: -1px; }
 
   /* ---------------- header ---------------- */
-  header {
-    height: 44px; display: flex; align-items: center; gap: 12px;
-    padding: 0 16px; border-bottom: 1px solid var(--line);
-  }
+  header { border-bottom: 1px solid var(--line); }
+  /* The bar spans the window; its contents align to the same column as the
+     table below it, or the brand floats off on its own at wide widths. */
+  header > .wrap { height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 16px; }
   .name { font-weight: 600; font-size: 13px; letter-spacing: -0.01em; }
   .name span { color: var(--ink-3); font-weight: 400; margin-left: 7px; }
   .grow { flex: 1; }
@@ -105,6 +105,18 @@
   .seg button { border: 0; border-radius: 0; height: 24px; color: var(--ink-2); }
   .seg button + button { border-left: 1px solid var(--line); }
   .seg button[aria-pressed="true"] { background: var(--bg-sunk); color: var(--ink); font-weight: 550; }
+
+  /* ---------------- layout ----------------
+     A measured content column, and the leftover width spent on a detail rail
+     rather than on stretching six columns across a monitor. Below 1140px the
+     rail drops under the list and the page reads as one column. */
+  .wrap { max-width: 1400px; margin: 0 auto; width: 100%; }
+  .split { display: grid; grid-template-columns: minmax(0,1fr) 400px; align-items: start; }
+  .split > .rail { border-left: 1px solid var(--line); min-height: 100%; }
+  @media (max-width: 1139px) {
+    .split { grid-template-columns: minmax(0,1fr); }
+    .split > .rail { border-left: 0; border-top: 1px solid var(--line); }
+  }
 
   /* ---------------- summary strip ---------------- */
   .strip {
@@ -136,6 +148,13 @@
     border-bottom: 1px solid var(--line-2); white-space: nowrap;
   }
   tbody td { padding: 0 12px; height: 40px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  /* Names stay left, every figure sits in one right-hand block, so a row can be
+     read without the eye travelling the width of the screen. */
+  table { table-layout: fixed; }
+  /* Edge cells carry the page gutter so the first column lines up with the
+     brand and the toolbar above it. */
+  thead th:first-child, tbody td:first-child { padding-left: 16px; }
+  thead th:last-child,  tbody td:last-child  { padding-right: 16px; }
   tbody tr.line { cursor: pointer; }
   tbody tr.line:hover td { background: var(--bg-hover); }
   tbody tr.line.open td { background: var(--sel-bg); }
@@ -156,18 +175,24 @@
   .c-mod  { color: var(--mod);  } .c-ok   { color: var(--ok); }
   .st b { font-weight: 550; color: var(--ink); }
 
-  /* ---------------- inline expansion ---------------- */
-  tr.detail td { padding: 0; background: var(--bg-sunk); border-bottom: 1px solid var(--line-2); }
-  .exp { padding: 14px 16px 16px 16px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 26px; }
-  @media (max-width: 900px) { .exp { grid-template-columns: minmax(0,1fr); gap: 16px; } }
-  .exp h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); margin-bottom: 7px; }
+  /* ---------------- detail tables ---------------- */
   .mini { width: 100%; border-collapse: collapse; }
   .mini td { height: 24px; padding: 0 8px 0 0; border: 0; font-size: 12.5px; }
   .mini td.r { padding-right: 0; }
   .facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font-size: 12.5px; }
   .facts dt { color: var(--ink-3); white-space: nowrap; }
   .facts dd { margin: 0; }
-  .acts { display: flex; gap: 8px; margin-top: 14px; align-items: center; grid-column: 1 / -1; }
+
+  /* ---------------- detail rail ---------------- */
+  .rail .rhead { padding: 11px 14px; border-bottom: 1px solid var(--line); }
+  .rail .rhead b { font-size: 13.5px; }
+  .rail .rhead .sub { display: block; margin-top: 1px; }
+  .rail .sect { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .rail .sect h3 {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-3); margin-bottom: 8px; font-weight: 600;
+  }
+  .rail .empty { padding: 22px 14px; color: var(--ink-3); font-size: 12px; }
 
   /* ---------------- drill-down page ---------------- */
   .crumbs { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
@@ -207,7 +232,7 @@
   .out { white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
 
   /* ---------------- ask ---------------- */
-  .ask { border-top: 1px solid var(--line); padding: 8px 16px; display: flex; gap: 8px; align-items: center; }
+  .ask { border-top: 1px solid var(--line); padding: 8px 16px; }
   .ask input {
     flex: 1; font: inherit; height: 28px; padding: 0 9px;
     border: 1px solid var(--control); border-radius: 4px; background: var(--bg); color: var(--ink);
@@ -227,15 +252,18 @@
 <body>
 
 <header>
-  <span class="name">Sourcing Risk <span id="period"></span></span>
-  <span class="grow"></span>
-  <button class="plain" id="sysBtn">Sources</button>
+  <div class="wrap">
+    <span class="name">Sourcing Risk <span id="period"></span></span>
+    <span class="grow"></span>
+    <button class="plain" id="sysBtn">Sources</button>
+  </div>
 </header>
 
-<div class="strip" id="strip"></div>
+<div class="wrap"><div class="strip" id="strip"></div></div>
 
 <!-- ============== worklist ============== -->
-<section id="vList">
+<section id="vList" class="wrap split">
+ <div>
   <div class="bar">
     <div class="seg">
       <button id="segAll" aria-pressed="true">All</button>
@@ -249,12 +277,12 @@
   <table>
     <thead>
       <tr>
-        <th style="width:24%">Line</th>
-        <th style="width:19%">Lead supplier</th>
-        <th class="r" style="width:15%">Share</th>
+        <th style="width:30%">Line</th>
+        <th style="width:20%">Lead supplier</th>
+        <th class="r" style="width:14%">Share</th>
         <th class="r" style="width:12%">At risk <span class="ord">2</span></th>
-        <th class="r" style="width:12%">Alternatives</th>
-        <th style="width:18%">Status <span class="ord">1 ↓</span></th>
+        <th class="r" style="width:13%">Alternatives</th>
+        <th style="width:23%">Status <span class="ord">1 ↓</span></th>
       </tr>
     </thead>
     <tbody id="rows"></tbody>
@@ -264,10 +292,12 @@
     <summary>Data sources and connections</summary>
     <div class="bd" id="sysBody">checking…</div>
   </details>
+ </div>
+ <aside class="rail" id="rail"><div class="empty">Select a line to see where it comes from.</div></aside>
 </section>
 
 <!-- ============== one line ============== -->
-<section id="vLine" class="hide">
+<section id="vLine" class="hide wrap">
   <div class="crumbs">
     <button class="plain" id="back">← Lines</button>
     <span id="crumb"></span>
@@ -275,10 +305,12 @@
   <div class="pad" id="lineBody"></div>
 </section>
 
-<div class="qa" id="qa"></div>
+<div class="wrap"><div class="qa" id="qa"></div></div>
 <div class="ask">
-  <input id="ask" placeholder="Ask about these lines" autocomplete="off">
-  <button class="go" id="askBtn">Ask</button>
+  <span class="wrap" style="display:flex;gap:8px;align-items:center">
+    <input id="ask" placeholder="Ask about these lines" autocomplete="off">
+    <button class="go" id="askBtn">Ask</button>
+  </span>
 </div>
 
 <script>
@@ -396,63 +428,75 @@ function renderRows() {
   $("segRisk").setAttribute("aria-pressed", String(riskOnly));
   $("rows").querySelectorAll("tr.line").forEach(tr =>
     tr.addEventListener("click", () => toggle(tr.dataset.hs)));
-  if (openHs && rows.some(r => r.hs_code === openHs)) expand(openHs);
+
+  // Keep a selection valid across filtering, and never leave the rail blank.
+  if (!rows.some(r => r.hs_code === openHs)) {
+    openHs = rows[0]?.hs_code || null;
+    if (openHs) {
+      $("rows").querySelector(`tr.line[data-hs="${openHs}"]`)?.classList.add("open");
+      fillRail(openHs);
+    }
+  }
 }
 
-/* Detail opens in place. One row at a time, so the list never becomes a wall. */
+/* Selecting a row fills the rail. One selection at a time, and the top row is
+   selected on load so the rail is never an empty column. */
 function toggle(hs) {
-  openHs = openHs === hs ? null : hs;
+  openHs = hs;
   renderRows();
+  fillRail(hs);
 }
 
-async function expand(hs) {
-  const tr = $("rows").querySelector(`tr.line[data-hs="${hs}"]`);
-  if (!tr || tr.nextElementSibling?.classList.contains("detail")) return;
-  const host = document.createElement("tr");
-  host.className = "detail";
-  host.innerHTML = `<td colspan="6"><div class="exp"><div class="note">Loading…</div></div></td>`;
-  tr.after(host);
-
+async function fillRail(hs) {
   const row = data.rows.find(r => r.hs_code === hs);
+  const rail = $("rail");
+  rail.innerHTML = `<div class="rhead"><b>${esc(row ? row.label : hs)}</b>
+    <span class="sub">HS ${esc(hs)} · loading…</span></div>`;
   try {
     const d = await (await fetch(`/api/commodity/${hs}?year=2024`)).json();
+    if (openHs !== hs) return;              // a later click won the race
     const flows = d.flows || {}, risk = d.risk || {};
-    const top = (flows.rows || []).slice(0, 5);
-    const all = conds(row);
+    const all = conds(row || {});
+    const top = (flows.rows || []).slice(0, 8);
 
-    host.querySelector(".exp").innerHTML = `
-      <div>
+    rail.innerHTML = `
+      <div class="rhead">
+        <b>${esc(row ? row.label : hs)}</b>
+        <span class="sub">HS ${esc(hs)} · ${esc(period(flows.provenance?.as_of || data.period_label))}</span>
+      </div>
+
+      <div class="sect">
         <h3>Origins</h3>
         <table class="mini"><tbody>
           ${top.map((r, i) => `<tr>
             <td>${esc(r.partner_name)}${i === 0 ? ' <span class="sub">lead</span>' : ""}</td>
-            <td class="r" style="width:64px">${pct(r.share_of_total_pct, 1)}</td>
-            <td class="r" style="width:64px">${usd(r.value_usd)}</td>
-            <td class="r" style="width:64px">${r.unit_price_usd_per_kg == null ? "—" : "$" + r.unit_price_usd_per_kg.toFixed(2) + "/kg"}</td>
+            <td class="r" style="width:52px">${pct(r.share_of_total_pct, 1)}</td>
+            <td class="r" style="width:54px">${usd(r.value_usd)}</td>
           </tr>`).join("")}
         </tbody></table>
-        ${(flows.rows || []).length > 5
-          ? `<div class="note" style="margin-top:6px">${flows.rows.length - 5} smaller origins not shown.</div>` : ""}
+        ${(flows.rows || []).length > top.length
+          ? `<div class="note" style="margin-top:7px">${flows.rows.length - top.length} smaller origins not shown.</div>` : ""}
       </div>
-      <div>
+
+      <div class="sect">
         <h3>Detail</h3>
         <dl class="facts">
           <dt>Imports</dt><dd>${usd(flows.total_value_usd)}</dd>
+          <dt>With the lead</dt><dd>${usd(atRisk(row || {}))}</dd>
           <dt>Effective origins</dt><dd>${n(risk.effective_partner_count, 1)} of ${n(flows.partner_count)}</dd>
           <dt>Volume swing</dt><dd>${pct(risk.yoy_volatility_pct, 0)} year to year</dd>
           <dt>Conditions</dt><dd>${all.length
             ? all.map(c => `<span title="${esc(c.why)}">${c.w}</span>`).join(", ") : "none"}</dd>
         </dl>
       </div>
-      <div class="acts">
-        <button class="go" data-open="${esc(hs)}">Open full analysis</button>
-        <span class="note">Costs and ranks alternative origins. Several minutes.</span>
+
+      <div class="sect" style="border-bottom:0">
+        <button class="go" id="openFull">Open full analysis</button>
+        <p class="note" style="margin:8px 0 0">Costs and ranks alternative origins. Several minutes.</p>
       </div>`;
-    host.querySelector("[data-open]").addEventListener("click", e => {
-      e.stopPropagation(); openLine(hs);
-    });
+    $("openFull").addEventListener("click", () => openLine(hs));
   } catch (e) {
-    host.querySelector(".exp").innerHTML = `<div class="note">Could not load: ${esc(e)}</div>`;
+    if (openHs === hs) rail.innerHTML = `<div class="empty">Could not load: ${esc(e)}</div>`;
   }
 }
 
