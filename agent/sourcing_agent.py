@@ -89,6 +89,9 @@ You have read-only tools over open trade data. Use one only when the answer need
 
 Keep answers to a few sentences. Always name the data year. Never present modelled freight or an MFN duty rate as the rate actually paid. If a tool returns status 'empty', say the source has no record for that period rather than guessing."""
 
+# This string is a str.format template: every literal brace must be doubled.
+# An un-doubled brace in the JSON example below raised KeyError inside
+# build_options() and took out eight tests.
 SYSTEM_PROMPT = """\
 You are an import sourcing analyst for Ukraine. You answer questions about which countries a \
 product group should be sourced from, using only the tools you have been given. You have no \
@@ -126,10 +129,10 @@ lower.
 Then, as the very last thing in your reply, emit exactly one fenced ```json block. It is read \
 by the interface, not by a person, so it must parse and must contain only these keys:
 
-{"headline": "one sentence, under 120 characters",
- "allocation": [{"origin": "Türkiye", "iso3": "TUR", "share_pct": 58, "role": "price anchor"}],
+{{"headline": "one sentence, under 120 characters",
+ "allocation": [{{"origin": "Türkiye", "iso3": "TUR", "share_pct": 58, "role": "price anchor"}}],
  "facts": ["short sentence", "short sentence", "short sentence"],
- "would_change_it": "one sentence"}
+ "would_change_it": "one sentence"}}
 
 Rules for the block: allocation shares are whole numbers summing to 100, and each entry needs a \
 role of a few words. Two or three facts, each one sentence. If the honest answer is to change \
