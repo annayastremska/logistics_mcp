@@ -67,11 +67,19 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Install the Playwright browser once (Node must be on the PATH):
+Install the browser server and a Chromium build once (Node 18+ on the PATH):
 
 ```bash
+npm install
 npx -y playwright install chromium
 ```
+
+`npm install` pins `@playwright/mcp`, and the agent then starts it as
+`node node_modules/@playwright/mcp/cli.js`. It does not go through `npx`: there is no
+executable called `npx` on Windows, and Node refuses to spawn `npx.cmd` without a shell, so
+launching the server by that name failed silently — the run continued and the model reported
+it had no browser tool. Without `npm install` the agent falls back to `npx -y
+@playwright/mcp@latest`, which works where a POSIX shell resolves it.
 
 ---
 
@@ -121,8 +129,10 @@ npx -y @modelcontextprotocol/inspector python -m mcp_server.server
 
 ### 2. Playwright MCP server
 
+The agent spawns this itself; run it by hand only to inspect it.
+
 ```bash
-npx -y @playwright/mcp@latest
+node node_modules/@playwright/mcp/cli.js --headless --isolated
 ```
 
 ### 3. Agent and web application

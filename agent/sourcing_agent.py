@@ -37,6 +37,27 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CUSTOM_SERVER = "trade-sourcing"
 PLAYWRIGHT_SERVER = "playwright"
 
+# The browser server is spawned directly rather than through the npx shim.
+# Measured: bare "npx" is not an executable on Windows -- the extensionless file
+# beside node is a POSIX shell script and CreateProcess refuses it -- and
+# "npx.cmd" does not help either, because Node refuses to spawn a .cmd without a
+# shell. Either way the server never started, the run continued, and the model
+# reported it had no browser tool: the recency check silently went unperformed.
+# The package is pinned in package.json, so its entry point is a plain .js file
+# that node can execute with no shim, no shell and no network fetch per run.
+# npx stays as the fallback for a checkout where npm install has not been run.
+PLAYWRIGHT_CLI = Path(__file__).resolve().parent.parent / "node_modules" / "@playwright" / "mcp" / "cli.js"
+
+
+def _playwright_command() -> tuple[str, list[str]]:
+    """Return the command and leading arguments that start the browser server."""
+    if PLAYWRIGHT_CLI.exists():
+        return os.environ.get("SOURCING_NODE", "node"), [str(PLAYWRIGHT_CLI)]
+    return os.environ.get("SOURCING_NPX", "npx.cmd" if sys.platform == "win32" else "npx"), [
+        "-y",
+        "@playwright/mcp@latest",
+    ]
+
 # The one page the browser is permitted to visit: the State Customs Service
 # publishes current-year turnover as HTML and nowhere else.
 CUSTOMS_TURNOVER_URL = os.environ.get(
@@ -112,9 +133,17 @@ with the statistical data alone.
 HIGH_CONCENTRATION or SINGLE_SOURCE, your candidate list must reach beyond the current top \
 suppliers, and you should weight supply capacity lower and logistics higher, because the point \
 of the exercise is then diversification rather than reinforcing a dependency.
-5. `estimate_landed_cost` for candidates worth costing.
+5. `estimate_landed_cost` for candidates worth costing. When step 4 flagged concentration, \
+at least two of your candidates must be origins that did **not** appear in step 3 -- countries \
+Ukraine does not currently buy this product from. Those calls come back status 'empty', because \
+a unit value can only be derived from trade that actually happened; that is the tool telling \
+you to supply `unit_price_usd_per_kg` yourself. Do so, and name the basis in the same \
+sentence: the unit value of a comparable incumbent, or a figure from a page you read. A \
+shortlist containing only the suppliers we already depend on cannot answer the question that \
+was asked.
 6. `rank_sourcing_countries` with weights you justify out loud, based on what step 4 found. \
-Rank once. Transport mode does not change the scores -- reported unit values are already CIF, so \
+Pass the widened candidates in the same call as the incumbents, so the comparison is one \
+table and not two. Rank once. Transport mode does not change the scores -- reported unit values are already CIF, so \
 modelled freight is reference-only and excluded from the total -- so splitting the candidates into \
 a road set and a sea set produces two identical answers and wastes rate-limited calls.
 
@@ -123,7 +152,8 @@ Rules you do not break:
 - A tool result with status 'empty' is a real answer. Do not retry it and do not treat it as an \
 error.
 - Never present a modelled number as measured. Freight is modelled; say so whenever you quote \
-a landed cost.
+a landed cost. A unit price you supplied yourself is a proxy, not an observation: say whose \
+figure it is every time you use it.
 - Duty figures are MFN rates. If fta_preference_possible is true, say the real rate may be \
 lower.
 - State the data year. Comtrade lags by about two years.
@@ -224,12 +254,12 @@ def build_options(
         allowed = [_qualified(CUSTOM_SERVER, tool) for tool in CHAT_TOOLS]
 
     if include_playwright:
+        browser_command, browser_args = _playwright_command()
         mcp_servers[PLAYWRIGHT_SERVER] = {
             "type": "stdio",
-            "command": os.environ.get("SOURCING_NPX", "npx"),
+            "command": browser_command,
             "args": [
-                "-y",
-                "@playwright/mcp@latest",
+                *browser_args,
                 "--headless",
                 # A fresh profile per run: no cookies or storage are carried over,
                 # and nothing about the developer's own browser session is touched.

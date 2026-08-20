@@ -996,7 +996,8 @@ function renderVerdict(d) {
 function run(d, opts) {
   opts = opts || {};
   const q = "Where should Ukraine source " + d.label + " (HS " + d.hs_code + ") from? " +
-    "Assume a 120 tonne shipment. If current supply is concentrated, look beyond the incumbent leaders.";
+    "Assume a 120 tonne shipment. If current supply is concentrated, at least two of your ranked "
+    + "candidates must be origins that do not currently supply Ukraine with this product.";
   const p = new URLSearchParams({ question: q });
   if ($("optReplay").checked) p.set("replay", "true");
   if (!$("optPw").checked) p.set("playwright", "false");

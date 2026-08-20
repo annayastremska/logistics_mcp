@@ -31,3 +31,4 @@ scripts/last_e2e_trace.jsonl
 # written per run. Transient by nature; nothing here is worth keeping.
 .playwright-mcp/
 scripts/last_failure_demo_trace.jsonl
+node_modules/

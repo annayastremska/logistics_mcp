@@ -49,7 +49,7 @@ python scripts/inspect_tools.py --json | head -60
 **Terminal 2** — the existing server, also independently:
 
 ```bash
-npx -y @playwright/mcp@latest
+node node_modules/@playwright/mcp/cli.js --headless --isolated
 ```
 
 **Terminal 3** — the application:
@@ -262,7 +262,7 @@ the system.
 | Agent fails to authenticate | `claude` → `/login`, or set `ANTHROPIC_API_KEY` in `.env`. The badge shows which source is in use. |
 | Comtrade returns `RATE_LIMITED` | Tick **offline** in the analysis block and re-run; explain the 1 req/s limit and the retry with backoff. |
 | WITS times out | Expected; it is slow. The tool records the assumption and continues with the duty as a lower bound. |
-| `npx` not found | Node is not on the PATH. Fall back to explaining the Playwright contract from the docs, and demonstrate the failure path instead. |
+| browser server absent from the run record | `npm install` has not been run, so the pinned `node_modules/@playwright/mcp/cli.js` is missing and the fallback to `npx` cannot start either. Run `npm install`. If Node is unavailable altogether, demonstrate the failure path instead and explain the Playwright contract from the docs. |
 | Nothing renders in the UI | Fall back to `python scripts/smoke_tools.py` — the same tools, in the terminal. |
 | The worklist is slow on first load | Expected: six lines over a twelve-month window is roughly eighty throttled Comtrade calls on a cold cache. Cached per year afterwards — warm it is about 3 s — and **Refresh** forces a re-query. |
 | A row shows `incomplete` | Flows resolved but the risk call did not. Say so — the row is deliberately marked rather than shown with a blank figure, because a missing number must not read as a low one. |

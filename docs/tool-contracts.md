@@ -416,7 +416,7 @@ comparison. Read-only.
 ## Existing server: Microsoft Playwright MCP
 
 Repository: <https://github.com/microsoft/playwright-mcp>. Started independently with
-`npx -y @playwright/mcp@latest`; the agent connects to it over stdio.
+`node node_modules/@playwright/mcp/cli.js --headless --isolated`, pinned in `package.json`; the agent spawns it and connects over stdio. Not through `npx`: bare `npx` is not an executable on Windows and Node will not spawn `npx.cmd` without a shell, so the server never started and the run went ahead without a browser.
 
 ### Why this server belongs in this project
 

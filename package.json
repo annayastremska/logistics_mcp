@@ -1,0 +1,8 @@
+{
+  "name": "logistics-mcp-browser",
+  "private": true,
+  "description": "Pins the existing Playwright MCP server so the agent can spawn it directly. Node refuses to execute npx.cmd without a shell, and there is no executable plain npx on Windows, so the server is launched as node node_modules/@playwright/mcp/cli.js instead of through the npx shim.",
+  "dependencies": {
+    "@playwright/mcp": "^0.0.41"
+  }
+}

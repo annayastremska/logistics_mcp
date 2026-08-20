@@ -13,7 +13,7 @@
 |---|---|
 | Агентний фреймворк | **Claude Agent SDK** (`claude-agent-sdk`), MCP-клієнт вбудований |
 | Модель | Два профілі: `analysis` — `claude-sonnet-5`, effort high, 24 turns; `chat` — `claude-haiku-4-5`, effort low, 6 turns |
-| Існуючий MCP | Microsoft Playwright MCP (`npx @playwright/mcp@latest`) |
+| Існуючий MCP | Microsoft Playwright MCP (`node node_modules/@playwright/mcp/cli.js`, запінений у `package.json`) |
 | Кастомний MCP | Python, офіційний `mcp` SDK, транспорт stdio, ім'я `trade-sourcing-mcp` |
 | Веб-інтерфейс | FastAPI + одна HTML-сторінка (без збірки), SSE для стріму трейсу |
 
