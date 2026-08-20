@@ -54,6 +54,25 @@ CUSTOM_TOOLS = [
 
 PLAYWRIGHT_TOOLS = ["browser_navigate", "browser_snapshot", "browser_close"]
 
+# Two model tiers. The sourcing analysis is a long multi-step agentic run where a
+# wrong turn wastes rate-limited API calls, so it gets the capable model. Chat
+# questions about an already-computed result, and one-shot lookups, are short and
+# well-scoped: a small model answers them faster and far cheaper.
+MODEL_TIERS = {
+    "analysis": (os.environ.get("SOURCING_ANALYSIS_MODEL", "claude-opus-5"), "high", 24),
+    "chat": (os.environ.get("SOURCING_CHAT_MODEL", "claude-haiku-4-5"), "low", 6),
+}
+
+# The chat tier is deliberately narrower: it may read data and explain it, but it
+# does not drive the browser or re-run a whole ranking.
+CHAT_TOOLS = ["validate_sourcing_brief", "get_import_flows", "assess_supply_concentration_risk"]
+
+CHAT_SYSTEM_PROMPT = """You answer follow-up questions about Ukrainian import sourcing data, briefly and concretely.
+
+You have read-only tools over open trade data. Use one only when the answer needs a figure you do not already have in the conversation; otherwise answer directly from what is there.
+
+Keep answers to a few sentences. Always name the data year. Never present modelled freight or an MFN duty rate as the rate actually paid. If a tool returns status 'empty', say the source has no record for that period rather than guessing."""
+
 SYSTEM_PROMPT = """\
 You are an import sourcing analyst for Ukraine. You answer questions about which countries a \
 product group should be sourced from, using only the tools you have been given. You have no \
@@ -124,23 +143,30 @@ def split_tool_name(name: str) -> tuple[str | None, str]:
 
 def build_options(
     *,
+    profile: Literal["analysis", "chat"] = "analysis",
     replay: bool = False,
     include_playwright: bool = True,
     break_playwright: bool = False,
     model: str | None = None,
-    max_turns: int = 24,
+    max_turns: int | None = None,
 ) -> ClaudeAgentOptions:
     """Assemble the agent configuration, including both MCP connections.
 
     Args:
+        profile: ``analysis`` for the full multi-step sourcing run on the capable
+            model, or ``chat`` for short follow-up questions on the small model.
         replay: Run the custom server against recorded fixtures with no network.
-        include_playwright: Attach the existing Playwright MCP server.
+        include_playwright: Attach the existing Playwright MCP server. Forced off
+            for the chat profile, which has no reason to drive a browser.
         break_playwright: Point the browser at an unresolvable host, to demonstrate
             how a failure of the existing server surfaces. The failure is produced
             by changing the input, not by faking an error.
-        model: Model override; defaults to ``SOURCING_AGENT_MODEL``.
-        max_turns: Hard ceiling on agent turns.
+        model: Model override; defaults to the profile's tier.
+        max_turns: Turn ceiling override; defaults to the profile's tier.
     """
+    tier_model, tier_effort, tier_turns = MODEL_TIERS[profile]
+    if profile == "chat":
+        include_playwright = False
     server_env = {"SOURCING_MODE": "replay" if replay else os.environ.get("SOURCING_MODE", "live")}
 
     mcp_servers: dict[str, Any] = {
@@ -152,6 +178,9 @@ def build_options(
         }
     }
     allowed = [_qualified(CUSTOM_SERVER, tool) for tool in CUSTOM_TOOLS]
+
+    if profile == "chat":
+        allowed = [_qualified(CUSTOM_SERVER, tool) for tool in CHAT_TOOLS]
 
     if include_playwright:
         mcp_servers[PLAYWRIGHT_SERVER] = {
@@ -171,8 +200,12 @@ def build_options(
     target_url = BROKEN_URL if break_playwright else CUSTOMS_TURNOVER_URL
 
     return ClaudeAgentOptions(
-        model=model or os.environ.get("SOURCING_AGENT_MODEL", "claude-opus-5"),
-        system_prompt=SYSTEM_PROMPT.format(customs_url=target_url),
+        model=model or tier_model,
+        system_prompt=(
+            CHAT_SYSTEM_PROMPT
+            if profile == "chat"
+            else SYSTEM_PROMPT.format(customs_url=target_url)
+        ),
         # No built-in tools at all: the MCP servers are the entire capability surface.
         tools=[],
         mcp_servers=mcp_servers,
@@ -183,9 +216,9 @@ def build_options(
         plugins=[],
         skills=None,
         permission_mode="bypassPermissions",  # every allowed tool is read-only
-        max_turns=max_turns,
+        max_turns=max_turns or tier_turns,
         cwd=str(REPO_ROOT),
-        effort="high",
+        effort=tier_effort,
     )
 
 
@@ -211,19 +244,34 @@ async def discover_connections(options: ClaudeAgentOptions) -> dict[str, list[st
 async def run_sourcing_query(
     question: str,
     *,
+    profile: Literal["analysis", "chat"] = "analysis",
     replay: bool = False,
     include_playwright: bool = True,
     break_playwright: bool = False,
+    context: str | None = None,
 ) -> AsyncIterator[TraceEvent]:
-    """Run one sourcing question, yielding trace events as they happen."""
+    """Run one question, yielding trace events as they happen.
+
+    Args:
+        context: Already-computed findings to hand the chat tier, so a follow-up
+            question does not re-run the whole analysis to restate a number.
+    """
     options = build_options(
-        replay=replay, include_playwright=include_playwright, break_playwright=break_playwright
+        profile=profile,
+        replay=replay,
+        include_playwright=include_playwright,
+        break_playwright=break_playwright,
     )
+    if context:
+        question = (
+            f"Current analysis on screen:\n{context}\n\nQuestion: {question}"
+        )
 
     yield TraceEvent(
         kind="status",
         text="starting agent",
         data={
+            "profile": profile,
             "model": options.model,
             "data_mode": "replay" if replay else os.environ.get("SOURCING_MODE", "live"),
             "playwright_attached": include_playwright,
