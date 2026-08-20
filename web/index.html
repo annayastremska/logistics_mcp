@@ -101,7 +101,18 @@ header { background: var(--sheet); border-bottom: 2px solid var(--ink); }
 header .wrap { display: flex; align-items: flex-end; gap: 18px; padding: 14px 24px 10px; }
 .mark { font-family: var(--din); font-size: 19px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .mark small { display: block; font-family: var(--body); font-size: 11px; font-weight: 400;
-              letter-spacing: 0; text-transform: none; color: var(--ink-2); margin-top: 1px; }
+              letter-spacing: .02em; text-transform: none; color: var(--ink-3); margin-top: 1px; }
+
+/* What this is for, at a size it can be read. Sits under the masthead so it is
+   the first thing after the name and the last thing a returning reader looks at. */
+.intro { background: var(--sheet); border-bottom: 1px solid var(--rule); }
+.intro .wrap { padding: 18px 24px 20px; }
+.intro h1 {
+  font-family: var(--din); font-size: 20px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; max-width: 30ch;
+}
+.intro p { margin: 9px 0 0; font-size: 15px; line-height: 1.55; color: var(--ink-2); max-width: 74ch; }
+.intro p b { color: var(--ink); font-weight: 600; }
 .grow { flex: 1; }
 .ref { text-align: right; }
 .ref .v { font-family: var(--din); font-size: 13px; letter-spacing: .05em; }
@@ -264,12 +275,31 @@ details .bd { padding: 4px 16px 16px; }
 .log .bad { color: var(--stamp); }
 .out { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
 
-.ask { background: var(--sheet); border-top: 1px solid var(--rule); padding: 11px 0; margin-top: auto; }
-.ask .wrap { display: flex; gap: 9px; align-items: center; }
-.ask input { flex: 1; font: inherit; font-size: 14px; height: 30px; padding: 0 11px;
-             border: 1px solid var(--control); border-radius: 2px; background: var(--sheet); color: var(--ink); }
-.qa .q { font-size: 12.5px; color: var(--ink-3); margin-top: 13px; }
-.qa .a { white-space: pre-wrap; margin-top: 3px; }
+/* The question block: a sheet like the others, not a footer strip. */
+.ask .row { display: flex; gap: 10px; align-items: center; }
+.ask input {
+  flex: 1; font: inherit; font-size: 15px; height: 40px; padding: 0 13px;
+  border: 1px solid var(--control); border-radius: 2px;
+  background: var(--sheet); color: var(--ink);
+}
+.ask input::placeholder { color: var(--ink-3); }
+.ask .go { height: 40px; padding: 0 20px; font-size: 12px; }
+
+/* Prompts, so the reader is not handed an empty box. Each is built from the
+   figures on screen, so they are specific rather than illustrative. */
+.prompts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.prompts button {
+  height: auto; padding: 7px 12px; font-size: 13px; text-align: left;
+  border: 1px dashed var(--control); background: transparent; color: var(--ink-2);
+  border-radius: 2px;
+}
+.prompts button:hover { background: var(--form); color: var(--ink); border-style: solid; }
+
+.qa .q {
+  font-family: var(--din); font-size: 12px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-3); margin-top: 16px;
+}
+.qa .a { white-space: pre-wrap; margin-top: 5px; padding-left: 13px; border-left: 2px solid var(--rule); }
 
 #main { flex: 1 1 auto; padding-bottom: 26px; }
 .hide { display: none !important; }
@@ -282,10 +312,17 @@ details .bd { padding: 4px 16px 16px; }
 <body>
 
 <header><div class="wrap">
-  <span class="mark">Origin<small>Ukraine · import concentration</small></span>
+  <span class="mark">Origin<small>Ukraine</small></span>
   <span class="grow"></span>
   <span class="ref"><span class="eb">Period</span><div class="v" id="period">&#8212;</div></span>
 </div></header>
+
+<div class="intro"><div class="wrap">
+  <h1>Import risk by product group</h1>
+  <p>When one country supplies most of a product group, a single export ban, failed harvest or
+  closed border empties the shelf. This shows <b>where that exposure sits</b>, <b>what it is
+  worth</b>, and <b>which origins already ship enough to take the volume</b>.</p>
+</div></div>
 
 <div class="fields"><div class="wrap" id="fields"></div></div>
 
@@ -293,7 +330,7 @@ details .bd { padding: 4px 16px 16px; }
   <section id="vList">
     <div class="tools">
       <div class="seg">
-        <button id="segAll" aria-pressed="true">All lines</button>
+        <button id="segAll" aria-pressed="true">All products</button>
         <button id="segRisk" aria-pressed="false">Single source</button>
       </div>
       <span class="note" id="cnt"></span>
@@ -301,24 +338,32 @@ details .bd { padding: 4px 16px 16px; }
       <button class="q" id="refresh">Refresh</button>
     </div>
     <div class="list" id="list"></div>
-    <div class="sheet" style="margin-top:14px">
+    <div class="sheet ask" style="margin-top:14px">
+      <div class="cap"><span class="t">Ask about these products</span>
+        <span class="grow"></span>
+        <span class="note">answered from the figures above</span></div>
+      <div class="bd">
+        <div class="prompts" id="prompts"></div>
+        <div class="row">
+          <input id="ask" placeholder="Type a question" autocomplete="off">
+          <button class="go" id="askBtn">Ask</button>
+        </div>
+        <div class="qa" id="qa"></div>
+      </div>
+    </div>
+
+    <div class="sheet">
       <details id="sysWrap"><summary>Data sources and connections</summary>
         <div class="bd" id="sysBody">checking&#8230;</div></details>
     </div>
   </section>
 
   <section id="vLine" class="hide">
-    <div class="crumbs"><button class="q" id="back">&#8592; All lines</button>
+    <div class="crumbs"><button class="q" id="back">&#8592; All products</button>
       <span class="eb" id="crumb"></span></div>
     <div id="lineBody"></div>
   </section>
 </div></div>
-
-<div class="ask"><div class="wrap">
-  <input id="ask" placeholder="Ask about these lines" autocomplete="off">
-  <button class="go" id="askBtn">Ask</button>
-</div></div>
-<div class="wrap qa" id="qa"></div>
 
 <script>
 "use strict";
@@ -328,7 +373,7 @@ details .bd { padding: 4px 16px 16px; }
    on the line sheet. */
 const COND = {
   SINGLE_SOURCE:          { w: "Single source", c: "s-stamp", rank: 4, face: true,
-                            why: "One country supplies over 70% of this line." },
+                            why: "One country supplies over 70% of this product." },
   HIGH_CONCENTRATION:     { w: "Concentrated",  c: "s-hold",  rank: 3, face: true,
                             why: "Supply sits with very few countries." },
   MODERATE_CONCENTRATION: { w: "Moderate",      c: "s-watch", rank: 2, face: true,
@@ -387,7 +432,12 @@ function fields() {
     (top && top[1].length > 1
       ? f("Concentrated on", esc(top[0]).toUpperCase())
       : "") +
-    f("Single source", rows.filter(r => (r.severity||0) >= ATTENTION).length, "of " + rows.length);
+    /* A share, not a tally: "2 of 6" makes the reader do the division. And it
+       is labelled by the condition it describes rather than by the flag name,
+       which is server vocabulary. */
+    f("Critically dependent",
+      pct(rows.length ? rows.filter(r => (r.severity||0) >= ATTENTION).length / rows.length * 100 : 0),
+      "of products");
   $("period").textContent = period(data.period_label);
 }
 
@@ -434,11 +484,37 @@ function entry(r, wide) {
     '</div>';
 }
 
+/* Built from the rows on screen, so every prompt names something real. */
+function renderPrompts() {
+  const rows = visible();
+  if (!rows.length) { $("prompts").innerHTML = ""; return; }
+  const worst = rows[0];
+  const byLead = {};
+  rows.forEach(r => (byLead[r.top_partner_name || r.top_partner_iso3] ??= []).push(r));
+  const shared = Object.entries(byLead).sort((a,b) => b[1].length - a[1].length)[0];
+  const biggest = [...rows].sort((a,b) => (atRisk(b)||0) - (atRisk(a)||0))[0];
+
+  const qs = ["Which product would you fix first, and why?"];
+  if (shared && shared[1].length > 1)
+    qs.push("What happens if " + shared[0] + " stops shipping?");
+  if (biggest && worst && biggest.hs_code !== worst.hs_code)
+    // Product names are plural, so "are" reads correctly for all of them.
+    qs.push("Are " + shortName(worst).toLowerCase() + " really worse than " +
+            shortName(biggest).toLowerCase() + "?");
+  else
+    qs.push("Where should we look for a second origin?");
+
+  $("prompts").innerHTML = qs.map(q =>
+    '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>').join("");
+  $("prompts").querySelectorAll("button").forEach(b =>
+    b.addEventListener("click", () => { $("ask").value = b.dataset.q; send(); }));
+}
+
 function renderList() {
   const rows = visible();
   $("list").innerHTML = rows.length
     ? rows.map((r,i) => entry(r, i === 0)).join("")
-    : '<div class="entry s-clear" style="cursor:default"><div class="body"><span class="note">No line matches.</span></div></div>';
+    : '<div class="entry s-clear" style="cursor:default"><div class="body"><span class="note">No product matches.</span></div></div>';
   $("cnt").textContent = rows.length + " of " + data.rows.length;
   $("segAll").setAttribute("aria-pressed", String(!riskOnly));
   $("segRisk").setAttribute("aria-pressed", String(riskOnly));
@@ -450,6 +526,7 @@ function renderList() {
     });
   });
   if (rows[0]) fillAlt(rows[0].hs_code);
+  renderPrompts();
 }
 
 /* The lead entry earns its width by answering "where else?" up front. */
@@ -590,7 +667,7 @@ function stream(url, on) {
 
 /* ---------------- ask ---------------- */
 const ctx = () => !data ? "" :
-  "Lines on screen (" + period(data.period_label) + ", UN Comtrade via the trade-sourcing MCP server):\n" +
+  "Products on screen (" + period(data.period_label) + ", UN Comtrade via the trade-sourcing MCP server):\n" +
   data.rows.map(r => r.label + " (HS " + r.hs_code + "): " + usd(r.total_value_usd) + " imports, lead " +
     r.top_partner_iso3 + " " + pct(r.top_partner_share_pct,1) + ", " + usd(atRisk(r)) + " with the lead, " +
     "effective origins " + n(r.effective_partner_count,1) + ", conditions " +
@@ -602,6 +679,7 @@ function send() {
   const w = document.createElement("div");
   w.innerHTML = '<div class="q">' + esc(q) + '</div><div class="a">…</div>';
   $("qa").appendChild(w);
+  w.scrollIntoView({ block: "nearest" });
   const a = w.querySelector(".a");
   $("askBtn").disabled = true;
   stream("/api/chat?question=" + encodeURIComponent(q) + "&context=" + encodeURIComponent(ctx()), {
