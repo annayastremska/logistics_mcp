@@ -120,9 +120,14 @@ header .wrap { display: flex; align-items: center; gap: 16px; padding: 11px 24px
 /* A lede, not a heading. Someone who has never seen this page should know what
    it is from one line; the second clause says what they get. No DIN caps here --
    a slogan set heavier than the product names below it reads backwards. */
-.purpose p { margin: 0; font-size: 18px; line-height: 1.45; max-width: 56ch; }
-.purpose p b { color: var(--ink); font-weight: 600; }
-.purpose p span { color: var(--ink-2); }
+.purpose .wrap { display: flex; justify-content: center; }
+.purpose p {
+  margin: 0; text-align: center; max-width: 62ch;
+  font-family: var(--din); font-size: 14px; line-height: 1.5; letter-spacing: .03em;
+}
+.purpose p b { display: block; color: var(--ink); font-weight: 700;
+               font-size: 15px; letter-spacing: .13em; text-transform: uppercase; }
+.purpose p span { display: block; margin-top: 4px; color: var(--ink-2); letter-spacing: .01em; }
 .grow { flex: 1; }
 .ref { text-align: right; }
 .ref .v { font-family: var(--din); font-size: 13px; letter-spacing: .05em; }
@@ -290,7 +295,46 @@ details .bd { padding: 4px 16px 16px; }
 .log { font-family: var(--code); font-size: 12px; }
 .log div { padding: 2px 0; color: var(--ink-2); }
 .log .bad { color: var(--stamp); }
-.out { white-space: pre-wrap; font-size: 14px; line-height: 1.6; max-width: 72ch; }
+/* The model's prose, rendered rather than dumped. Only the final answer
+   lands here; mid-run commentary goes to the status line. */
+.out { font-size: 14px; line-height: 1.6; max-width: 74ch; }
+.out h4 { margin: 14px 0 5px; font-family: var(--din); font-size: 12px; font-weight: 700;
+          letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3); }
+.out p { margin: 0 0 9px; }
+.out ul { margin: 0 0 9px; padding-left: 18px; }
+.out li { margin: 2px 0; }
+.out strong { font-weight: 600; color: var(--ink); }
+
+/* The decision, first and largest. Everything that argues for it is behind
+   a disclosure -- a screen shows a decision, a memo argues one. */
+.verdict { border: 1px solid var(--ink); border-radius: 2px; margin-bottom: 14px; }
+.verdict .top { padding: 13px 16px; border-bottom: 1px solid var(--rule); }
+.verdict .top p { margin: 0; font-size: 18px; line-height: 1.35; font-weight: 600; max-width: 56ch; }
+.alloc { display: flex; flex-wrap: wrap; gap: 1px; background: var(--rule); }
+.alloc > div { flex: 1 1 130px; background: var(--sheet); padding: 11px 14px 12px; }
+.alloc .pcs { font-family: var(--din); font-size: 30px; font-weight: 700; line-height: 1; }
+.alloc .org { font-family: var(--din); font-size: 12px; font-weight: 700; letter-spacing: .14em;
+              text-transform: uppercase; margin-top: 6px; }
+.alloc .role { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.verdict .why { padding: 12px 16px 14px; border-top: 1px solid var(--rule); }
+.verdict .why ul { margin: 6px 0 0; padding-left: 18px; }
+.verdict .why li { font-size: 13px; margin: 3px 0; color: var(--ink-2); }
+.verdict .chg { padding: 11px 16px 13px; background: var(--form); border-top: 1px solid var(--rule);
+                font-size: 13px; color: var(--ink-2); }
+.verdict .chg b { color: var(--ink); font-weight: 600; }
+
+/* The ranking, drawn from the tool result. */
+.rank { margin-bottom: 4px; }
+.rank td.pos { font-family: var(--din); font-weight: 700; color: var(--ink-3); width: 26px; }
+.rank td.who { font-weight: 600; }
+.rank .score { display: flex; align-items: center; gap: 9px; justify-content: flex-end; }
+.rank .sbar { width: 68px; height: 4px; background: var(--rule); flex: none; }
+.rank .sbar i { display: block; height: 100%; background: var(--ink); }
+.rank tr.top td { background: color-mix(in srgb, var(--form) 70%, transparent); }
+.rank tr.partial td.who::after {
+  content: " incomplete"; font-family: var(--din); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--watch); font-weight: 600;
+}
 
 /* Launcher, always in the corner. A stamped block, in the page's own
    language, rather than a chat bubble borrowed from somewhere else. */
@@ -711,11 +755,97 @@ async function openLine(hs) {
       '<button id="breakPw">Break browser server</button></div>' +
     '<p class="note" id="runNote" style="margin:11px 0 0">Landed cost, logistics, duty, ' +
     'demonstrated supply. Several minutes.</p>' +
-    '<div class="out" id="out" style="margin-top:13px"></div></div>' +
+    '<div id="verdict" style="margin-top:14px"></div>' +
+    '<div id="rankOut" style="margin-top:14px"></div>' +
+    '<div class="out" id="out" style="margin-top:4px"></div></div>' +
     '<details id="logWrap" class="hide"><summary>Steps</summary><div class="bd log" id="log"></div></details></div>';
 
   $("run").addEventListener("click", () => run(d));
   $("breakPw").addEventListener("click", () => run(d, { broken: true }));
+}
+
+/* Enough markdown to render what the model actually emits: bold, bullets,
+   headings, paragraphs. Escaped first, so nothing in the text can inject. */
+function md(t) {
+  const lines = esc(t).split(/\r?\n/);
+  let html = "", list = false;
+  const close = () => { if (list) { html += "</ul>"; list = false; } };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { close(); continue; }
+    const bold = (x) => x.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    let m;
+    if ((m = line.match(/^#{1,6}\s+(.*)$/))) { close(); html += "<h4>" + bold(m[1]) + "</h4>"; }
+    else if ((m = line.match(/^[-*]\s+(.*)$/))) {
+      if (!list) { html += "<ul>"; list = true; }
+      html += "<li>" + bold(m[1]) + "</li>";
+    } else if ((m = line.match(/^(\d+)\.\s+(.*)$/))) {
+      if (!list) { html += "<ul>"; list = true; }
+      html += "<li>" + bold(m[2]) + "</li>";
+    } else { close(); html += "<p>" + bold(line) + "</p>"; }
+  }
+  close();
+  return html;
+}
+
+/* The ranking arrives as structured output, so it is drawn from the figures
+   rather than reconstructed from whatever the model wrote about them. */
+function renderRanking(payload) {
+  const rows = payload.ranking || [];
+  if (!rows.length) return;
+  const best = Math.max(...rows.map(r => r.score || 0)) || 1;
+  const w = payload.weights_used || {};
+
+  $("rankOut").innerHTML =
+    '<table class="man rank"><thead><tr>' +
+      '<th class="eb"></th><th class="eb">Origin</th>' +
+      '<th class="r eb">Score</th><th class="r eb">Landed</th>' +
+      '<th class="r eb">Duty</th><th class="r eb">Logistics</th>' +
+      '<th class="r eb">Share now</th></tr></thead><tbody>' +
+    rows.map(r => '<tr class="' + (r.rank === 1 ? "top " : "") +
+        ((r.scored_weight_pct != null && r.scored_weight_pct < 100) ? "partial" : "") + '">' +
+      '<td class="pos">' + r.rank + '</td>' +
+      '<td class="who">' + esc(r.name || r.iso3) + ' <span class="code">' + esc(r.iso3) + '</span></td>' +
+      '<td class="r"><span class="score"><b>' + (r.score == null ? "—" : r.score.toFixed(1)) + '</b>' +
+        '<span class="sbar"><i style="width:' + Math.round((r.score || 0) / best * 100) + '%"></i></span></span></td>' +
+      '<td class="r n">' + (r.landed_cost_per_kg_usd == null ? "—" : "$" + r.landed_cost_per_kg_usd.toFixed(2)) + '</td>' +
+      '<td class="r">' + (r.duty_rate_pct == null ? "—" : pct(r.duty_rate_pct, 0)) + '</td>' +
+      '<td class="r">' + (r.lpi_overall == null ? "—" : r.lpi_overall.toFixed(1)) + '</td>' +
+      '<td class="r">' + (r.supply_share_pct == null ? "—" : pct(r.supply_share_pct, 1)) + '</td>' +
+    '</tr>').join("") + '</tbody></table>' +
+    '<p class="note" style="margin:8px 0 0">Weights: price ' + (w.price ?? "—") +
+      ' · logistics ' + (w.logistics ?? "—") + ' · duty ' + (w.duty ?? "—") +
+      ' · supply ' + (w.supply ?? "—") + '. Landed cost contains a modelled freight component.</p>' +
+    ((payload.caveats || []).length
+      ? '<details><summary>Caveats on this ranking</summary><div class="bd">' +
+        '<ul style="margin:0;padding-left:18px">' +
+        payload.caveats.map(c => '<li class="note">' + esc(c) + '</li>').join("") +
+        '</ul></div></details>' : "");
+}
+
+/* Pull the decision block out of the reply. Returns [decision, prose]. */
+function splitDecision(text) {
+  const m = text.match(/```json\s*([\s\S]*?)```\s*$/);
+  if (!m) return [null, text];
+  try { return [JSON.parse(m[1]), text.slice(0, m.index).trim()]; }
+  catch (e) { return [null, text]; }
+}
+
+function renderVerdict(d) {
+  const alloc = (d.allocation || []).filter(a => a && a.share_pct != null);
+  $("verdict").innerHTML =
+    '<div class="verdict">' +
+      (d.headline ? '<div class="top"><p>' + esc(d.headline) + '</p></div>' : "") +
+      (alloc.length ? '<div class="alloc">' + alloc.map(a =>
+        '<div><div class="pcs">' + Math.round(a.share_pct) + '%</div>' +
+        '<div class="org">' + esc(a.origin || a.iso3 || "") + '</div>' +
+        (a.role ? '<div class="role">' + esc(a.role) + '</div>' : "") +
+        '</div>').join("") + '</div>' : "") +
+      ((d.facts || []).length ? '<div class="why"><span class="eb">Because</span><ul>' +
+        d.facts.slice(0, 3).map(f => '<li>' + esc(f) + '</li>').join("") + '</ul></div>' : "") +
+      (d.would_change_it ? '<div class="chg"><b>What would change it:</b> ' +
+        esc(d.would_change_it) + '</div>' : "") +
+    '</div>';
 }
 
 function run(d, opts) {
@@ -727,7 +857,8 @@ function run(d, opts) {
   if (!$("optPw").checked) p.set("playwright", "false");
   if (opts.broken) p.set("break_playwright", "true");
 
-  $("out").textContent = ""; $("log").innerHTML = "";
+  $("out").innerHTML = ""; $("rankOut").innerHTML = "";
+  $("verdict").innerHTML = ""; $("log").innerHTML = "";
   $("logWrap").classList.remove("hide"); $("logWrap").open = true;
   $("runNote").textContent = opts.broken ? "Failure demo — running…" : "Running…";
   $("run").disabled = true;
@@ -744,10 +875,30 @@ function run(d, opts) {
       div.textContent = (e.kind === "tool_call" ? "›" : bad ? "×" : "✓") +
         " " + (e.server||"") + "." + (e.tool||"");
       $("log").appendChild(div);
+
+      // Draw the ranking from the tool's own output the moment it arrives.
+      if (e.kind === "tool_result" && e.tool === "rank_sourcing_countries" && !bad) {
+        try {
+          const c = e.data.content;
+          const raw = typeof c === "string" ? c
+            : Array.isArray(c) ? (c.map(x => (x && x.text) || "").join("")) : "";
+          const payload = JSON.parse(raw);
+          if (payload.status === "ok") renderRanking(payload);
+        } catch (err) { /* a partial payload is not worth breaking the run over */ }
+      }
     },
-    text: e => { $("out").textContent = e.text; },
+    // Mid-run commentary is progress, not a result: it goes to the status line.
+    text: e => { $("runNote").textContent = e.text.replace(/\s+/g, " ").slice(0, 150); },
     done: e => {
       const t = e.data || {};
+      if (e.text) {
+        const [decision, prose] = splitDecision(e.text);
+        if (decision) renderVerdict(decision);
+        // The argument is evidence, but it is not the screen: one click away.
+        $("out").innerHTML = decision
+          ? '<details><summary>Full reasoning</summary><div class="bd">' + md(prose) + '</div></details>'
+          : md(prose);
+      }
       $("runNote").textContent = "Done · " + (t.turns == null ? "?" : t.turns) + " steps · " +
         Math.round((t.duration_ms||0)/1000) + "s" + (t.cost_usd ? " · $" + t.cost_usd.toFixed(2) : "");
       $("run").disabled = false;
@@ -788,7 +939,7 @@ function send() {
   $("askBtn").disabled = true;
   stream("/api/chat?question=" + encodeURIComponent(q) + "&context=" + encodeURIComponent(ctx()), {
     trace: e => { if (e.kind === "tool_call") a.textContent = "checking " + e.tool + "…"; },
-    text: e => { a.textContent = e.text; },
+    text: e => { a.innerHTML = md(e.text); },
     done: () => { $("askBtn").disabled = false; },
     error: e => { a.textContent = "failed: " + e.text; $("askBtn").disabled = false; },
   });

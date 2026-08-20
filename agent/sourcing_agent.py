@@ -121,7 +121,20 @@ a landed cost.
 - Duty figures are MFN rates. If fta_preference_possible is true, say the real rate may be \
 lower.
 - State the data year. Comtrade lags by about two years.
-- Close with a recommendation, the two or three facts it rests on, and what would change it.\
+- Close with a recommendation, the two or three facts it rests on, and what would change it.
+
+Then, as the very last thing in your reply, emit exactly one fenced ```json block. It is read \
+by the interface, not by a person, so it must parse and must contain only these keys:
+
+{"headline": "one sentence, under 120 characters",
+ "allocation": [{"origin": "Türkiye", "iso3": "TUR", "share_pct": 58, "role": "price anchor"}],
+ "facts": ["short sentence", "short sentence", "short sentence"],
+ "would_change_it": "one sentence"}
+
+Rules for the block: allocation shares are whole numbers summing to 100, and each entry needs a \
+role of a few words. Two or three facts, each one sentence. If the honest answer is to change \
+nothing, say so in the headline and give allocation a single entry at 100. Never put a figure in \
+the block that does not appear in your reply above it.\
 """
 
 
@@ -366,8 +379,15 @@ async def run_sourcing_query(
         yield TraceEvent(kind="error", text=f"{type(exc).__name__}: {exc}")
 
 
-def _shorten(content: Any, limit: int = 4000) -> Any:
-    """Trim a tool result for transport to the browser without losing its shape."""
+def _shorten(content: Any, limit: int = 24000) -> Any:
+    """Trim a tool result for transport to the browser without losing its shape.
+
+    The limit is generous because the interface parses these payloads rather than
+    only displaying them: a ranking of ten candidates with a four-factor
+    decomposition is about 4KB, and truncating it mid-JSON left the browser with
+    a string it could not read, so the table had to be reconstructed from the
+    model's prose instead of from the figures.
+    """
     if isinstance(content, str):
         return content if len(content) <= limit else content[:limit] + f"... [{len(content)} chars]"
     if isinstance(content, list):
