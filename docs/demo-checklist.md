@@ -121,11 +121,15 @@ Click the worst line (**Tomatoes, fresh**), then press **Run full sourcing analy
 
 Let the same run finish. Walk the trace top to bottom:
 
+Figures below are for **Tomatoes, fresh (HS 070200), 2024** — the line Segment 2 opened. The
+grape case (HS 080610: 20 origins, Türkiye 64.8 %, 43 M USD, HHI 4,503) is the fully rehearsed
+fallback if the live run misbehaves.
+
 | Step | What to say |
 |---|---|
-| `validate_sourcing_brief` | Resolved "fresh grapes" to HS 080610 against the 6,939-entry HS2022 nomenclature. Offline — `openWorldHint: false`. |
-| `get_import_flows` | 20 origins, Türkiye 64.8 %, about 43 M USD total. Note `rows_dropped_as_duplicates: 21`. |
-| `assess_supply_concentration_risk` | HHI 4,503 — equivalent to 2.2 equally sized origins. `HIGH_CONCENTRATION`. |
+| `validate_sourcing_brief` | Resolved the request to HS 070200 against the 6,939-entry HS2022 nomenclature. Offline — `openWorldHint: false`. |
+| `get_import_flows` | 17 origins, Türkiye 71.8 %, about 113 M USD total. Note `rows_dropped_as_duplicates: 18`. |
+| `assess_supply_concentration_risk` | HHI 5,356 — equivalent to **1.9** equally sized origins, on a 113 M USD line. `SINGLE_SOURCE` **and** `HIGH_CONCENTRATION`. |
 | **the decision** | This flag is what changes the next step: the agent widens its candidate list beyond the incumbents and reweights, because on a concentrated product the goal is diversification. Point at the weights it chose and its stated reason. |
 | `estimate_landed_cost` | Itemised: goods, freight, duty **on the CIF value**, brokerage. Each line labelled measured or estimated. |
 | `rank_sourcing_countries` | The score decomposition. Contributions sum to the score. |
