@@ -140,6 +140,26 @@ The default year is the current year minus two, based on observed reporting beha
 than an assumption that last year is available. Every result carries `as_of`, and a query for a
 year the source has not reported returns `empty` with a note naming the latest usable year.
 
+### The server is spawned under `sys.executable`
+
+Not under `python` from the PATH. The interpreter on the PATH is the system one, without this
+project's dependencies, so a server started with it dies on `import mcp` — and from the agent's
+side that is indistinguishable from a server with no tools. It happened: the first end-to-end
+run produced a fluent, well-reasoned answer explaining that the sourcing tools were unavailable,
+and every tool call in the trace looked fine because tool *results* were not being captured
+either. Two silent failures compounding into a plausible output is the failure mode worth
+guarding against, so `scripts/run_e2e.py` now fails a run unless both servers attached and all
+five custom tools were actually called.
+
+### A missing fixture is not a zero
+
+Replay reported 0 percent duty where live reported 10, because a recording run on a warm cache
+never wrote the tariff fixture, and a missing fixture then aborted the year-fallback chain
+instead of moving to the next year. Both are fixed, and a chain with no fixture in *any* year
+now raises explicitly. The general rule the incident illustrates: an absent value must never
+reach the user as a low value, which is also why a portfolio row whose risk call failed is
+marked `partial` rather than shown with a blank HHI.
+
 ## 5. Trade-offs taken knowingly
 
 | Decision | Gained | Given up |
@@ -151,6 +171,10 @@ year the source has not reported returns `empty` with a note naming the latest u
 | HHI thresholds borrowed from competition policy | A recognisable, defensible bar | They were written for market concentration, not supply dependency. The analogy is deliberate and disclosed. |
 | Five tools rather than three | Validation and risk each earn their own contract | More surface to document and keep correct. |
 | One page, no framework | No build step, readable source, fast to review | No component library; charts were cut. |
+| The landing screen calls the MCP server directly, with no model | The first screen is deterministic, instant and free; identical inputs give identical numbers, which a demo needs | It cannot answer anything not designed in. Interpretation is a separate, explicit action. |
+| Portfolio fixed at six lines | Each line is a real Ukrainian import with enough volume to be worth screening | Not configurable at runtime. Adding a line is a code change. |
+| Two model tiers instead of one | The long analysis run gets the capable model; a follow-up question costs $0.014 instead of $0.55 | Two configurations to keep correct, and the small tier can only answer from what is on screen. |
+| Sequential portfolio queries, not concurrent | Six concurrent bursts is how a demo earns a 429 from Comtrade | A cold first load takes about 40 seconds. |
 
 ## 6. Known limitations
 
@@ -168,8 +192,15 @@ year the source has not reported returns `empty` with a note naming the latest u
    sanitary and phytosanitary requirements can rule out an origin the score ranks first.
 8. **Country-level, not supplier-level.** Nothing here says a capable exporter exists.
 9. **The 500-record cap** can truncate a broad query; the result flags it rather than hiding it.
-10. **Demo scope.** Tested against fresh grapes, HS 080610. Other products work but are less
-    rehearsed.
+10. **Demo scope.** Six lines exercised end to end on live data: bananas 080390, tomatoes
+    070200, mandarins 080521, grapes 080610, kiwifruit 081050, almonds 080212. Grapes is the
+    most rehearsed and has the fullest fixture set. Other products work but are less proven.
+11. **The customs page blocks automated clients.** `customs.gov.ua` answers HTTP 403 at its
+    Akamai edge to anything that is not a human browser. The recency step therefore reaches its
+    fallback, the National Bank's external-sector page, which confirms the publication vintage
+    but carries no headline turnover figure — so the recency check is *partial* by design. The
+    alternative, driving the user's own logged-in browser profile, was rejected: it would mean
+    touching their real session and cookies for a figure that only qualifies staleness.
 
 ## 7. Credential configuration
 
