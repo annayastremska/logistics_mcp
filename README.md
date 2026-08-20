@@ -9,11 +9,26 @@ The agent is extended through two MCP connections:
 
 | | Server | Role |
 |---|---|---|
-| Existing | [Microsoft Playwright MCP](https://github.com/microsoft/playwright-mcp) | Reads the current-year trade turnover figure that the State Customs Service publishes only as a web page, so the agent knows how stale its statistical data is |
+| Existing | [Microsoft Playwright MCP](https://github.com/microsoft/playwright-mcp) | Reads the current-year trade turnover figure that Ukrainian authorities publish only as a web page, so the agent knows how stale its statistical data is |
 | Custom | `trade-sourcing-mcp` (this repo, `mcp_server/`) | Five tools over UN Comtrade, the World Bank Indicators API and WITS TRAINS |
 
 Everything runs on public data with no confidential inputs, and the custom server needs no
 API credentials of any kind.
+
+## What you see first
+
+The landing screen is a **portfolio, not a chat box**. Six tracked import lines are shown
+worst-first, each with its lead supplier's share, the effective number of sources
+(`10000 / HHI`), year-on-year volatility and risk flags. Filter by product, group or
+severity; open a line for its full origin breakdown; run the agent from there when a line
+warrants it. Follow-up questions go to a side panel on a smaller model.
+
+That screen is computed, not reasoned about: `web/portfolio.py` opens one MCP stdio session
+to the same custom server the agent uses and calls the tools directly, with no model in the
+loop. The first screen a visitor loads should not wait on an agent or cost anything.
+
+It also surfaces one thing no single row can show — a supplier that several independent
+lines all lean on. On 2024 data, Türkiye leads three of the six.
 
 ---
 
@@ -65,7 +80,8 @@ affect the agent and the data transport mode.
 | Variable | Default | Meaning |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | unset | Model credential for the agent. If unset, the Claude Agent SDK falls back to the local Claude Code login (`claude` → `/login`). Only one of the two is needed. |
-| `SOURCING_AGENT_MODEL` | `claude-opus-5` | Model the agent runs on |
+| `SOURCING_ANALYSIS_MODEL` | `claude-opus-5` | Model for a full sourcing run: a long multi-step loop where a wrong turn wastes rate-limited calls |
+| `SOURCING_CHAT_MODEL` | `claude-haiku-4-5` | Model for follow-up questions about an already-computed result: no browser, three read-only tools |
 | `SOURCING_MODE` | `live` | `live` calls the open APIs, `record` also writes fixtures, `replay` serves from fixtures with no network access |
 | `SOURCING_CACHE_TTL` | `86400` | Seconds to keep the local response cache (`.cache/`, git-ignored) |
 
@@ -116,10 +132,18 @@ exposed.
 ## Verifying the install
 
 ```bash
-python -m pytest tests -q        # unit tests, no network
+python -m pytest tests -q        # 22 unit tests, no network
 python scripts/smoke_tools.py    # calls every tool end to end against the live APIs
 REPLAY=1 python scripts/smoke_tools.py   # the same run, offline, from fixtures
+python scripts/run_e2e.py        # the whole agent flow, both MCP servers, live
 ```
+
+`run_e2e.py` is the check the demo rests on. It fails the run unless **both** servers
+attached and **all five** custom tools were actually called — a run where the custom server
+failed to start still produces a fluent answer, because the model simply reports it has no
+tools. Every event is written to `scripts/last_e2e_trace.jsonl` so the run can be inspected
+afterwards rather than taken on trust. A full run is roughly 10 minutes, 20 turns and about
+$0.55.
 
 ---
 
@@ -153,7 +177,8 @@ response body.
 | World Bank Indicators | `api.worldbank.org/v2` | none | Logistics Performance Index and sub-indices, container port traffic |
 | WITS TRAINS | `wits.worldbank.org/API/V1/SDMX/V21` | none | Applied MFN import duty by HS6 |
 | Comtrade reference files | vendored in `data/reference/` | none | HS2022 nomenclature, country codes — the preview API returns codes only |
-| State Customs Service | web page, via Playwright MCP | none | Current-year turnover, published only as HTML |
+| State Customs Service | web page, via Playwright MCP | none | Current-year turnover, published only as HTML. **Returns 403 to automated clients**, so it is tried first and usually fails |
+| National Bank of Ukraine | web page, via Playwright MCP | none | External-sector statistics index — the reachable fallback for the recency check |
 
 Verified endpoint behaviour, rate limits and quirks are documented in
 [`docs/01-data-sources-verified.md`](docs/01-data-sources-verified.md).
@@ -168,11 +193,14 @@ mcp_server/          Custom MCP server (separate process)
   models.py          Pydantic input/output contracts
   sources/           http (rate limit, cache, fixtures), comtrade, worldbank, wits, reference
   domain/            costing and analysis calculations
-agent/               Claude Agent SDK wiring and MCP client configuration
-web/                 FastAPI application and single-page UI
+agent/               Claude Agent SDK wiring, two model tiers, trace events
+web/                 FastAPI application, portfolio over MCP, single-page UI
+  app.py             Endpoints: portfolio, commodity detail, agent run, chat
+  portfolio.py       The tracked lines, queried over an MCP stdio session
+  index.html         Portfolio screen, line detail, MCP trace, chat panel
 data/reference/      Vendored HS2022 and country reference data
 fixtures/            Recorded genuine API responses for replay mode
-scripts/             inspect_tools, smoke_tools, fixture recording
+scripts/             inspect_tools, smoke_tools, run_e2e
 tests/               Unit tests
 docs/                Requirements digest, verified sources, contracts, rationale, demo script
 ```
@@ -204,5 +232,13 @@ Stated up front rather than buried:
 - **Unit values are not prices.** A Comtrade unit value is total value over total weight, not
   a quotation.
 - **The Logistics Performance Index is not an annual series.** 2022 is the latest observation.
+- **The customs page blocks automated clients.** `customs.gov.ua` answers HTTP 403 at its
+  Akamai edge to anything that is not a human browser, while opening normally for a person.
+  The recency step therefore falls through to the National Bank's external-sector page, and
+  the agent names which page it actually read. That confirms the publication vintage but not
+  a turnover figure, so the recency check is partial by design rather than by accident.
+- **The portfolio is six lines, chosen for signal.** Apples (HS 080810, $0.5M) and walnuts in
+  shell (HS 080231, near zero) were dropped: Ukraine grows and exports both, so their import
+  lines are noise.
 - **This is a screening tool.** It narrows a list of countries worth investigating; it does not
   replace a tender.
