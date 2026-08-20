@@ -22,9 +22,9 @@ not demonstrable without them, and the project constitution makes verification n
 > existing — the whole reason this project has a rule about verification is that a plausible-looking
 > implementation passed for a working one twice.
 >
-> **Current state: 66 of 69 tasks complete.** The 3 open tasks are T019, T068 and
-> T069. The four regression tests are done and were each mutation-checked -- the fix they cover was
-> reverted to confirm the test actually fails, because a test that cannot fail is not a test.
+> **Current state: 67 of 69 tasks complete.** The 2 open tasks are T068 and
+> T069. Every regression test is mutation-checked -- the behaviour it covers is reverted to confirm
+> the test actually fails, because a test that cannot fail is not a test. 47 tests, offline, ~1.6s.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -78,7 +78,7 @@ its concentration figures, worst first, and that filters change what is shown.
 
 - [x] T017 [P] [US1] Cover concentration and effective-source arithmetic in tests/test_domain.py
 - [x] T018 [P] [US1] Cover the asymmetric mirror-gap threshold in tests/test_domain.py
-- [ ] T019 [P] [US1] Cover portfolio row assembly and severity ordering in tests/test_portfolio.py
+- [X] T019 [P] [US1] Cover portfolio row assembly and severity ordering in tests/test_portfolio.py
 
 ### Implementation for User Story 1
 
