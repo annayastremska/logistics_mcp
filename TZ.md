@@ -146,7 +146,7 @@ agent/                     # Claude Agent SDK: опції, два профілі
 web/                       # FastAPI + index.html + портфель через MCP
   app.py  portfolio.py  index.html
 scripts/                   # smoke_tools.py, inspect_tools.py, run_e2e.py
-tests/                     # 23 юніт-тести доменної логіки
+tests/                     # 38 юніт-тестів
 data/reference/            # H6.json, Reporters.json, partnerAreas.json
 fixtures/                  # записані відповіді API
 .env.example               # ANTHROPIC_API_KEY= (або локальний логін Claude Code)
@@ -189,7 +189,7 @@ fixtures/                  # записані відповіді API
 - [x] Заповнені docs/ (контракти, rationale, чекліст)
 - [x] У репо немає секретів, є `.env.example`
       — grep по застейджених файлах на `sk-ant-`, ключі, куки: чисто
-- [x] 23 юніт-тести доменної логіки проходять
+- [x] 38 юніт-тестів проходять (домен, транспорт, обв'язка агента)
 - [x] Фейл Playwright через `break_playwright` повідомляється, не приховується
       — `net::ERR_NAME_NOT_RESOLVED`, `is_error=True` на результаті тулу, агент назвав причину
 - [ ] Формальний прогін spec-kit (`constitution → specify → plan → tasks`) — артефактів у репо немає

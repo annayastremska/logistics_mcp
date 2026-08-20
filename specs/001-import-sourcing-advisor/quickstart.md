@@ -15,7 +15,7 @@ validates a specific requirement group, and the cheap ones come first.
 python -m pytest tests -q
 ```
 
-**Expect**: `23 passed` in under 2 seconds, with no network access. If this is slow, something is
+**Expect**: `38 passed` in under 3 seconds, with no network access. If this is slow, something is
 reaching the network that should not be.
 
 ---

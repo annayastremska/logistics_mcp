@@ -132,7 +132,7 @@ exposed.
 ## Verifying the install
 
 ```bash
-python -m pytest tests -q        # 23 unit tests, no network
+python -m pytest tests -q        # 38 unit tests, no network
 python scripts/smoke_tools.py    # calls every tool end to end against the live APIs
 REPLAY=1 python scripts/smoke_tools.py   # the same run, offline, from fixtures
 python scripts/run_e2e.py        # the whole agent flow, both MCP servers, live

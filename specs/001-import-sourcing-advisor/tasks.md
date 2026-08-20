@@ -22,10 +22,9 @@ not demonstrable without them, and the project constitution makes verification n
 > existing — the whole reason this project has a rule about verification is that a plausible-looking
 > implementation passed for a working one twice.
 >
-> **Current state: 62 of 69 tasks complete.** The 7 open tasks are T019 and Phase 8 and are all
-> either regression cover for defects that were fixed without a test, or a limitation discovered
-> while writing the quickstart. None of them blocks a demonstration; all of them are the kind of
-> gap that lets a fixed bug come back.
+> **Current state: 66 of 69 tasks complete.** The 3 open tasks are T019, T068 and
+> T069. The four regression tests are done and were each mutation-checked -- the fix they cover was
+> reverted to confirm the test actually fails, because a test that cannot fail is not a test.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -189,10 +188,10 @@ cites the displayed figures and returns in seconds.
 **Purpose**: Regression cover for defects fixed without a test, plus one limitation found while
 writing the quickstart. Ordered by risk of the defect silently returning.
 
-- [ ] T064 [P] Add a regression test asserting tool results are captured, so a trace of calls with no outcomes fails a build, in tests/test_agent_trace.py
-- [ ] T065 [P] Add a regression test asserting a recording is written on a warm cache hit, in tests/test_http_transport.py
-- [ ] T066 [P] Add a regression test asserting the tariff fallback survives one missing recording and raises when all are missing, in tests/test_http_transport.py
-- [ ] T067 [P] Add a regression test asserting the capability server is spawned under the running interpreter, in tests/test_agent_config.py
+- [x] T064 [P] Add a regression test asserting tool results are captured, so a trace of calls with no outcomes fails a build, in tests/test_agent_trace.py
+- [x] T065 [P] Add a regression test asserting a recording is written on a warm cache hit, in tests/test_http_transport.py
+- [x] T066 [P] Add a regression test asserting the tariff fallback survives one missing recording and raises when all are missing, in tests/test_http_transport.py
+- [x] T067 [P] Add a regression test asserting the capability server is spawned under the running interpreter, in tests/test_agent_config.py
 - [ ] T068 Record fixtures for reference years 2023 and 2022, or restrict the year selector to years with recordings — offline currently covers 2024 only, so selecting another year fails, in web/index.html and fixtures/
 - [ ] T069 Run /speckit-converge to check the delivered system against this specification rather than assuming they agree
 
