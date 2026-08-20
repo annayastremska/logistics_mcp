@@ -103,16 +103,20 @@ header .wrap { display: flex; align-items: flex-end; gap: 18px; padding: 14px 24
 .mark small { display: block; font-family: var(--body); font-size: 11px; font-weight: 400;
               letter-spacing: .02em; text-transform: none; color: var(--ink-3); margin-top: 1px; }
 
-/* What this is for, at a size it can be read. Sits under the masthead so it is
-   the first thing after the name and the last thing a returning reader looks at. */
-.intro { background: var(--sheet); border-bottom: 1px solid var(--rule); }
-.intro .wrap { padding: 18px 24px 20px; }
-.intro h1 {
-  font-family: var(--din); font-size: 20px; font-weight: 700;
-  letter-spacing: .04em; text-transform: uppercase; max-width: 30ch;
+/* What the reader gets, stated after the figures rather than before them.
+   Three promises, each with a verb, so it scans instead of reading as a wall. */
+.purpose { background: var(--sheet); border-bottom: 1px solid var(--rule); }
+.purpose .wrap { padding: 20px 24px 22px; }
+.purpose h1 {
+  font-family: var(--din); font-size: 22px; font-weight: 700;
+  letter-spacing: .03em; text-transform: uppercase; line-height: 1.2;
 }
-.intro p { margin: 9px 0 0; font-size: 15px; line-height: 1.55; color: var(--ink-2); max-width: 74ch; }
-.intro p b { color: var(--ink); font-weight: 600; }
+.gains { display: flex; gap: 0; margin-top: 18px; flex-wrap: wrap; }
+.gain { flex: 1 1 210px; min-width: 0; padding-right: 26px; margin-right: 26px;
+        border-right: 1px solid var(--rule); }
+.gain:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+.gain p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.gain p b { color: var(--ink); font-weight: 600; }
 .grow { flex: 1; }
 .ref { text-align: right; }
 .ref .v { font-family: var(--din); font-size: 13px; letter-spacing: .05em; }
@@ -317,14 +321,22 @@ details .bd { padding: 4px 16px 16px; }
   <span class="ref"><span class="eb">Period</span><div class="v" id="period">&#8212;</div></span>
 </div></header>
 
-<div class="intro"><div class="wrap">
-  <h1>Import risk by product group</h1>
-  <p>When one country supplies most of a product group, a single export ban, failed harvest or
-  closed border empties the shelf. This shows <b>where that exposure sits</b>, <b>what it is
-  worth</b>, and <b>which origins already ship enough to take the volume</b>.</p>
-</div></div>
-
 <div class="fields"><div class="wrap" id="fields"></div></div>
+
+<div class="purpose"><div class="wrap">
+  <h1>Turn a supply dependency into a plan</h1>
+  <div class="gains">
+    <div class="gain"><span class="eb">What would run short</span>
+      <p>The product groups that <b>empty the shelf</b> if one country stops &#8212; ranked, before
+      it happens.</p></div>
+    <div class="gain"><span class="eb">What it costs you</span>
+      <p>The exposure <b>in money, not percentages</b>, so it can be ranked against every other
+      risk on the table.</p></div>
+    <div class="gain"><span class="eb">Where to go instead</span>
+      <p>Origins <b>already shipping to Ukraine</b> in volume &#8212; demonstrated capacity, not a
+      hopeful list.</p></div>
+  </div>
+</div></div>
 
 <div id="main"><div class="wrap">
   <section id="vList">
