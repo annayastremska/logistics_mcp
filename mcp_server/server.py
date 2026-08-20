@@ -822,6 +822,9 @@ def rank_sourcing_countries(
         "The cost criterion contains a modelled freight component, so cost differences smaller than "
         "roughly ten percent should not decide anything.",
         "Duty is the MFN rate; candidates with a trade agreement may pay less.",
+        "Transport mode does not change these scores. Reported unit values are already "
+        "CIF, so modelled freight is shown for reference and excluded from the total to "
+        "avoid double counting; cost differences here come from unit value and duty only.",
     ]
     if lpi_year:
         caveats.append(f"Logistics Performance Index values are as of {lpi_year}; it is not an annual series.")

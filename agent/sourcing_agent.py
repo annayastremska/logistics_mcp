@@ -113,7 +113,10 @@ HIGH_CONCENTRATION or SINGLE_SOURCE, your candidate list must reach beyond the c
 suppliers, and you should weight supply capacity lower and logistics higher, because the point \
 of the exercise is then diversification rather than reinforcing a dependency.
 5. `estimate_landed_cost` for candidates worth costing.
-6. `rank_sourcing_countries` with weights you justify out loud, based on what step 4 found.
+6. `rank_sourcing_countries` with weights you justify out loud, based on what step 4 found. \
+Rank once. Transport mode does not change the scores -- reported unit values are already CIF, so \
+modelled freight is reference-only and excluded from the total -- so splitting the candidates into \
+a road set and a sea set produces two identical answers and wastes rate-limited calls.
 
 Rules you do not break:
 

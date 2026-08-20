@@ -759,15 +759,18 @@ async function openLine(hs) {
       '<p class="note" style="margin:10px 0 0">Unit value is declared value over declared weight, not a quote.</p>' +
     '</div></details></div>' +
 
-  '<div class="sheet"><div class="cap"><span class="t">Ranked alternatives</span></div><div class="bd">' +
+  '<div class="sheet"><div class="cap"><span class="t">Ranked by landed cost</span>' +
+    '<span class="grow"></span><span class="note">of the origins already shipping</span></div>' +
+    '<div id="detRank"><div class="bd note">Ranking&#8230;</div></div>' +
+    '<div class="bd" style="border-top:1px solid var(--rule)">' +
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
-      '<button class="go" id="run">Run</button>' +
+      '<button class="go" id="run">Look beyond these</button>' +
       '<label class="note"><input type="checkbox" id="optReplay"> offline</label>' +
       '<label class="note"><input type="checkbox" id="optPw" checked> browser server</label>' +
       '<span class="grow"></span>' +
       '<button id="breakPw">Break browser server</button></div>' +
-    '<p class="note" id="runNote" style="margin:11px 0 0">Landed cost, logistics, duty, ' +
-    'demonstrated supply. Several minutes.</p>' +
+    '<p class="note" id="runNote" style="margin:11px 0 0">Asks the agent for origins outside ' +
+    'this list, and a split for a 120 t shipment. Several minutes.</p>' +
     '<div id="record"></div>' +
     '<div id="verdict" style="margin-top:14px"></div>' +
     '<div id="rankOut" style="margin-top:14px"></div>' +
@@ -776,6 +779,7 @@ async function openLine(hs) {
 
   $("run").addEventListener("click", () => run(d));
   $("breakPw").addEventListener("click", () => run(d, { broken: true }));
+  loadRanking(hs);
 }
 
 /* Enough markdown to render what the model actually emits: bold, bullets,
@@ -802,16 +806,12 @@ function md(t) {
   return html;
 }
 
-/* The ranking arrives as structured output, so it is drawn from the figures
-   rather than reconstructed from whatever the model wrote about them. */
-function renderRanking(payload) {
+/* One table, shared by the deterministic ranking and the agent's re-ranking. */
+function rankTable(payload, volumeKg) {
   const rows = payload.ranking || [];
-  if (!rows.length) return;
   const best = Math.max(...rows.map(r => r.score || 0)) || 1;
   const w = payload.weights_used || {};
-
-  $("rankOut").innerHTML =
-    '<table class="man rank"><thead><tr>' +
+  return '<table class="man rank"><thead><tr>' +
       '<th class="eb"></th><th class="eb">Origin</th>' +
       '<th class="r eb">Score</th><th class="r eb">Landed</th>' +
       '<th class="r eb">Duty</th><th class="r eb">Logistics</th>' +
@@ -827,14 +827,50 @@ function renderRanking(payload) {
       '<td class="r">' + (r.lpi_overall == null ? "—" : r.lpi_overall.toFixed(1)) + '</td>' +
       '<td class="r">' + (r.supply_share_pct == null ? "—" : pct(r.supply_share_pct, 1)) + '</td>' +
     '</tr>').join("") + '</tbody></table>' +
-    '<p class="note" style="margin:8px 0 0">Weights: price ' + (w.price ?? "—") +
-      ' · logistics ' + (w.logistics ?? "—") + ' · duty ' + (w.duty ?? "—") +
-      ' · supply ' + (w.supply ?? "—") + '. Landed cost contains a modelled freight component.</p>' +
+    '<div class="bd" style="padding-top:0">' +
+    '<p class="note" style="margin:8px 0 0">' +
+      (volumeKg ? "Costed on " + n(volumeKg / 1000) + " t. " : "") +
+      "Weights: price " + (w.price ?? "—") + " · logistics " + (w.logistics ?? "—") +
+      " · duty " + (w.duty ?? "—") + " · supply " + (w.supply ?? "—") + ".</p>" +
     ((payload.caveats || []).length
-      ? '<details><summary>Caveats on this ranking</summary><div class="bd">' +
+      ? '<details style="border-top:0"><summary>Caveats on this ranking</summary><div class="bd">' +
         '<ul style="margin:0;padding-left:18px">' +
         payload.caveats.map(c => '<li class="note">' + esc(c) + '</li>').join("") +
-        '</ul></div></details>' : "");
+        '</ul></div></details>' : "") +
+    '</div>';
+}
+
+/* The deterministic ranking: arithmetic over the origins that already ship, so
+   it belongs with the product rather than behind a button. Cold it is slow --
+   a landed-cost call per candidate against a tariff source that answers 404 for
+   the current year and falls back under a 45-second timeout -- so the server
+   pre-warms it and reports progress meanwhile. */
+async function loadRanking(hs) {
+  try {
+    const r = await (await fetch("/api/ranking/" + hs + "?year=2024")).json();
+    if (r.status === "warming") {
+      $("detRank").innerHTML = '<div class="bd note">' + esc(r.note) + '</div>';
+      setTimeout(() => loadRanking(hs), 8000);
+      return;
+    }
+    const k = r.ranking;
+    if (!k || k.status !== "ok" || !(k.ranking || []).length) {
+      $("detRank").innerHTML = '<div class="bd note">' +
+        esc(r.note || "No ranking available for this product.") + '</div>';
+      return;
+    }
+    $("detRank").innerHTML = rankTable(k, r.volume_kg);
+  } catch (e) {
+    $("detRank").innerHTML = '<div class="bd note">Could not rank: ' + esc(e) + '</div>';
+  }
+}
+
+/* The agent's re-ranking, from its structured output. Same table. */
+function renderRanking(payload) {
+  if (!(payload.ranking || []).length) return;
+  $("rankOut").innerHTML =
+    '<div class="bd" style="padding-bottom:0"><span class="eb">Re-ranked with the agent’s ' +
+    'candidates and weights</span></div>' + rankTable(payload, null);
 }
 
 /* Live evidence for the run, accumulated from trace events. */

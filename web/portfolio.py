@@ -230,6 +230,65 @@ async def build_portfolio(
     }
 
 
+# Ten is the tool's ceiling and eight leaves room for the model to add to the
+# set later without blowing the cap.
+RANK_CANDIDATES = 8
+RANK_VOLUME_KG = 120_000.0
+
+
+async def ranked_origins(hs_code: str, year: int) -> dict[str, Any]:
+    """Rank the origins that already ship this product. No model involved.
+
+    Candidates are the largest existing origins, so this answers "of the places
+    we already buy from, which is best on cost, logistics, duty and demonstrated
+    supply" -- a question with an arithmetic answer.
+
+    Ranked once. Transport mode was measured to make no difference: reported unit
+    values are already CIF, so the tool computes modelled freight and then excludes
+    it from the total rather than counting freight twice, and road, sea, air and
+    rail all return the same landed cost.
+    """
+    async with stdio_client(_server_params()) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+
+            flows = _payload(
+                await session.call_tool(
+                    "get_import_flows",
+                    {"hs_code": hs_code, "year": year, "top_n": 20, "trailing_12m_to": LATEST},
+                )
+            )
+            rows = flows.get("rows") or []
+            candidates = [r["partner_iso3"] for r in rows if r.get("partner_iso3")][:RANK_CANDIDATES]
+            if len(candidates) < 2:
+                return {
+                    "hs_code": hs_code,
+                    "candidates": candidates,
+                    "ranking": None,
+                    "note": "Fewer than two origins report on this product, so there is nothing to rank.",
+                }
+
+            ranking = _payload(
+                await session.call_tool(
+                    "rank_sourcing_countries",
+                    {
+                        "hs_code": hs_code,
+                        "candidates": candidates,
+                        "volume_kg": RANK_VOLUME_KG,
+                        "year": year,
+                    },
+                )
+            )
+
+    return {
+        "hs_code": hs_code,
+        "year": year,
+        "volume_kg": RANK_VOLUME_KG,
+        "candidates": candidates,
+        "ranking": ranking,
+    }
+
+
 async def commodity_detail(hs_code: str, year: int) -> dict[str, Any]:
     """Origins and risk detail for one product group, for the drill-down view.
 

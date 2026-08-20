@@ -24,7 +24,7 @@ from agent.sourcing_agent import (
     build_options,
     run_sourcing_query,
 )
-from web.portfolio import PORTFOLIO, build_portfolio, commodity_detail
+from web.portfolio import PORTFOLIO, build_portfolio, commodity_detail, ranked_origins
 
 load_dotenv()
 
@@ -36,7 +36,33 @@ app = FastAPI(title="Import Sourcing Advisor", version="1.0.0")
 # app with one worker, so a dict is the whole cache layer it needs. Cleared by
 # restarting the app, which is also how the data mode changes.
 _portfolio_cache: dict[int, dict] = {}
+_ranking_cache: dict[tuple[str, int], dict] = {}
+_ranking_pending: set[tuple[str, int]] = set()
 _portfolio_lock = asyncio.Lock()
+
+
+@app.on_event("startup")
+async def _warm_rankings() -> None:
+    """Fill the ranking cache in the background, one product at a time.
+
+    Sequential on purpose: the upstream sources are rate limited, and six
+    concurrent ranking runs is how a demo earns a 429.
+    """
+
+    async def warm() -> None:
+        for item in PORTFOLIO:
+            key = (item.hs_code, 2024)
+            if key in _ranking_cache or key in _ranking_pending:
+                continue
+            _ranking_pending.add(key)
+            try:
+                _ranking_cache[key] = await ranked_origins(item.hs_code, 2024)
+            except Exception:  # noqa: BLE001 - a cold cache is not a fatal condition
+                pass
+            finally:
+                _ranking_pending.discard(key)
+
+    asyncio.create_task(warm())
 
 
 @app.get("/")
@@ -82,6 +108,32 @@ async def commodity(
 ) -> dict:
     """The origin breakdown for one product group, for the detail view."""
     return await commodity_detail(hs_code, year)
+
+
+@app.get("/api/ranking/{hs_code}")
+async def ranking(hs_code: str, year: int = Query(2024, ge=2015, le=2030)) -> dict:
+    """Rank the origins that already ship this product, with no model in the loop.
+
+    Cached per product and year. A cold ranking takes minutes -- one landed-cost
+    call per candidate, each hitting a tariff source that answers 404 for the
+    current year and falls back under a 45-second timeout -- so the cache is
+    pre-warmed at startup and this endpoint reports progress rather than blocking
+    a page for five minutes.
+    """
+    key = (hs_code, year)
+    if key in _ranking_cache:
+        return _ranking_cache[key]
+    if key in _ranking_pending:
+        return {"hs_code": hs_code, "year": year, "ranking": None, "status": "warming",
+                "note": "Ranking this product for the first time. Tariff lookups are slow; "
+                        "it is cached once done."}
+    _ranking_pending.add(key)
+    try:
+        result = await ranked_origins(hs_code, year)
+        _ranking_cache[key] = result
+        return result
+    finally:
+        _ranking_pending.discard(key)
 
 
 @app.get("/api/tracked")
