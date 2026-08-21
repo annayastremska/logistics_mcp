@@ -267,3 +267,58 @@ def test_an_unestablished_duty_is_reported_as_unknown_not_as_zero(
     # branch's wording and let the new one be deleted without a failure.
     assert any("read as a duty-free origin" in a for a in result.assumptions)
     assert any("lower bound" in a for a in result.assumptions)
+
+
+# --------------------------------------------------------------------------- #
+# Offline must not be pinned to one reporting window
+# --------------------------------------------------------------------------- #
+
+
+def test_two_distinct_trailing_windows_both_replay(monkeypatch: pytest.MonkeyPatch) -> None:
+    """One recorded window made offline look complete while it was period-locked.
+
+    The read path only ever asks for "latest", so a request for any other window
+    failed offline and nobody noticed -- the interface had no year selector left
+    to expose it. Two windows are recorded now, and this asserts both of them
+    answer *and* that they are genuinely different periods. A test that passed
+    while both windows returned the same figures would be worthless: it would
+    hold just as well if the window argument were ignored entirely.
+    """
+    monkeypatch.setenv("SOURCING_MODE", "replay")
+
+    from mcp_server.server import assess_supply_concentration_risk, get_import_flows
+
+    seen = {}
+    for window in ("latest", "202412"):
+        flows = get_import_flows(hs_code="080610", year=2024, top_n=20, trailing_12m_to=window)
+        risk = assess_supply_concentration_risk(
+            hs_code="080610", years=[2022, 2023, 2024], trailing_12m_to=window
+        )
+        assert flows.status == "ok", f"{window} does not replay: {flows.errors}"
+        assert risk.status == "ok", f"{window} does not replay: {risk.errors}"
+        assert flows.provenance is not None
+        seen[window] = (flows.provenance.as_of, risk.hhi)
+
+    # 202412 is a trailing twelve months ending December 2024, so it is calendar
+    # 2024 -- a different period from the frontier window, and it must read that way.
+    assert seen["202412"][0] == "202401-202412"
+    assert seen["latest"][0] != seen["202412"][0], "the two windows cover the same months"
+    assert seen["latest"][1] != seen["202412"][1], "the window argument changed nothing"
+
+
+def test_an_unrecorded_window_fails_loudly_rather_than_falling_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two recorded windows are two, not all of them.
+
+    Offline coverage is finite, and the honest response to a window nobody
+    recorded is to say so -- not to quietly serve a neighbouring period, which
+    would put figures on screen under the wrong dates.
+    """
+    monkeypatch.setenv("SOURCING_MODE", "replay")
+
+    from mcp_server.server import get_import_flows
+
+    result = get_import_flows(hs_code="080610", year=2024, top_n=20, trailing_12m_to="202306")
+    assert result.status != "ok"
+    assert result.rows == []

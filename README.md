@@ -198,8 +198,10 @@ every field: identical to the last decimal. That check is worth keeping — it i
 below was found, and before the ranking fixtures were recorded it is how the collapsed offline
 scores were found too.
 
-**What it does not.** Only one reference window is recorded (Oct 2024 – Sep 2025), so a request
-for any other trailing window fails offline rather than falling back. Two products carry a
+**What it does not.** Two reference windows are recorded — the frontier window (Oct 2024 – Sep
+2025) and calendar 2024 (Jan – Dec 2024), which is a trailing twelve months ending December. Any
+third window fails offline rather than quietly serving a neighbouring period, which would put
+figures on screen under the wrong dates. Two products carry a
 candidate that cannot be priced in either mode — USA and NLD for almonds, AZE for kiwifruit
 report no weight, so no unit value exists to derive. Those rows are marked *incomplete* on screen
 and named in a caveat; they are a gap in the source, not in the recording.

@@ -22,8 +22,7 @@ not demonstrable without them, and the project constitution makes verification n
 > existing — the whole reason this project has a rule about verification is that a plausible-looking
 > implementation passed for a working one twice.
 >
-> **Current state: 67 of 69 tasks complete.** The 2 open tasks are T068 and
-> T069. Every regression test is mutation-checked -- the behaviour it covers is reverted to confirm
+> **Current state: 68 of 69 tasks complete.** The one open task is T069. Every regression test is mutation-checked -- the behaviour it covers is reverted to confirm
 > the test actually fails, because a test that cannot fail is not a test. 47 tests, offline, ~1.6s.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -192,7 +191,7 @@ writing the quickstart. Ordered by risk of the defect silently returning.
 - [x] T065 [P] Add a regression test asserting a recording is written on a warm cache hit, in tests/test_http_transport.py
 - [x] T066 [P] Add a regression test asserting the tariff fallback survives one missing recording and raises when all are missing, in tests/test_http_transport.py
 - [x] T067 [P] Add a regression test asserting the capability server is spawned under the running interpreter, in tests/test_agent_config.py
-- [ ] T068 Record fixtures for a second reference window, so offline is not pinned to one period — the year selector was removed in the interface rebuild, which hid the problem rather than fixing it, in fixtures/
+- [X] T068 Record fixtures for a second reference window, so offline is not pinned to one period — the year selector was removed in the interface rebuild, which hid the problem rather than fixing it, in fixtures/
 - [ ] T069 Run /speckit-converge to check the delivered system against this specification rather than assuming they agree
 
 ---
