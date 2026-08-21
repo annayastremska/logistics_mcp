@@ -22,7 +22,8 @@ not demonstrable without them, and the project constitution makes verification n
 > existing — the whole reason this project has a rule about verification is that a plausible-looking
 > implementation passed for a working one twice.
 >
-> **Current state: 68 of 69 tasks complete.** The one open task is T069. Every regression test is mutation-checked -- the behaviour it covers is reverted to confirm
+> **Current state: 69 of 69 original tasks complete.** Convergence then appended five in
+> Phase 9 -- three MEDIUM, two LOW, no CRITICAL or HIGH. Every regression test is mutation-checked -- the behaviour it covers is reverted to confirm
 > the test actually fails, because a test that cannot fail is not a test. 47 tests, offline, ~1.6s.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -192,7 +193,7 @@ writing the quickstart. Ordered by risk of the defect silently returning.
 - [x] T066 [P] Add a regression test asserting the tariff fallback survives one missing recording and raises when all are missing, in tests/test_http_transport.py
 - [x] T067 [P] Add a regression test asserting the capability server is spawned under the running interpreter, in tests/test_agent_config.py
 - [X] T068 Record fixtures for a second reference window, so offline is not pinned to one period — the year selector was removed in the interface rebuild, which hid the problem rather than fixing it, in fixtures/
-- [ ] T069 Run /speckit-converge to check the delivered system against this specification rather than assuming they agree
+- [X] T069 Run /speckit-converge to check the delivered system against this specification rather than assuming they agree
 
 ---
 
@@ -280,3 +281,23 @@ new page. A rewrite should end with a pass over every document that describes th
 - Checked tasks are backed by a recorded run; see quickstart.md for the observed values
 - Phase 8 exists because four defects were fixed without regression cover. A fix without a test is
   a fix with a return date.
+
+---
+
+## Phase 9: Convergence
+
+Appended by `/speckit-converge`. Every item is a divergence between the delivered system and
+`spec.md` / `plan.md`, found by reading the code rather than the history. No CRITICAL or HIGH
+findings: all five constitution principles pass, and the one violation of Principle III — a
+failed tariff lookup arriving as a duty of zero — was fixed before this pass ran.
+
+Two of these exist because the interface was reworked repeatedly on direct instruction and the
+spec was not amended to follow. Converge may not touch `spec.md`, so the honest remediation for
+T070 and T073 may be to amend the requirement rather than the code; whoever picks them up should
+decide which document is wrong.
+
+- [ ] T070 Restore declared import value and year-on-year variability on the landing entry, or amend FR-001 to match the two-field entry that was chosen deliberately, in web/index.html:624 per FR-001 (partial)
+- [ ] T071 Add narrowing by product name or identifier and by product family, and make the severity control a minimum rather than a binary toggle, in web/index.html:611 per FR-003 (partial)
+- [ ] T072 Remove `transport_mode` from estimate_landed_cost and rank_sourcing_countries, or justify keeping a parameter that provably changes no result, in mcp_server/server.py per plan: landed-cost model (unrequested)
+- [ ] T073 State the number of lines the shared leading origin affects beside its name — the count is already computed and discarded — in web/index.html:598 per FR-004 (partial)
+- [ ] T074 Label the unit-value column at the figure rather than only inside the collapsed disclosure, in web/index.html:765 per FR-008 (partial)
